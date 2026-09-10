@@ -17,6 +17,7 @@ const LINKS: Record<Role, { href: string; label: string }[]> = {
     { href: "/company/conges", label: "Congés à valider" },
     { href: "/company/absences", label: "Absences" },
     { href: "/company/pointage", label: "Pointage" },
+    { href: "/company/rapports", label: "Rapports" },
     { href: "/settings/security", label: "Sécurité / 2FA" },
   ],
   CANDIDATE: [

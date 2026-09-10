@@ -16,6 +16,10 @@ export function doualaYmd(date = new Date()) {
   }).format(date);
 }
 
+export function monthStartYmd(ymd = doualaYmd()) {
+  return `${ymd.slice(0, 7)}-01`;
+}
+
 export function toDateOnly(ymd: string) {
   return new Date(`${ymd}T00:00:00.000Z`);
 }

@@ -148,3 +148,27 @@ export const DOCUMENT_TYPE_LABELS = {
   certificat_medical: "Certificat médical",
   autre: "Autre",
 } as const;
+
+export const LEAVE_STATUS_LABELS = {
+  PENDING: "En attente",
+  APPROVED: "Accepté",
+  REJECTED: "Refusé",
+} as const;
+
+export const REPORT_TYPES = [
+  "PRESENCE",
+  "ABSENCE",
+  "LEAVE",
+  "HOURS",
+  "PERFORMANCE",
+] as const;
+
+export type ReportType = (typeof REPORT_TYPES)[number];
+
+export const REPORT_TYPE_LABELS: Record<ReportType, string> = {
+  PRESENCE: "Présence",
+  ABSENCE: "Absences",
+  LEAVE: "Congés",
+  HOURS: "Heures travaillées",
+  PERFORMANCE: "Performance",
+};
