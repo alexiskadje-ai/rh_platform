@@ -1,3 +1,11 @@
 ---
+description: Règles globales du projet Plateforme RH
 alwaysApply: true
 ---
+- Stack : Next.js 16 (App Router), TypeScript strict, Prisma, PostgreSQL, Tailwind + shadcn/ui.
+- Toute logique métier passe par src/server/actions/<domaine>.ts (Server Actions).
+- Toute donnée entrante est validée avec Zod avant Prisma.
+- Le client Prisma est un singleton (src/lib/db.ts).
+- Toute route protégée vérifie le rôle via src/proxy.ts (Next.js 16 ; l'ancien middleware.ts est déprécié).
+- Après modification de prisma/schema.prisma, lancer npx prisma generate.
+- Si une règle métier n'est pas précisée dans docs/Cahier-des-Charges_Complet_RH.md, demander avant de choisir une valeur par défaut.
