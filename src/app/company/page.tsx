@@ -29,7 +29,7 @@ export default async function CompanyDashboardPage() {
     <DashboardShell role={Role.RECRUITER} title="Espace entreprise">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">Bonjour {user.firstName}</h1>
+          <h1 className="font-display text-3xl font-medium text-primary">Bonjour {user.firstName}</h1>
           <p className="mt-1 text-muted-foreground">
             Pilotage recrutement et RH de votre entreprise.
           </p>
@@ -53,7 +53,7 @@ export default async function CompanyDashboardPage() {
               <CardHeader>
                 <CardTitle className="text-base">{label}</CardTitle>
               </CardHeader>
-              <CardContent className="text-3xl font-semibold">{value}</CardContent>
+          <CardContent className="font-display text-4xl text-primary">{value}</CardContent>
             </Card>
           </Link>
         ))}

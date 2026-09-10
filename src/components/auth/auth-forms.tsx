@@ -23,7 +23,7 @@ export function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
       : "";
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md shadow-[0_20px_60px_rgba(20,33,28,0.08)]">
       <CardHeader>
         <CardTitle>Connexion</CardTitle>
         <CardDescription>E-mail ou téléphone, puis mot de passe.</CardDescription>

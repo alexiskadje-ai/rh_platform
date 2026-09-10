@@ -21,8 +21,8 @@ export default async function AdminDashboardPage() {
 
   return (
     <DashboardShell role={Role.ADMIN} title="Administration">
-      <h1 className="text-2xl font-semibold">Bonjour {user.firstName}</h1>
-      <div className="mt-6 grid gap-4 md:grid-cols-4">
+      <h1 className="font-display text-3xl font-medium text-primary">Bonjour {user.firstName}</h1>
+      <div className="mt-8 grid gap-4 md:grid-cols-4">
         {[
           ["Candidats", candidates],
           ["Entreprises", companies],
@@ -33,7 +33,7 @@ export default async function AdminDashboardPage() {
             <CardHeader>
               <CardTitle className="text-base">{label}</CardTitle>
             </CardHeader>
-            <CardContent className="text-3xl font-semibold">{value}</CardContent>
+            <CardContent className="font-display text-4xl text-primary">{value}</CardContent>
           </Card>
         ))}
       </div>

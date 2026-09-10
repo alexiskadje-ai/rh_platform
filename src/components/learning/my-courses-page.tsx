@@ -23,7 +23,7 @@ export async function MyCoursesPage({
   return (
     <DashboardShell role={role} title={title}>
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">Mes formations</h1>
+        <h1 className="font-display text-2xl font-medium text-primary">Mes formations</h1>
         <Link href="/formations" className={cn(buttonVariants({ variant: "outline" }))}>
           Catalogue
         </Link>
@@ -38,7 +38,7 @@ export async function MyCoursesPage({
             <Link
               key={item.id}
               href={`/learn/${item.courseId}`}
-              className="block rounded-xl border border-border bg-card p-4"
+              className="block rounded-3xl border border-border/80 bg-card p-5 transition-all hover:-translate-y-0.5 hover:shadow-md"
             >
               <p className="font-medium">{item.course.title}</p>
               <p className="text-sm text-muted-foreground">

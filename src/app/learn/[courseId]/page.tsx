@@ -78,7 +78,7 @@ export default async function LearnCoursePage({
       <Link href={home} className="text-sm text-muted-foreground hover:text-foreground">
         ← Mes formations
       </Link>
-      <h1 className="mt-4 text-2xl font-semibold">{enrollment.course.title}</h1>
+      <h1 className="mt-4 font-display text-3xl font-medium text-primary">{enrollment.course.title}</h1>
       <p className="text-sm text-muted-foreground">
         {COURSE_ACCESS_LABELS[
           enrollment.course.accessMode as keyof typeof COURSE_ACCESS_LABELS
@@ -100,8 +100,8 @@ export default async function LearnCoursePage({
                 key={item.id}
                 href={`/learn/${courseId}?module=${item.id}`}
                 className={cn(
-                  "block rounded-xl border p-3 text-sm",
-                  item.id === selected.id ? "border-primary bg-card" : "border-border",
+                  "block rounded-2xl border p-3 text-sm transition-colors",
+                  item.id === selected.id ? "border-primary bg-primary text-primary-foreground" : "border-border/80 bg-card hover:bg-muted",
                 )}
               >
                 {index + 1}. {item.title}

@@ -5,6 +5,8 @@ import { CONTRACT_LABELS } from "@/lib/constants";
 import { JobOfferCard } from "@/components/recruitment/job-offer-card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { PageHero } from "@/components/layout/page-hero";
+import { fieldClass } from "@/lib/ui";
 
 export default async function PublicJobsPage({
   searchParams,
@@ -20,15 +22,22 @@ export default async function PublicJobsPage({
   });
 
   return (
-    <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-12">
-      <h1 className="text-3xl font-semibold">Offres d&apos;emploi</h1>
-      <form className="mt-6 grid gap-3 md:grid-cols-4" action="/offres">
+    <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-16">
+      <PageHero
+        eyebrow="Carrières"
+        title="Offres d'emploi"
+        description="Filtrez par métier, ville ou type de contrat. La candidature se fait en un clic une fois le profil prêt."
+      />
+      <form
+        className="mt-10 grid gap-3 rounded-3xl border border-border/80 bg-card p-4 md:grid-cols-4 md:p-5"
+        action="/offres"
+      >
         <Input name="q" placeholder="Métier, compétence…" defaultValue={filters.q} />
         <Input name="location" placeholder="Ville ou région" defaultValue={filters.location} />
         <select
           name="contractType"
           defaultValue={filters.contractType ?? ""}
-          className="h-11 rounded-xl border border-input bg-card px-3 text-sm"
+          className={fieldClass}
         >
           <option value="">Tous les contrats</option>
           {Object.entries(CONTRACT_LABELS).map(([value, label]) => (
@@ -39,7 +48,7 @@ export default async function PublicJobsPage({
         </select>
         <Button type="submit">Filtrer</Button>
       </form>
-      <div className="mt-8 grid gap-4 md:grid-cols-2">
+      <div className="mt-10 grid gap-4 md:grid-cols-2">
         {offers.length === 0 ? (
           <p className="text-sm text-muted-foreground">Aucune offre ne correspond à votre recherche.</p>
         ) : (
@@ -48,8 +57,8 @@ export default async function PublicJobsPage({
           ))
         )}
       </div>
-      <p className="mt-8 text-sm text-muted-foreground">
-        <Link href="/register/candidate" className="text-primary">
+      <p className="mt-10 text-sm text-muted-foreground">
+        <Link href="/register/candidate" className="text-primary underline-offset-4 hover:underline">
           Créer un compte candidat
         </Link>{" "}
         pour postuler en un clic.

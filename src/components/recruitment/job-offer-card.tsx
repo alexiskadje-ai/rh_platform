@@ -1,3 +1,4 @@
+import { MapPin } from "lucide-react";
 import Link from "next/link";
 import type { ContractType, JobStatus } from "@prisma/client";
 import { CONTRACT_LABELS } from "@/lib/constants";
@@ -48,8 +49,9 @@ export function JobOfferCard({
             </Badge>
           ) : null}
         </div>
-        <CardTitle className="text-lg">{offer.title}</CardTitle>
-        <p className="text-sm text-muted-foreground">
+        <CardTitle className="font-display text-2xl">{offer.title}</CardTitle>
+        <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <MapPin className="size-3.5 shrink-0 text-accent" />
           {offer.company?.name ? `${offer.company.name} · ` : ""}
           {offer.location}
         </p>

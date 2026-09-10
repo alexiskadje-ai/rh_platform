@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Fraunces, Geist, Geist_Mono } from "next/font/google";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { APP_NAME, APP_TAGLINE } from "@/lib/constants";
@@ -12,6 +12,11 @@ const geistSans = Geist({
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+const display = Fraunces({
+  variable: "--font-display",
   subsets: ["latin"],
 });
 
@@ -31,11 +36,11 @@ export default function RootLayout({
   return (
     <html
       lang="fr"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${display.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col font-sans">
         <SiteHeader />
-        {children}
+        <div className="flex flex-1 flex-col pt-[4.25rem]">{children}</div>
         <SiteFooter />
       </body>
     </html>

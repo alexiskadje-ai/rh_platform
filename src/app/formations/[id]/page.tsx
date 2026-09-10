@@ -29,10 +29,10 @@ export default async function PublicCourseDetailPage({
   const canEnroll = user?.role === "CANDIDATE" || user?.role === "EMPLOYEE";
 
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-12">
-      <p className="text-sm text-muted-foreground">{course.category}</p>
-      <h1 className="mt-2 text-3xl font-semibold">{course.title}</h1>
-      <p className="mt-4 whitespace-pre-wrap text-muted-foreground">{course.description}</p>
+    <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-16">
+      <p className="text-xs uppercase tracking-[0.28em] text-accent">{course.category}</p>
+      <h1 className="mt-3 font-display text-4xl font-medium leading-tight text-primary">{course.title}</h1>
+      <p className="mt-4 whitespace-pre-wrap leading-relaxed text-muted-foreground">{course.description}</p>
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
         <Card>
           <CardHeader>

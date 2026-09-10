@@ -23,8 +23,8 @@ export default async function EmployeeDashboardPage() {
 
   return (
     <DashboardShell role={Role.EMPLOYEE} title="Espace employé">
-      <h1 className="text-2xl font-semibold">Bonjour {user.firstName}</h1>
-      <div className="mt-6 grid gap-4 md:grid-cols-3">
+      <h1 className="font-display text-3xl font-medium text-primary">Bonjour {user.firstName}</h1>
+      <div className="mt-8 grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Solde de congés</CardTitle>

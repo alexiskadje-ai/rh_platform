@@ -18,12 +18,12 @@ export default async function OrderPaymentPage({
   const { order } = result;
 
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 space-y-8 px-4 py-12">
+    <main className="mx-auto w-full max-w-3xl flex-1 space-y-8 px-4 py-16">
       <div>
-        <h1 className="text-3xl font-semibold">Choix du paiement</h1>
+        <p className="text-xs uppercase tracking-[0.28em] text-accent">Commande</p>
+        <h1 className="mt-3 font-display text-4xl font-medium text-primary">Choix du paiement</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Commande {ORDER_STATUS_LABELS[order.status] ?? order.status} ·{" "}
-          {formatFcfa(order.total)}
+          {ORDER_STATUS_LABELS[order.status] ?? order.status} · {formatFcfa(order.total)}
         </p>
       </div>
       <Card>
