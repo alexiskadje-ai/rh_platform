@@ -9,6 +9,7 @@ const LINKS: Record<Role, { href: string; label: string }[]> = {
   ADMIN: [
     { href: "/admin", label: "Vue d'ensemble" },
     { href: "/admin/formations", label: "Formations" },
+    { href: "/admin/boutique", label: "Boutique" },
     { href: "/settings/security", label: "Sécurité / 2FA" },
   ],
   RECRUITER: [
@@ -27,6 +28,7 @@ const LINKS: Record<Role, { href: string; label: string }[]> = {
     { href: "/candidate/candidatures", label: "Mes candidatures" },
     { href: "/candidate/offres", label: "Offres recommandées" },
     { href: "/candidate/formations", label: "Mes formations" },
+    { href: "/candidate/achats", label: "Mes achats" },
     { href: "/settings/security", label: "Sécurité / 2FA" },
   ],
   EMPLOYEE: [
@@ -38,6 +40,7 @@ const LINKS: Record<Role, { href: string; label: string }[]> = {
     { href: "/employee/documents", label: "Mes documents" },
     { href: "/employee/validations", label: "Validations équipe" },
     { href: "/employee/formations", label: "Mes formations" },
+    { href: "/employee/achats", label: "Mes achats" },
     { href: "/settings/security", label: "Sécurité / 2FA" },
   ],
 };

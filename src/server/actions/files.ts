@@ -18,6 +18,7 @@ const FOLDER_ROLES: Record<string, Role[]> = {
   absences: [Role.EMPLOYEE, Role.RECRUITER],
   "courses/videos": [Role.ADMIN],
   "courses/documents": [Role.ADMIN],
+  "shop/products": [Role.ADMIN],
 };
 
 function canUpload(role: Role, folder: string) {

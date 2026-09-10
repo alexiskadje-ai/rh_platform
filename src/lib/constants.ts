@@ -189,3 +189,28 @@ export const COURSE_ACCESS_LABELS = {
   LINEAR: "Parcours linéaire",
   OPEN: "Accès libre",
 } as const;
+
+export const PRODUCT_TYPES = [
+  "livre",
+  "guide",
+  "modele_cv",
+  "modele_lettre",
+  "formation_premium",
+] as const;
+
+export type ProductType = (typeof PRODUCT_TYPES)[number];
+
+export const PRODUCT_TYPE_LABELS: Record<ProductType, string> = {
+  livre: "Livre",
+  guide: "Guide",
+  modele_cv: "Modèle de CV",
+  modele_lettre: "Modèle de lettre",
+  formation_premium: "Formation premium",
+};
+
+export const PAYMENT_METHOD_LABELS = {
+  MTN_MOMO: "MTN MoMo",
+  ORANGE_MONEY: "Orange Money",
+  CARD: "Carte bancaire",
+  BANK_TRANSFER: "Virement",
+} as const;

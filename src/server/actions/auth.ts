@@ -45,6 +45,14 @@ function booleanFromForm(value: FormDataEntryValue | null) {
   return value === "on" || value === "true";
 }
 
+function safeRedirectPath(value: FormDataEntryValue | null) {
+  if (typeof value !== "string") return null;
+  if (!value.startsWith("/") || value.startsWith("//") || value.includes("://")) {
+    return null;
+  }
+  return value;
+}
+
 async function setDevVerificationHints(emailToken: string, smsCode: string) {
   if (process.env.NODE_ENV === "production") return;
   const jar = await cookies();
@@ -271,12 +279,13 @@ export async function login(
     await setTrustedDevice(user.id);
   }
 
+  const callback = safeRedirectPath(formData.get("callbackUrl"));
   const destination =
     user.role === Role.CANDIDATE && !user.isVerified
       ? "/verify"
       : user.role === Role.RECRUITER && user.status === UserStatus.PENDING
         ? "/pending-approval"
-        : ROLE_HOME[user.role];
+        : (callback ?? ROLE_HOME[user.role]);
 
   await createSession(user.id, destination);
   return { ok: true };

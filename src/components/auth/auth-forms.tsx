@@ -15,8 +15,12 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PasswordStrength } from "@/components/auth/password-strength";
 
-export function LoginForm() {
+export function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
   const [state, action] = useActionState(login, {} as ActionState);
+  const next =
+    callbackUrl && callbackUrl.startsWith("/") && !callbackUrl.startsWith("//")
+      ? callbackUrl
+      : "";
 
   return (
     <Card className="w-full max-w-md">
@@ -26,6 +30,7 @@ export function LoginForm() {
       </CardHeader>
       <CardContent>
         <form action={action} className="space-y-4">
+          {next ? <input type="hidden" name="callbackUrl" value={next} /> : null}
           <div className="space-y-2">
             <Label htmlFor="identifier">E-mail ou téléphone</Label>
             <Input id="identifier" name="identifier" required autoComplete="username" />

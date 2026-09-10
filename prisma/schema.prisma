@@ -393,6 +393,7 @@ model Order {
   userId    String
   items     OrderItem[]
   total     Int
+  status    String      @default("pending")
   payment   Payment?
   createdAt DateTime    @default(now())
 }
