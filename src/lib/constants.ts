@@ -80,3 +80,71 @@ export const MATCH_WEIGHTS = {
   availability: 0.1,
   contract: 0.1,
 } as const;
+
+export const TZ_DOUALA = "Africa/Douala";
+
+/** TODO(phase2) : taux paramétrable par type de contrat (CDI/CDD/STAGE). */
+export const LEAVE_ACCRUAL_RATE = 1.5;
+
+/** TODO(phase2) : configurable par entreprise. Art. 96 Code du Travail. */
+export const MAX_CARRYOVER_DAYS = 15;
+
+export const MATERNITY_CALENDAR_DAYS = 98;
+
+export const DEFAULT_WORK_START = "08:00";
+export const DEFAULT_WORK_END = "17:00";
+export const DEFAULT_WORK_DAYS = [1, 2, 3, 4, 5] as const;
+
+export const CAMEROON_FIXED_HOLIDAYS = [
+  "01-01",
+  "02-11",
+  "05-01",
+  "05-20",
+  "08-15",
+  "12-25",
+] as const;
+
+/** Jours fériés mobiles (MVP 2026–2027). À mettre à jour chaque année. */
+export const CAMEROON_MOVABLE_HOLIDAYS = [
+  "2026-03-20",
+  "2026-04-03",
+  "2026-04-06",
+  "2026-05-14",
+  "2026-05-27",
+  "2026-08-25",
+  "2027-03-10",
+  "2027-03-26",
+  "2027-03-29",
+  "2027-05-06",
+  "2027-05-16",
+] as const;
+
+/** Liste statique MVP : MM-DD (fixes) + YYYY-MM-DD (mobiles). */
+export const CAMEROON_HOLIDAYS = [
+  ...CAMEROON_FIXED_HOLIDAYS,
+  ...CAMEROON_MOVABLE_HOLIDAYS,
+] as const;
+
+export const LEAVE_TYPE_LABELS = {
+  ANNUAL: "Congé annuel",
+  SICK: "Congé maladie",
+  UNPAID: "Congé sans solde",
+  MATERNITY: "Congé de maternité",
+  OTHER: "Autre",
+} as const;
+
+export const ABSENCE_REASON_LABELS = {
+  MALADIE: "Maladie / arrêt",
+  IMPREVU: "Imprévu",
+  AUTRE: "Autre",
+} as const;
+
+export const DOCUMENT_TYPE_LABELS = {
+  contrat: "Contrat",
+  diplome: "Diplôme",
+  cni: "CNI",
+  attestation: "Attestation",
+  bulletin: "Bulletin de paie",
+  certificat_medical: "Certificat médical",
+  autre: "Autre",
+} as const;

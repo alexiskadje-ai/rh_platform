@@ -1,6 +1,5 @@
 "use server";
 
-import { readFile } from "node:fs/promises";
 import { PDFParse } from "pdf-parse";
 import { AiCallKind, ContractType } from "@prisma/client";
 import { revalidatePath } from "next/cache";
@@ -10,7 +9,7 @@ import { getOpenAI } from "@/lib/ai/openai";
 import { logAiCall } from "@/lib/ai/logs";
 import { consumeAiQuota } from "@/lib/ai/rate-limit";
 import { refreshCandidateEmbedding } from "@/lib/ai/embeddings";
-import { resolveUploadPath, saveUpload } from "@/lib/storage";
+import { readUploadBuffer, saveUpload } from "@/lib/storage";
 import { CV_JSON_SCHEMA, parsedCvSchema, type ParsedCv } from "@/lib/validations/cv-parse";
 
 export type ParseCvState = {
@@ -29,7 +28,7 @@ export async function parseCv(fileUrl: string): Promise<ParseCvState> {
   }
 
   try {
-    const buffer = await readFile(resolveUploadPath(fileUrl));
+    const buffer = await readUploadBuffer(fileUrl);
     const parser = new PDFParse({ data: new Uint8Array(buffer) });
     let extractedText = "";
     try {

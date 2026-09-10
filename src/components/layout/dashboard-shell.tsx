@@ -13,6 +13,10 @@ const LINKS: Record<Role, { href: string; label: string }[]> = {
   RECRUITER: [
     { href: "/company", label: "Tableau de bord" },
     { href: "/company/offres", label: "Offres publiées" },
+    { href: "/company/employes", label: "Employés" },
+    { href: "/company/conges", label: "Congés à valider" },
+    { href: "/company/absences", label: "Absences" },
+    { href: "/company/pointage", label: "Pointage" },
     { href: "/settings/security", label: "Sécurité / 2FA" },
   ],
   CANDIDATE: [
@@ -24,6 +28,12 @@ const LINKS: Record<Role, { href: string; label: string }[]> = {
   ],
   EMPLOYEE: [
     { href: "/employee", label: "Tableau de bord" },
+    { href: "/employee/dossier", label: "Mon dossier" },
+    { href: "/employee/conges", label: "Mes congés" },
+    { href: "/employee/absences", label: "Absences" },
+    { href: "/employee/pointage", label: "Mon pointage" },
+    { href: "/employee/documents", label: "Mes documents" },
+    { href: "/employee/validations", label: "Validations équipe" },
     { href: "/settings/security", label: "Sécurité / 2FA" },
   ],
 };

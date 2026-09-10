@@ -1,0 +1,27 @@
+CREATE TYPE "LeaveType" AS ENUM ('ANNUAL', 'SICK', 'UNPAID', 'MATERNITY', 'OTHER');
+
+ALTER TABLE "Employee" ADD COLUMN "birthDate" TIMESTAMP(3);
+ALTER TABLE "Employee" ADD COLUMN "address" TEXT;
+ALTER TABLE "Employee" ADD COLUMN "emergencyName" TEXT;
+ALTER TABLE "Employee" ADD COLUMN "emergencyPhone" TEXT;
+ALTER TABLE "Employee" ADD COLUMN "expectedStartTime" TEXT NOT NULL DEFAULT '08:00';
+ALTER TABLE "Employee" ADD COLUMN "expectedEndTime" TEXT NOT NULL DEFAULT '17:00';
+ALTER TABLE "Employee" ADD COLUMN "workDays" INTEGER[] DEFAULT ARRAY[1, 2, 3, 4, 5];
+
+ALTER TABLE "LeaveRequest" DROP COLUMN "type";
+ALTER TABLE "LeaveRequest" ADD COLUMN "type" "LeaveType" NOT NULL;
+ALTER TABLE "LeaveRequest" ADD COLUMN "days" DOUBLE PRECISION NOT NULL DEFAULT 0;
+ALTER TABLE "LeaveRequest" ADD COLUMN "alertedAt" TIMESTAMP(3);
+ALTER TABLE "LeaveRequest" ADD COLUMN "decidedAt" TIMESTAMP(3);
+ALTER TABLE "LeaveRequest" ADD COLUMN "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
+
+UPDATE "Attendance" SET "lateMinutes" = 0 WHERE "lateMinutes" IS NULL;
+UPDATE "Attendance" SET "overtimeMinutes" = 0 WHERE "overtimeMinutes" IS NULL;
+ALTER TABLE "Attendance" ALTER COLUMN "lateMinutes" SET NOT NULL;
+ALTER TABLE "Attendance" ALTER COLUMN "lateMinutes" SET DEFAULT 0;
+ALTER TABLE "Attendance" ALTER COLUMN "overtimeMinutes" SET NOT NULL;
+ALTER TABLE "Attendance" ALTER COLUMN "overtimeMinutes" SET DEFAULT 0;
+ALTER TABLE "Attendance" ADD COLUMN "autoClosed" BOOLEAN NOT NULL DEFAULT false;
+
+ALTER TABLE "Absence" ADD COLUMN "alertedAt" TIMESTAMP(3);
+ALTER TABLE "Absence" ADD COLUMN "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;

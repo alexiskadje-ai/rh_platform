@@ -59,3 +59,19 @@ export async function requireRecruiter() {
   }
   return { user, companyId: dbUser.companyId, company: dbUser.company };
 }
+
+export async function requireEmployee() {
+  const user = await requireRole([Role.EMPLOYEE]);
+  const employee = await db.employee.findUnique({
+    where: { userId: user.id },
+    include: {
+      user: true,
+      manager: { include: { user: true } },
+      documents: { orderBy: { uploadedAt: "desc" } },
+    },
+  });
+  if (!employee) {
+    redirect("/employee");
+  }
+  return { user, employee };
+}

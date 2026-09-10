@@ -69,6 +69,14 @@ enum LeaveStatus {
   REJECTED
 }
 
+enum LeaveType {
+  ANNUAL
+  SICK
+  UNPAID
+  MATERNITY
+  OTHER
+}
+
 enum PaymentProvider {
   MTN_MOMO
   ORANGE_MONEY
@@ -260,23 +268,30 @@ model Certification {
 }
 
 model Employee {
-  id           String       @id @default(cuid())
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId       String       @unique
-  company      Company      @relation(fields: [companyId], references: [id])
-  companyId    String
-  matricule    String       @unique
-  position     String
-  department   String
-  contractType ContractType
-  hireDate     DateTime
-  managerId    String?
-  manager      Employee?    @relation("EmployeeManager", fields: [managerId], references: [id])
-  reports      Employee[]   @relation("EmployeeManager")
-  documents    Document[]
-  leaves       LeaveRequest[]
-  attendances  Attendance[]
-  absences     Absence[]
+  id                 String       @id @default(cuid())
+  user               User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId             String       @unique
+  company            Company      @relation(fields: [companyId], references: [id])
+  companyId          String
+  matricule          String       @unique
+  position           String
+  department         String
+  contractType       ContractType
+  hireDate           DateTime
+  birthDate          DateTime?
+  address            String?
+  emergencyName      String?
+  emergencyPhone     String?
+  expectedStartTime  String       @default("08:00")
+  expectedEndTime    String       @default("17:00")
+  workDays           Int[]        @default([1, 2, 3, 4, 5])
+  managerId          String?
+  manager            Employee?    @relation("EmployeeManager", fields: [managerId], references: [id])
+  reports            Employee[]   @relation("EmployeeManager")
+  documents          Document[]
+  leaves             LeaveRequest[]
+  attendances        Attendance[]
+  absences           Absence[]
 }
 
 model Document {
@@ -292,12 +307,16 @@ model LeaveRequest {
   id               String      @id @default(cuid())
   employee         Employee    @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   employeeId       String
-  type             String
+  type             LeaveType
   startDate        DateTime
   endDate          DateTime
+  days             Float
   status           LeaveStatus @default(PENDING)
   reason           String?
   justificationUrl String?
+  alertedAt        DateTime?
+  decidedAt        DateTime?
+  createdAt        DateTime    @default(now())
 }
 
 model Attendance {
@@ -307,8 +326,9 @@ model Attendance {
   date            DateTime
   checkIn         DateTime?
   checkOut        DateTime?
-  lateMinutes     Int?      @default(0)
-  overtimeMinutes Int?      @default(0)
+  lateMinutes     Int       @default(0)
+  overtimeMinutes Int       @default(0)
+  autoClosed      Boolean   @default(false)
 
   @@unique([employeeId, date])
 }
@@ -322,6 +342,8 @@ model Absence {
   reason           String
   justificationUrl String?
   validated        Boolean   @default(false)
+  alertedAt        DateTime?
+  createdAt        DateTime  @default(now())
 }
 
 model Course {
