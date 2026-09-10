@@ -41,6 +41,22 @@ enum ApplicationStatus {
   REJECTED
 }
 
+enum JobVisibility {
+  PUBLIC
+  INVITE
+}
+
+enum JobStatus {
+  OPEN
+  CLOSED
+}
+
+enum InterviewFormat {
+  ONSITE
+  VIDEO
+  PHONE
+}
+
 enum LeaveStatus {
   PENDING
   APPROVED
@@ -107,51 +123,98 @@ model Company {
 }
 
 model Candidate {
-  id           String   @id @default(cuid())
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId       String   @unique
-  photoUrl     String?
-  headline     String?
-  bio          String?
-  cvUrl        String?
-  skills       String[]
-  availability String?
-  educations   Education[]
-  experiences  Experience[]
-  applications Application[]
+  id             String   @id @default(cuid())
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String   @unique
+  photoUrl       String?
+  headline       String?
+  bio            String?
+  cvUrl          String?
+  skills         String[]
+  availability   String?
+  availableFrom  DateTime?
+  educations     Education[]
+  experiences    Experience[]
+  certifications Certification[]
+  applications   Application[]
 }
 
 model JobOffer {
-  id              String      @id @default(cuid())
-  company         Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  companyId       String
-  title           String
-  description     String
-  requirements    String
-  location        String
-  contractType    ContractType?
-  salary          Int?
-  salaryNegotiable Boolean    @default(false)
-  deadline        DateTime
-  positionsCount  Int         @default(1)
-  visibility      String      @default("PUBLIC")
-  status          String      @default("OPEN")
-  applications    Application[]
-  createdAt       DateTime    @default(now())
+  id                 String         @id @default(cuid())
+  company            Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId          String
+  title              String
+  description        String
+  requirements       String
+  city               String
+  region             String
+  location           String
+  contractType       ContractType
+  salary             Int?
+  salaryMin          Int?
+  salaryMax          Int?
+  salaryNegotiable   Boolean        @default(false)
+  hideSalary         Boolean        @default(false)
+  coverLetterRequired Boolean       @default(false)
+  deadline           DateTime
+  positionsCount     Int            @default(1)
+  visibility         JobVisibility  @default(PUBLIC)
+  status             JobStatus      @default(OPEN)
+  closedAt           DateTime?
+  applications       Application[]
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
 }
 
 model Application {
-  id           String            @id @default(cuid())
-  candidate    Candidate         @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-  candidateId  String
-  jobOffer     JobOffer          @relation(fields: [jobOfferId], references: [id], onDelete: Cascade)
-  jobOfferId   String
-  status       ApplicationStatus @default(RECEIVED)
-  notes        String?
-  coverLetter  String?
-  createdAt    DateTime          @default(now())
+  id                String            @id @default(cuid())
+  candidate         Candidate         @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  candidateId       String
+  jobOffer          JobOffer          @relation(fields: [jobOfferId], references: [id], onDelete: Cascade)
+  jobOfferId        String
+  status            ApplicationStatus @default(RECEIVED)
+  statusChangedAt   DateTime          @default(now())
+  notes             String?
+  coverLetter       String?
+  coverLetterUrl    String?
+  cvUrl             String
+  salaryExpectation Int?
+  availabilityDate  DateTime?
+  matchScore        Float?
+  createdAt         DateTime          @default(now())
+  history           ApplicationStatusEvent[]
+  interview         Interview?
 
   @@unique([candidateId, jobOfferId])
+}
+
+model ApplicationStatusEvent {
+  id            String            @id @default(cuid())
+  application   Application       @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  applicationId String
+  status        ApplicationStatus
+  createdAt     DateTime          @default(now())
+}
+
+model Interview {
+  id             String          @id @default(cuid())
+  application    Application     @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  applicationId  String          @unique
+  scheduledAt    DateTime
+  format         InterviewFormat
+  locationOrLink String?
+  message        String?
+  createdAt      DateTime        @default(now())
+}
+
+model Certification {
+  id          String    @id @default(cuid())
+  candidate   Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  candidateId String
+  name        String
+  issuer      String?
+  year        Int?
+  fileUrl     String?
 }
 
 model Employee {

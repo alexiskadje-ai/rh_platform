@@ -3,6 +3,8 @@ import { db } from "@/lib/db";
 import { APP_NAME, APP_TAGLINE } from "@/lib/constants";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { closeExpiredOffers, publicJobWhere } from "@/lib/jobs";
+import { JobOfferCard } from "@/components/recruitment/job-offer-card";
 
 export default async function HomePage() {
   let cvCount = 0;
@@ -91,6 +93,8 @@ export default async function HomePage() {
         </div>
       </section>
 
+      <RecentOffers />
+
       <section className="mx-auto max-w-6xl px-4 py-16">
         <h2 className="text-2xl font-semibold">Nos services</h2>
         <div className="mt-8 grid gap-4 md:grid-cols-3">
@@ -109,5 +113,40 @@ export default async function HomePage() {
         </div>
       </section>
     </main>
+  );
+}
+
+async function loadRecentOffers() {
+  await closeExpiredOffers();
+  return db.jobOffer.findMany({
+    where: publicJobWhere(),
+    include: { company: true },
+    orderBy: { createdAt: "desc" },
+    take: 6,
+  });
+}
+
+async function RecentOffers() {
+  let offers;
+  try {
+    offers = await loadRecentOffers();
+  } catch {
+    return null;
+  }
+  if (offers.length === 0) return null;
+  return (
+    <section className="mx-auto max-w-6xl px-4 py-16">
+      <div className="flex items-end justify-between">
+        <h2 className="text-2xl font-semibold">Offres d&apos;emploi récentes</h2>
+        <Link href="/offres" className="text-sm text-primary">
+          Voir tout
+        </Link>
+      </div>
+      <div className="mt-8 grid gap-4 md:grid-cols-2">
+        {offers.map((offer) => (
+          <JobOfferCard key={offer.id} offer={offer} href={`/offres/${offer.id}`} compact />
+        ))}
+      </div>
+    </section>
   );
 }

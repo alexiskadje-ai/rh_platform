@@ -12,10 +12,14 @@ const LINKS: Record<Role, { href: string; label: string }[]> = {
   ],
   RECRUITER: [
     { href: "/company", label: "Tableau de bord" },
+    { href: "/company/offres", label: "Offres publiées" },
     { href: "/settings/security", label: "Sécurité / 2FA" },
   ],
   CANDIDATE: [
     { href: "/candidate", label: "Tableau de bord" },
+    { href: "/candidate/profil", label: "Mon profil / CV" },
+    { href: "/candidate/candidatures", label: "Mes candidatures" },
+    { href: "/candidate/offres", label: "Offres recommandées" },
     { href: "/settings/security", label: "Sécurité / 2FA" },
   ],
   EMPLOYEE: [

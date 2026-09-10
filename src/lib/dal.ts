@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
+import { Role } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { ROLE_HOME } from "@/lib/constants";
-import type { Role } from "@prisma/client";
+import { db } from "@/lib/db";
 
 export async function getSessionUser() {
   const session = await auth();
@@ -22,4 +23,39 @@ export async function requireRole(roles: Role[]) {
     redirect(ROLE_HOME[user.role]);
   }
   return user;
+}
+
+export async function requireCandidate() {
+  const user = await requireRole([Role.CANDIDATE]);
+  let candidate = await db.candidate.findUnique({
+    where: { userId: user.id },
+    include: {
+      educations: { orderBy: { year: "desc" } },
+      experiences: { orderBy: { startDate: "desc" } },
+      certifications: true,
+    },
+  });
+  if (!candidate) {
+    candidate = await db.candidate.create({
+      data: { userId: user.id },
+      include: {
+        educations: true,
+        experiences: true,
+        certifications: true,
+      },
+    });
+  }
+  return { user, candidate };
+}
+
+export async function requireRecruiter() {
+  const user = await requireRole([Role.RECRUITER]);
+  const dbUser = await db.user.findUnique({
+    where: { id: user.id },
+    include: { company: true },
+  });
+  if (!dbUser?.companyId || !dbUser.company) {
+    redirect("/pending-approval");
+  }
+  return { user, companyId: dbUser.companyId, company: dbUser.company };
 }
