@@ -4,7 +4,7 @@ import { useState } from "react";
 import {
   presignPrivateFile,
   uploadLocalFile,
-} from "@/server/actions/employees";
+} from "@/server/actions/files";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -12,13 +12,25 @@ export function FileUrlField({
   name,
   folder,
   label,
+  accept,
+  defaultUrl = "",
+  onUploaded,
 }: {
   name: string;
   folder: string;
   label: string;
+  accept?: string;
+  defaultUrl?: string;
+  onUploaded?: (url: string) => void;
 }) {
-  const [fileUrl, setFileUrl] = useState("");
+  const [fileUrl, setFileUrl] = useState(defaultUrl);
   const [status, setStatus] = useState("");
+
+  function ready(url: string) {
+    setFileUrl(url);
+    onUploaded?.(url);
+    setStatus("Fichier prêt.");
+  }
 
   async function onChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -43,7 +55,8 @@ export function FileUrlField({
         setStatus("Échec du transfert S3.");
         return;
       }
-      setFileUrl(signed.fileUrl);
+      ready(signed.fileUrl);
+      return;
     } else {
       const local = new FormData();
       local.set("folder", folder);
@@ -53,17 +66,20 @@ export function FileUrlField({
         setStatus(uploaded.message ?? "Échec de l'envoi local.");
         return;
       }
-      setFileUrl(uploaded.fileUrl);
+      ready(uploaded.fileUrl);
+      return;
     }
-    setStatus("Fichier prêt.");
   }
 
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
-      <Input type="file" onChange={onChange} />
+      <Input type="file" accept={accept} onChange={onChange} />
       <input type="hidden" name={name} value={fileUrl} />
       {status ? <p className="text-xs text-muted-foreground">{status}</p> : null}
+      {fileUrl && !status ? (
+        <p className="text-xs text-muted-foreground">Fichier déjà joint.</p>
+      ) : null}
     </div>
   );
 }

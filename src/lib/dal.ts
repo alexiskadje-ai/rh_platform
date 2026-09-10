@@ -25,6 +25,14 @@ export async function requireRole(roles: Role[]) {
   return user;
 }
 
+export async function requireAdmin() {
+  return requireRole([Role.ADMIN]);
+}
+
+export async function requireLearner() {
+  return requireRole([Role.CANDIDATE, Role.EMPLOYEE]);
+}
+
 export async function requireCandidate() {
   const user = await requireRole([Role.CANDIDATE]);
   let candidate = await db.candidate.findUnique({

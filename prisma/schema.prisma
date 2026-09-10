@@ -350,22 +350,30 @@ model Course {
   id           String       @id @default(cuid())
   title        String
   description  String
-  category     String?
+  category     String
   price        Int          @default(0)
   passingScore Int          @default(70)
+  accessMode   String       @default("LINEAR")
   videos       String[]
   documents    String[]
+  modules      Json         @default("[]")
+  quiz         Json         @default("[]")
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
   enrollments  Enrollment[]
 }
 
 model Enrollment {
-  id             String   @id @default(cuid())
-  course         Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  courseId       String
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId         String
-  progress       Int      @default(0)
-  certificateUrl String?
+  id                  String    @id @default(cuid())
+  course              Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  courseId            String
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId              String
+  progress            Int       @default(0)
+  completedModuleIds  String[]  @default([])
+  quizScore           Int?
+  certificateUrl      String?
+  enrolledAt          DateTime  @default(now())
 
   @@unique([courseId, userId])
 }

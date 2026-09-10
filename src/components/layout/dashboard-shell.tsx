@@ -8,6 +8,7 @@ import Link from "next/link";
 const LINKS: Record<Role, { href: string; label: string }[]> = {
   ADMIN: [
     { href: "/admin", label: "Vue d'ensemble" },
+    { href: "/admin/formations", label: "Formations" },
     { href: "/settings/security", label: "Sécurité / 2FA" },
   ],
   RECRUITER: [
@@ -25,6 +26,7 @@ const LINKS: Record<Role, { href: string; label: string }[]> = {
     { href: "/candidate/profil", label: "Mon profil / CV" },
     { href: "/candidate/candidatures", label: "Mes candidatures" },
     { href: "/candidate/offres", label: "Offres recommandées" },
+    { href: "/candidate/formations", label: "Mes formations" },
     { href: "/settings/security", label: "Sécurité / 2FA" },
   ],
   EMPLOYEE: [
@@ -35,6 +37,7 @@ const LINKS: Record<Role, { href: string; label: string }[]> = {
     { href: "/employee/pointage", label: "Mon pointage" },
     { href: "/employee/documents", label: "Mes documents" },
     { href: "/employee/validations", label: "Validations équipe" },
+    { href: "/employee/formations", label: "Mes formations" },
     { href: "/settings/security", label: "Sécurité / 2FA" },
   ],
 };

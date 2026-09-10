@@ -68,16 +68,20 @@ export function isS3Stored(fileUrl: string) {
   return fileUrl.startsWith("s3://");
 }
 
-export async function saveUpload(folder: string, file: File) {
-  const key = buildObjectKey(folder, file.name);
-    const bytes = Buffer.from(await file.arrayBuffer());
+export async function saveBuffer(
+  folder: string,
+  filename: string,
+  bytes: Buffer,
+  contentType: string,
+) {
+  const key = buildObjectKey(folder, filename);
   if (isS3Enabled()) {
     await getS3().send(
       new PutObjectCommand({
         Bucket: s3Config().bucket,
         Key: key,
         Body: bytes,
-        ContentType: file.type || "application/octet-stream",
+        ContentType: contentType,
       }),
     );
     return storedUrlFromKey(key);
@@ -86,6 +90,16 @@ export async function saveUpload(folder: string, file: File) {
   await mkdir(path.dirname(absolute), { recursive: true });
   await writeFile(absolute, bytes);
   return storedUrlFromKey(key);
+}
+
+export async function saveUpload(folder: string, file: File) {
+  const bytes = Buffer.from(await file.arrayBuffer());
+  return saveBuffer(
+    folder,
+    file.name,
+    bytes,
+    file.type || "application/octet-stream",
+  );
 }
 
 export async function createPresignedUpload(input: {

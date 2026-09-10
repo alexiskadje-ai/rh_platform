@@ -172,3 +172,20 @@ export const REPORT_TYPE_LABELS: Record<ReportType, string> = {
   HOURS: "Heures travaillées",
   PERFORMANCE: "Performance",
 };
+
+export const COURSE_CATEGORIES = [
+  "Ressources humaines",
+  "Recrutement",
+  "Management",
+  "Santé et sécurité",
+  "Bureautique",
+  "Langues",
+  "Technique",
+  "Droit du travail",
+  "Autre",
+] as const;
+
+export const COURSE_ACCESS_LABELS = {
+  LINEAR: "Parcours linéaire",
+  OPEN: "Accès libre",
+} as const;
