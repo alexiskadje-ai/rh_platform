@@ -57,6 +57,12 @@ enum InterviewFormat {
   PHONE
 }
 
+enum AiCallKind {
+  PARSE_CV
+  EMBEDDING
+  MATCH
+}
+
 enum LeaveStatus {
   PENDING
   APPROVED
@@ -103,6 +109,7 @@ model User {
   orders         Order[]
   tokens         VerificationToken[]
   trustedDevices TrustedDevice[]
+  aiCallLogs     AiCallLog[]
 }
 
 model Company {
@@ -133,10 +140,17 @@ model Candidate {
   skills         String[]
   availability   String?
   availableFrom  DateTime?
+  city           String?
+  region         String?
+  desiredContractTypes ContractType[]
+  parsedCvRaw    Json?
+  cvEmbedding    Unsupported("vector(1536)")?
+  embeddingInputHash String?
   educations     Education[]
   experiences    Experience[]
   certifications Certification[]
   applications   Application[]
+  matchScores    MatchScore[]
 }
 
 model JobOffer {
@@ -161,7 +175,10 @@ model JobOffer {
   visibility         JobVisibility  @default(PUBLIC)
   status             JobStatus      @default(OPEN)
   closedAt           DateTime?
+  offerEmbedding     Unsupported("vector(1536)")?
+  embeddingInputHash String?
   applications       Application[]
+  matchScores        MatchScore[]
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
 }
@@ -205,6 +222,31 @@ model Interview {
   locationOrLink String?
   message        String?
   createdAt      DateTime        @default(now())
+}
+
+model MatchScore {
+  id          String    @id @default(cuid())
+  candidate   Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  candidateId String
+  jobOffer    JobOffer  @relation(fields: [jobOfferId], references: [id], onDelete: Cascade)
+  jobOfferId  String
+  score       Float
+  breakdown   Json?
+  computedAt  DateTime  @default(now())
+
+  @@unique([candidateId, jobOfferId])
+}
+
+model AiCallLog {
+  id        String     @id @default(cuid())
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  kind      AiCallKind
+  ok        Boolean
+  message   String?
+  createdAt DateTime   @default(now())
+
+  @@index([userId, kind, createdAt])
 }
 
 model Certification {

@@ -6,7 +6,9 @@ import { db } from "@/lib/db";
 import { closeExpiredOffers } from "@/lib/jobs";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { JobOfferForm } from "@/components/recruitment/job-offer-form";
+import { RecalculateScoresButton } from "@/components/recruitment/recalculate-scores-button";
 import { StatusBadge } from "@/components/recruitment/status-badge";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default async function CompanyOfferDetailPage({
@@ -19,45 +21,68 @@ export default async function CompanyOfferDetailPage({
   await closeExpiredOffers();
   const offer = await db.jobOffer.findFirst({
     where: { id, companyId },
+  });
+  if (!offer) notFound();
+
+  const applications = await db.application.findMany({
+    where: { jobOfferId: id },
     include: {
-      applications: {
-        include: {
-          candidate: { include: { user: true } },
+      candidate: {
+        select: {
+          skills: true,
+          user: { select: { firstName: true, lastName: true } },
+          matchScores: {
+            where: { jobOfferId: id },
+            take: 1,
+            select: { score: true },
+          },
         },
-        orderBy: [{ matchScore: "desc" }, { createdAt: "desc" }],
       },
     },
   });
-  if (!offer) notFound();
+
+  const ranked = [...applications].sort((a, b) => {
+    const scoreA = a.candidate.matchScores[0]?.score ?? a.matchScore ?? 0;
+    const scoreB = b.candidate.matchScores[0]?.score ?? b.matchScore ?? 0;
+    return scoreB - scoreA;
+  });
 
   return (
     <DashboardShell role={Role.RECRUITER} title="Espace entreprise">
       <JobOfferForm offer={offer} companyName={company.name} />
       <Card className="mt-8">
-        <CardHeader>
+        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle>Candidatures reçues</CardTitle>
+          <RecalculateScoresButton jobOfferId={offer.id} />
         </CardHeader>
         <CardContent className="space-y-3">
-          {offer.applications.length === 0 ? (
+          {ranked.length === 0 ? (
             <p className="text-sm text-muted-foreground">Aucune candidature.</p>
           ) : (
-            offer.applications.map((application) => (
-              <Link
-                key={application.id}
-                href={`/company/candidatures/${application.id}`}
-                className="flex flex-col gap-2 rounded-xl border border-border p-3 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div>
-                  <p className="font-medium">
-                    {application.candidate.user.firstName} {application.candidate.user.lastName}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Score {application.matchScore ?? 0}% · {application.candidate.skills.slice(0, 5).join(", ")}
-                  </p>
-                </div>
-                <StatusBadge status={application.status} />
-              </Link>
-            ))
+            ranked.map((application) => {
+              const aiScore = application.candidate.matchScores[0]?.score;
+              const score = aiScore ?? application.matchScore ?? 0;
+              return (
+                <Link
+                  key={application.id}
+                  href={`/company/candidatures/${application.id}`}
+                  className="flex flex-col gap-2 rounded-xl border border-border p-3 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div>
+                    <p className="font-medium">
+                      {application.candidate.user.firstName} {application.candidate.user.lastName}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {application.candidate.skills.slice(0, 5).join(", ")}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge>{Math.round(score)}%</Badge>
+                    <StatusBadge status={application.status} />
+                  </div>
+                </Link>
+              );
+            })
           )}
         </CardContent>
       </Card>

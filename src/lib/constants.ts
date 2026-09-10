@@ -71,3 +71,12 @@ export const INTERVIEW_FORMAT_LABELS = {
   VIDEO: "Visio",
   PHONE: "Téléphone",
 } as const;
+
+export const AI_PARSE_CV_DAILY_LIMIT = 10;
+export const AI_EMBEDDING_DAILY_LIMIT = 50;
+export const MATCH_WEIGHTS = {
+  cosine: 0.7,
+  location: 0.1,
+  availability: 0.1,
+  contract: 0.1,
+} as const;

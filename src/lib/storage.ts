@@ -17,3 +17,15 @@ export async function saveUpload(folder: string, file: File) {
   await writeFile(path.join(dir, filename), bytes);
   return `/uploads/${folder}/${filename}`;
 }
+
+export function resolveUploadPath(fileUrl: string) {
+  if (!fileUrl.startsWith("/uploads/")) {
+    throw new Error("Fichier introuvable.");
+  }
+  const root = path.join(UPLOAD_ROOT);
+  const absolute = path.resolve(process.cwd(), "public", fileUrl.replace(/^\/+/, ""));
+  if (!absolute.startsWith(root)) {
+    throw new Error("Fichier introuvable.");
+  }
+  return absolute;
+}

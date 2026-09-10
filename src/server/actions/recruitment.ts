@@ -23,9 +23,12 @@ import {
   identitySchema,
   interviewSchema,
   jobOfferSchema,
+  preferencesSchema,
   skillsSchema,
   statusSchema,
 } from "@/lib/validations/recruitment";
+import { refreshCandidateEmbedding, refreshJobOfferEmbedding } from "@/lib/ai/embeddings";
+import { computeMatchScoresForOffer } from "@/server/actions/ai-matching";
 
 export type ActionState = {
   ok?: boolean;
@@ -77,12 +80,13 @@ export async function saveIdentitySection(
     bio: formData.get("bio") || undefined,
   });
   if (!parsed.success) return { errors: fieldErrorsFromZod(parsed.error) };
-  const { candidate } = await requireCandidate();
+  const { user, candidate } = await requireCandidate();
   await db.candidate.update({
     where: { id: candidate.id },
     data: parsed.data,
   });
   revalidatePath("/candidate/profil");
+  void refreshCandidateEmbedding(candidate.id, user.id);
   return { ok: true, message: "Profil enregistré." };
 }
 
@@ -96,12 +100,13 @@ export async function saveSkillsSection(
     .filter(Boolean);
   const parsed = skillsSchema.safeParse({ skills });
   if (!parsed.success) return { errors: fieldErrorsFromZod(parsed.error) };
-  const { candidate } = await requireCandidate();
+  const { user, candidate } = await requireCandidate();
   await db.candidate.update({
     where: { id: candidate.id },
     data: { skills: parsed.data.skills },
   });
   revalidatePath("/candidate/profil");
+  void refreshCandidateEmbedding(candidate.id, user.id);
   return { ok: true, message: "Compétences enregistrées." };
 }
 
@@ -148,7 +153,7 @@ export async function saveExperiencesSection(
     }),
   );
   if (!parsed.success) return { message: "Vérifiez les expériences." };
-  const { candidate } = await requireCandidate();
+  const { user, candidate } = await requireCandidate();
   const chronological = [...parsed.data].sort(
     (a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime(),
   );
@@ -167,7 +172,27 @@ export async function saveExperiencesSection(
     ),
   ]);
   revalidatePath("/candidate/profil");
+  void refreshCandidateEmbedding(candidate.id, user.id);
   return { ok: true, message: "Expériences enregistrées." };
+}
+
+export async function savePreferencesSection(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const parsed = preferencesSchema.safeParse({
+    city: formData.get("city") || undefined,
+    region: formData.get("region") || undefined,
+    desiredContractTypes: formData.getAll("desiredContractTypes").map(String),
+  });
+  if (!parsed.success) return { errors: fieldErrorsFromZod(parsed.error) };
+  const { candidate } = await requireCandidate();
+  await db.candidate.update({
+    where: { id: candidate.id },
+    data: parsed.data,
+  });
+  revalidatePath("/candidate/profil");
+  return { ok: true, message: "Préférences enregistrées." };
 }
 
 export async function saveEducationsSection(
@@ -300,7 +325,7 @@ export async function updateJobOffer(
 }
 
 async function upsertJobOffer(id: string | null, formData: FormData): Promise<ActionState> {
-  const { companyId } = await requireRecruiter();
+  const { companyId, user } = await requireRecruiter();
   const parsed = jobOfferSchema.safeParse({
     title: formData.get("title"),
     description: formData.get("description"),
@@ -333,6 +358,8 @@ async function upsertJobOffer(id: string | null, formData: FormData): Promise<Ac
     });
     if (!existing) return { message: "Offre introuvable." };
     await db.jobOffer.update({ where: { id }, data });
+    await refreshJobOfferEmbedding(id, user.id);
+    void computeMatchScoresForOffer(id);
     revalidatePath("/company/offres");
     revalidatePath(`/company/offres/${id}`);
     revalidatePath("/offres");
@@ -340,6 +367,8 @@ async function upsertJobOffer(id: string | null, formData: FormData): Promise<Ac
   }
 
   const created = await db.jobOffer.create({ data });
+  await refreshJobOfferEmbedding(created.id, user.id);
+  void computeMatchScoresForOffer(created.id);
   revalidatePath("/company/offres");
   revalidatePath("/offres");
   redirect(`/company/offres/${created.id}`);
@@ -430,6 +459,7 @@ export async function applyToJob(
     throw error;
   }
 
+  void computeMatchScoresForOffer(offer.id);
   revalidatePath("/candidate/candidatures");
   revalidatePath(`/offres/${offer.id}`);
   redirect("/candidate/candidatures");

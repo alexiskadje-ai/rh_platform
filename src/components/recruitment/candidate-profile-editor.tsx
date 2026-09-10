@@ -10,10 +10,11 @@ import {
   saveExperiencesSection,
   saveIdentitySection,
   savePhoto,
+  savePreferencesSection,
   saveSkillsSection,
   type ActionState,
 } from "@/server/actions/recruitment";
-import { AVAILABILITY_OPTIONS } from "@/lib/constants";
+import { AVAILABILITY_OPTIONS, CAMEROON_REGIONS, CONTRACT_LABELS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -32,6 +33,11 @@ export function CandidateProfileEditor({ profile }: { profile: Profile }) {
     <div className="space-y-6">
       <PhotoSection photoUrl={profile.photoUrl} />
       <IdentitySection headline={profile.headline} bio={profile.bio} />
+      <PreferencesSection
+        city={profile.city}
+        region={profile.region}
+        desiredContractTypes={profile.desiredContractTypes}
+      />
       <SkillsSection skills={profile.skills} />
       <ExperiencesSection experiences={profile.experiences} />
       <EducationsSection educations={profile.educations} />
@@ -130,6 +136,73 @@ function IdentitySection({
               placeholder="500 caractères maximum"
             />
           </div>
+          <SaveHint state={state} />
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
+function PreferencesSection({
+  city,
+  region,
+  desiredContractTypes,
+}: {
+  city: string | null;
+  region: string | null;
+  desiredContractTypes: string[];
+}) {
+  const { formRef, schedule } = useDebouncedSubmit();
+  const [state, action] = useActionState(savePreferencesSection, {} as ActionState);
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Localisation et contrat</CardTitle>
+        <CardDescription>
+          Utilisés pour le score de matching (filtres souples).
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form ref={formRef} action={action} onInput={schedule} className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="city">Ville</Label>
+              <Input id="city" name="city" defaultValue={city ?? ""} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="region">Région</Label>
+              <select
+                id="region"
+                name="region"
+                defaultValue={region ?? ""}
+                className="h-11 w-full rounded-xl border border-input bg-card px-3 text-sm"
+              >
+                <option value="">Non renseignée</option>
+                {CAMEROON_REGIONS.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <fieldset className="space-y-2">
+            <legend className="text-sm font-medium">Types de contrat recherchés</legend>
+            <div className="flex flex-wrap gap-3">
+              {Object.entries(CONTRACT_LABELS).map(([value, label]) => (
+                <label key={value} className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    name="desiredContractTypes"
+                    value={value}
+                    defaultChecked={desiredContractTypes.includes(value)}
+                    onChange={schedule}
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+          </fieldset>
           <SaveHint state={state} />
         </form>
       </CardContent>

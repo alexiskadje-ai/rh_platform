@@ -14,6 +14,12 @@ export const availabilitySchema = z.object({
   availableFrom: z.string().optional(),
 });
 
+export const preferencesSchema = z.object({
+  city: z.string().trim().max(80).optional(),
+  region: z.string().trim().max(80).optional(),
+  desiredContractTypes: z.array(z.enum(["CDI", "CDD", "STAGE", "PRESTATION"])).max(4),
+});
+
 export const experienceItemSchema = z.object({
   id: z.string().optional(),
   title: z.string().trim().min(1, "Intitulé obligatoire."),
