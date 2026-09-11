@@ -1,47 +1,16 @@
 import Link from "next/link";
-import {
-  Briefcase,
-  ClipboardList,
-  GraduationCap,
-  Handshake,
-  Search,
-  Users,
-} from "lucide-react";
+import { Briefcase, ClipboardList, Handshake, Search, Users } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { COMPANY_SERVICES, COMPANY_SHORT } from "@/lib/company";
 import { FadeIn, Stagger, StaggerItem } from "@/components/motion/reveal";
 
-const SERVICES = [
-  {
-    title: "Gestion administrative du personnel",
-    body: "Dossiers, contrats et suivi RH centralisés pour vos équipes.",
-    icon: ClipboardList,
-  },
-  {
-    title: "Mise à disposition du personnel",
-    body: "Affectez les bons profils, au bon moment, sur vos projets.",
-    icon: Users,
-  },
-  {
-    title: "Accompagnement des chercheurs d'emploi",
-    body: "Profil, CV, matching et candidature en un clic.",
-    icon: Search,
-  },
-  {
-    title: "Audit et accompagnement RH",
-    body: "Un cadre clair pour structurer vos process internes.",
-    icon: Handshake,
-  },
-  {
-    title: "Externalisation du recrutement (RPO)",
-    body: "Publiez, triez et suivez les candidatures jusqu'à l'entretien.",
-    icon: Briefcase,
-  },
-  {
-    title: "Formation professionnelle en ligne",
-    body: "Parcours, quiz et certificat — le différenciant de la plateforme.",
-    icon: GraduationCap,
-    featured: true,
-  },
-] as const;
+const ICONS: Record<(typeof COMPANY_SERVICES)[number]["title"], LucideIcon> = {
+  "Gestion administrative du personnel": ClipboardList,
+  "Audit et accompagnement RH": Handshake,
+  "Mise à disposition du personnel": Users,
+  "Accompagnement des chercheurs d'emploi": Search,
+  "Externalisation du recrutement (RPO)": Briefcase,
+};
 
 export function ServicesGrid({ hideHeading = false }: { hideHeading?: boolean }) {
   return (
@@ -49,7 +18,7 @@ export function ServicesGrid({ hideHeading = false }: { hideHeading?: boolean })
       {hideHeading ? null : (
         <FadeIn className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-xs uppercase tracking-[0.28em] text-accent">Cabinet</p>
+            <p className="text-xs uppercase tracking-[0.28em] text-accent">{COMPANY_SHORT}</p>
             <h2 className="mt-3 font-display text-3xl font-medium text-primary md:text-4xl">
               Nos services
             </h2>
@@ -59,23 +28,24 @@ export function ServicesGrid({ hideHeading = false }: { hideHeading?: boolean })
           </Link>
         </FadeIn>
       )}
-      <Stagger className="mt-10 grid gap-4 md:grid-cols-3">
-        {SERVICES.map((service) => {
-          const Icon = service.icon;
+      <Stagger className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {COMPANY_SERVICES.map((service, index) => {
+          const Icon = ICONS[service.title];
+          const featured = index === COMPANY_SERVICES.length - 1;
           return (
             <StaggerItem key={service.title}>
               <div
                 className={`h-full rounded-3xl border p-6 ${
-                  "featured" in service
+                  featured
                     ? "border-accent/40 bg-primary text-primary-foreground"
                     : "border-border/80 bg-card"
                 }`}
               >
-                <Icon className={`size-6 ${"featured" in service ? "text-accent" : "text-accent"}`} />
+                <Icon className={featured ? "size-6 text-highlight" : "size-6 text-accent"} />
                 <p className="mt-4 font-display text-xl">{service.title}</p>
                 <p
                   className={`mt-2 text-sm leading-relaxed ${
-                    "featured" in service ? "text-primary-foreground/75" : "text-muted-foreground"
+                    featured ? "text-primary-foreground/75" : "text-muted-foreground"
                   }`}
                 >
                   {service.body}

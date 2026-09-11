@@ -35,6 +35,10 @@ export default async function EditProductPage({
         <p className="mt-3 text-sm text-destructive">
           Impossible de supprimer : ce produit figure déjà dans une commande.
         </p>
+      ) : error === "delete" ? (
+        <p className="mt-3 text-sm text-destructive">
+          La suppression a échoué. Réessayez.
+        </p>
       ) : null}
       <div className="mt-6">
         <ProductForm

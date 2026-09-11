@@ -87,6 +87,7 @@ export async function updateCourse(
 ): Promise<ActionState> {
   await requireAdmin();
   const id = String(formData.get("courseId") ?? "");
+  if (!id) return { message: "Formation introuvable." };
   const parsed = coursePayload(formData);
   if (!parsed.success) return { errors: fieldErrorsFromZod(parsed.error) };
   await db.course.update({
@@ -114,6 +115,7 @@ export async function updateCourse(
 export async function deleteCourse(formData: FormData) {
   await requireAdmin();
   const id = String(formData.get("courseId") ?? "");
+  if (!id) redirect("/admin/formations");
   await db.course.delete({ where: { id } });
   revalidatePath("/admin/formations");
   revalidatePath("/formations");

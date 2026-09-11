@@ -39,7 +39,7 @@ export default async function EditCoursePage({
             price: course.price,
             passingScore: course.passingScore,
             accessMode: course.accessMode,
-            modules: parseModules(course.modules),
+            modules: parseModules(course.modules, { keepIncomplete: true }),
             documents: course.documents,
             quiz: parseQuiz(course.quiz),
           }}

@@ -10,6 +10,7 @@ import {
   Font,
 } from "@react-pdf/renderer";
 import { APP_NAME } from "@/lib/constants";
+import { BRAND, COMPANY_NAME } from "@/lib/company";
 
 Font.registerHyphenationCallback((word) => [word]);
 
@@ -17,24 +18,24 @@ const styles = StyleSheet.create({
   page: {
     padding: 48,
     fontFamily: "Helvetica",
-    color: "#14211c",
+    color: BRAND.dark,
     alignItems: "center",
     justifyContent: "center",
   },
   frame: {
     borderWidth: 3,
-    borderColor: "#0f4c45",
+    borderColor: BRAND.dark,
     padding: 36,
     width: "100%",
     minHeight: 480,
     alignItems: "center",
   },
-  brand: { fontSize: 12, color: "#c9842a", letterSpacing: 2, marginBottom: 16 },
+  brand: { fontSize: 12, color: BRAND.orange, letterSpacing: 2, marginBottom: 16 },
   kicker: { fontSize: 11, color: "#5c645f", marginBottom: 8 },
   title: {
     fontSize: 26,
     fontFamily: "Helvetica-Bold",
-    color: "#0f4c45",
+    color: BRAND.dark,
     textAlign: "center",
     marginBottom: 20,
   },
@@ -54,7 +55,7 @@ export async function renderCertificatePdf(input: {
     <Document title={`Certificat — ${input.courseTitle}`} author={APP_NAME} language="fr">
       <Page size="A4" orientation="landscape" style={styles.page}>
         <View style={styles.frame}>
-          <Text style={styles.brand}>{APP_NAME.toUpperCase()}</Text>
+          <Text style={styles.brand}>{COMPANY_NAME}</Text>
           <Text style={styles.kicker}>CERTIFICAT DE RÉUSSITE</Text>
           <Text style={styles.title}>Attestation de formation</Text>
           <Text style={styles.body}>Est décerné à</Text>

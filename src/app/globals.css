@@ -1,19 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f4efe6;
-  --foreground: #1a241f;
-  --card: #fffcf8;
-  --card-foreground: #1a241f;
-  --primary: #0c3d38;
-  --primary-foreground: #f6f0e6;
-  --accent: #c4842a;
-  --accent-foreground: #1a1308;
-  --muted: #e8e1d4;
-  --muted-foreground: #5e675f;
-  --border: #d8d0c2;
-  --input: #d8d0c2;
-  --ring: #0c3d38;
+  --background: #f4f7fb;
+  --foreground: #1a2f4b;
+  --card: #ffffff;
+  --card-foreground: #1a2f4b;
+  --primary: #042963;
+  --primary-foreground: #f4f7fb;
+  --accent: #f26200;
+  --accent-foreground: #ffffff;
+  --highlight: #f4a900;
+  --muted: #e8eef6;
+  --muted-foreground: #4a5568;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #f26200;
   --destructive: #9b2c2c;
   --radius: 1rem;
 }
@@ -27,6 +28,7 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-highlight: var(--highlight);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-border: var(--border);
@@ -57,7 +59,7 @@ body::before {
   position: fixed;
   inset: 0;
   z-index: 15;
-  opacity: 0.045;
+  opacity: 0.04;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
@@ -69,6 +71,6 @@ h2,
 }
 
 ::selection {
-  background: color-mix(in oklab, var(--accent) 35%, white);
+  background: color-mix(in oklab, var(--accent) 28%, white);
   color: var(--foreground);
 }

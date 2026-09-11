@@ -65,6 +65,10 @@ export default async function PublicCourseDetailPage({
           <Link href={`/learn/${course.id}`} className={cn(buttonVariants())}>
             Continuer la formation
           </Link>
+        ) : user?.role === "CANDIDATE" && !user.isVerified ? (
+          <Link href="/verify" className={cn(buttonVariants())}>
+            Vérifier le compte pour s&apos;inscrire
+          </Link>
         ) : canEnroll ? (
           <form action={enrollCourse}>
             <input type="hidden" name="courseId" value={course.id} />

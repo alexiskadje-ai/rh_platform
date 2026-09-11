@@ -10,7 +10,7 @@ export type QuizQuestion = {
   correctIndex: number;
 };
 
-export function parseModules(value: unknown): CourseModule[] {
+export function parseModules(value: unknown, options?: { keepIncomplete?: boolean }): CourseModule[] {
   if (!Array.isArray(value)) return [];
   return value.flatMap((item) => {
     if (!item || typeof item !== "object") return [];
@@ -18,7 +18,8 @@ export function parseModules(value: unknown): CourseModule[] {
     const id = typeof row.id === "string" ? row.id : "";
     const title = typeof row.title === "string" ? row.title : "";
     const videoUrl = typeof row.videoUrl === "string" ? row.videoUrl : "";
-    if (!id || !title || !videoUrl) return [];
+    if (!id) return [];
+    if (!options?.keepIncomplete && (!title || !videoUrl)) return [];
     return [{ id, title, videoUrl }];
   });
 }
@@ -29,11 +30,17 @@ export function parseQuiz(value: unknown): QuizQuestion[] {
     if (!item || typeof item !== "object") return [];
     const row = item as Record<string, unknown>;
     const prompt = typeof row.prompt === "string" ? row.prompt : "";
-    const choices = Array.isArray(row.choices)
-      ? row.choices.filter((choice): choice is string => typeof choice === "string" && choice.trim().length > 0)
-      : [];
-    const correctIndex = Number(row.correctIndex);
-    if (!prompt || choices.length < 2 || Number.isNaN(correctIndex)) return [];
+    const rawChoices = Array.isArray(row.choices) ? row.choices : [];
+    const rawIndex = Number(row.correctIndex);
+    const marked =
+      Number.isInteger(rawIndex) && rawIndex >= 0 && rawIndex < rawChoices.length
+        ? rawChoices[rawIndex]
+        : null;
+    const choices = rawChoices.filter(
+      (choice): choice is string => typeof choice === "string" && choice.trim().length > 0,
+    );
+    const correctIndex = typeof marked === "string" ? choices.indexOf(marked) : -1;
+    if (!prompt || choices.length < 2 || correctIndex < 0) return [];
     return [{ prompt, choices, correctIndex }];
   });
 }

@@ -100,6 +100,10 @@ export async function parseCvFromUpload(
       return { message: "Le CV doit être un PDF." };
     }
     fileUrl = await saveUpload("cv", uploaded);
+    await db.candidate.update({
+      where: { id: candidate.id },
+      data: { cvUrl: fileUrl },
+    });
   }
   if (!fileUrl) {
     return { message: "Ajoutez un CV PDF à analyser." };
@@ -125,7 +129,6 @@ export async function confirmParsedCv(
   }
 
   const data = parsed.data;
-  const cvUrl = String(formData.get("cvUrl") ?? candidate.cvUrl ?? "");
   const contracts = data.desiredContractTypes as ContractType[];
 
   try {
@@ -145,7 +148,7 @@ export async function confirmParsedCv(
             : null,
         desiredContractTypes: contracts,
         parsedCvRaw: data,
-        cvUrl: cvUrl || candidate.cvUrl,
+        cvUrl: candidate.cvUrl,
       },
     });
     await tx.experience.deleteMany({ where: { candidateId: candidate.id } });

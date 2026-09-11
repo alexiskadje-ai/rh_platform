@@ -10,6 +10,7 @@ import {
   Font,
 } from "@react-pdf/renderer";
 import { APP_NAME } from "@/lib/constants";
+import { BRAND } from "@/lib/company";
 import type { ReportTable } from "@/lib/reports/aggregations";
 
 Font.registerHyphenationCallback((word) => [word]);
@@ -19,27 +20,27 @@ const styles = StyleSheet.create({
     padding: 36,
     fontSize: 9,
     fontFamily: "Helvetica",
-    color: "#14211c",
+    color: BRAND.dark,
   },
-  brand: { fontSize: 10, color: "#0f4c45", marginBottom: 2 },
+  brand: { fontSize: 10, color: BRAND.orange, marginBottom: 2 },
   title: { fontSize: 16, fontFamily: "Helvetica-Bold", marginBottom: 4 },
   meta: { fontSize: 9, color: "#5c645f", marginBottom: 12 },
   summary: {
     marginBottom: 12,
     padding: 8,
-    backgroundColor: "#f6f4ef",
+    backgroundColor: "#f4f7fb",
     borderRadius: 4,
   },
   summaryLine: { marginBottom: 2 },
   header: {
     flexDirection: "row",
-    backgroundColor: "#0f4c45",
-    color: "#f4efe4",
+    backgroundColor: BRAND.dark,
+    color: "#f4f7fb",
   },
   row: {
     flexDirection: "row",
     borderBottomWidth: 1,
-    borderBottomColor: "#d9d2c4",
+    borderBottomColor: "#e2e8f0",
   },
   cell: { padding: 5, flexGrow: 1, flexBasis: 0 },
   empty: { marginTop: 16, color: "#5c645f" },

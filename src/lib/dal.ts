@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { Role } from "@prisma/client";
+import { CompanyStatus, Role, UserStatus } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { ROLE_HOME } from "@/lib/constants";
 import { db } from "@/lib/db";
@@ -30,11 +30,18 @@ export async function requireAdmin() {
 }
 
 export async function requireLearner() {
-  return requireRole([Role.CANDIDATE, Role.EMPLOYEE]);
+  const user = await requireRole([Role.CANDIDATE, Role.EMPLOYEE]);
+  if (user.role === Role.CANDIDATE && !user.isVerified) {
+    redirect("/verify");
+  }
+  return user;
 }
 
 export async function requireCandidate() {
   const user = await requireRole([Role.CANDIDATE]);
+  if (!user.isVerified) {
+    redirect("/verify");
+  }
   let candidate = await db.candidate.findUnique({
     where: { userId: user.id },
     include: {
@@ -62,7 +69,12 @@ export async function requireRecruiter() {
     where: { id: user.id },
     include: { company: true },
   });
-  if (!dbUser?.companyId || !dbUser.company) {
+  if (
+    !dbUser?.companyId ||
+    !dbUser.company ||
+    dbUser.status !== UserStatus.ACTIVE ||
+    dbUser.company.status !== CompanyStatus.ACTIVE
+  ) {
     redirect("/pending-approval");
   }
   return { user, companyId: dbUser.companyId, company: dbUser.company };

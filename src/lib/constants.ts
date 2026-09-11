@@ -22,9 +22,9 @@ export const COMPANY_SECTORS = [
   "Autre",
 ] as const;
 
-export const APP_NAME = "Pôle RH";
+export const APP_NAME = "PES-RH";
 export const APP_TAGLINE =
-  "Recrutement, formation et gestion du personnel — de bout en bout.";
+  "Connecter les talents aux opportunités, accompagner les entreprises vers la performance.";
 
 export const CAMEROON_REGIONS = [
   "Adamaoua",

@@ -1,5 +1,6 @@
 "use server";
 
+import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSessionUser, requireAdmin, requireUser } from "@/lib/dal";
@@ -59,6 +60,7 @@ export async function updateProduct(
 ): Promise<ShopActionState> {
   await requireAdmin();
   const id = String(formData.get("productId") ?? "");
+  if (!id) return { message: "Produit introuvable." };
   const parsed = productPayload(formData);
   if (!parsed.success) return { errors: fieldErrorsFromZod(parsed.error) };
   await db.product.update({
@@ -74,10 +76,13 @@ export async function updateProduct(
 export async function deleteProduct(formData: FormData) {
   await requireAdmin();
   const id = String(formData.get("productId") ?? "");
+  if (!id) redirect("/admin/boutique");
   try {
     await db.product.delete({ where: { id } });
-  } catch {
-    redirect(`/admin/boutique/${id}?error=ordered`);
+  } catch (error) {
+    const fk =
+      error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2003";
+    redirect(`/admin/boutique/${id}?error=${fk ? "ordered" : "delete"}`);
   }
   revalidatePath("/admin/boutique");
   revalidatePath("/boutique");
@@ -89,6 +94,12 @@ export async function checkoutCart(
 ): Promise<CheckoutState> {
   const user = await getSessionUser();
   if (!user) return { needsAuth: true };
+  if (user.role === "CANDIDATE" && !user.isVerified) {
+    return { message: "Vérifiez votre compte (e-mail et SMS) avant de commander." };
+  }
+  if (user.role === "RECRUITER" && user.status === "PENDING") {
+    return { message: "Votre espace recruteur n'est pas encore validé." };
+  }
 
   const parsed = checkoutSchema.safeParse({ items });
   if (!parsed.success) {
@@ -113,19 +124,40 @@ export async function checkoutCart(
     return { message: "Le montant de la commande est invalide." };
   }
 
-  const order = await db.order.create({
-    data: {
-      userId: user.id,
-      total,
-      status: "pending",
-      items: {
-        create: lines.map((line) => ({
-          productId: line.productId,
-          quantity: line.quantity,
-        })),
-      },
-    },
+  const existing = await db.order.findFirst({
+    where: { userId: user.id, status: "pending" },
+    orderBy: { createdAt: "desc" },
   });
+
+  const order = existing
+    ? await db.$transaction(async (tx) => {
+        await tx.orderItem.deleteMany({ where: { orderId: existing.id } });
+        return tx.order.update({
+          where: { id: existing.id },
+          data: {
+            total,
+            items: {
+              create: lines.map((line) => ({
+                productId: line.productId,
+                quantity: line.quantity,
+              })),
+            },
+          },
+        });
+      })
+    : await db.order.create({
+        data: {
+          userId: user.id,
+          total,
+          status: "pending",
+          items: {
+            create: lines.map((line) => ({
+              productId: line.productId,
+              quantity: line.quantity,
+            })),
+          },
+        },
+      });
 
   revalidatePath("/boutique/commandes");
   revalidatePath("/candidate/achats");

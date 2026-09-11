@@ -7,7 +7,7 @@ export function CtaBand() {
   return (
     <section className="px-4 pb-20">
       <FadeIn className="mx-auto max-w-6xl overflow-hidden rounded-[2rem] bg-primary px-8 py-14 text-primary-foreground md:px-14">
-        <p className="text-xs uppercase tracking-[0.28em] text-accent">Rejoindre</p>
+        <p className="text-xs uppercase tracking-[0.28em] text-highlight">Rejoindre</p>
         <h2 className="mt-3 max-w-xl font-display text-3xl font-medium md:text-5xl">
           Un compte. Le bon espace. Toute la RH.
         </h2>

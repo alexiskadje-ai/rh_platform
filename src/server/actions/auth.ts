@@ -16,7 +16,7 @@ import {
   sendVerificationEmail,
   sendVerificationSms,
 } from "@/lib/notify";
-import { consumeToken, issueToken } from "@/lib/tokens";
+import { consumeToken, issueToken, peekToken } from "@/lib/tokens";
 import { verifyTotp } from "@/lib/two-factor";
 import {
   loginSchema,
@@ -325,7 +325,37 @@ export async function verifyTwoFactor(
   return { ok: true };
 }
 
+export async function resumeApprovedRecruiter() {
+  const { auth } = await import("@/lib/auth");
+  const session = await auth();
+  if (!session?.user || session.user.role !== Role.RECRUITER) {
+    redirect("/login");
+  }
+  const user = await db.user.findUnique({
+    where: { id: session.user.id },
+    include: { company: true },
+  });
+  if (!user || user.status !== UserStatus.ACTIVE || user.company?.status !== "ACTIVE") {
+    return;
+  }
+  await createSession(user.id, ROLE_HOME.RECRUITER);
+}
+
 export async function confirmEmail(token: string) {
+  const pendingUserId = await peekToken(token, TokenType.EMAIL);
+  if (!pendingUserId) {
+    return { ok: false as const, message: "Lien de vérification invalide ou expiré." };
+  }
+
+  const { auth } = await import("@/lib/auth");
+  const session = await auth();
+  if (session?.user && session.user.id !== pendingUserId) {
+    return {
+      ok: false as const,
+      message: "Ce lien ne correspond pas au compte connecté. Déconnectez-vous pour l'utiliser.",
+    };
+  }
+
   const userId = await consumeToken(token, TokenType.EMAIL);
   if (!userId) {
     return { ok: false as const, message: "Lien de vérification invalide ou expiré." };
@@ -350,6 +380,17 @@ export async function confirmSms(
   const parsed = verifySmsSchema.safeParse({ code: formData.get("code") });
   if (!parsed.success) {
     return { errors: fieldErrorsFromZod(parsed.error) };
+  }
+
+  const pendingUserId = await peekToken(parsed.data.code, TokenType.SMS);
+  if (!pendingUserId) {
+    return { message: "Code SMS invalide ou expiré." };
+  }
+
+  const { auth } = await import("@/lib/auth");
+  const session = await auth();
+  if (!session?.user || session.user.id !== pendingUserId) {
+    return { message: "Ce code ne correspond pas au compte connecté." };
   }
 
   const userId = await consumeToken(parsed.data.code, TokenType.SMS);

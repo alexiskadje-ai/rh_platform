@@ -6,8 +6,10 @@ import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import type { Role } from "@prisma/client";
-import { APP_NAME, ROLE_HOME } from "@/lib/constants";
+import { ROLE_HOME } from "@/lib/constants";
+import { COMPANY_SHORT } from "@/lib/company";
 import { logout } from "@/server/actions/auth";
+import { BrandLogo } from "@/components/layout/brand-logo";
 import { CartLink } from "@/components/shop/cart-link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -49,8 +51,8 @@ export function HeaderBar({
       )}
     >
       <div className="mx-auto flex h-[4.25rem] w-full max-w-6xl items-center justify-between gap-4 px-4">
-        <Link href="/" className="font-display text-lg tracking-tight">
-          {APP_NAME}
+        <Link href="/" className="shrink-0" aria-label={COMPANY_SHORT}>
+          <BrandLogo variant={overlay ? "white" : "color"} priority />
         </Link>
         <nav className="hidden items-center gap-6 text-[13px] lg:flex">
           {NAV.map((item) => {
@@ -61,13 +63,13 @@ export function HeaderBar({
                 href={item.href}
                 className={cn(
                   "relative transition-colors",
-                  overlay ? "hover:text-accent" : "text-muted-foreground hover:text-foreground",
-                  active && (overlay ? "text-accent" : "text-primary"),
+                  overlay ? "hover:text-highlight" : "text-muted-foreground hover:text-foreground",
+                  active && (overlay ? "text-highlight" : "text-primary"),
                 )}
               >
                 {item.label}
                 {active ? (
-                  <span className="absolute -bottom-1 left-0 h-px w-full bg-accent" />
+                  <span className={cn("absolute -bottom-1 left-0 h-px w-full", overlay ? "bg-highlight" : "bg-accent")} />
                 ) : null}
               </Link>
             );

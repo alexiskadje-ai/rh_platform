@@ -28,6 +28,16 @@ export async function issueToken(userId: string, type: TokenType, rawToken?: str
   return token;
 }
 
+export async function peekToken(token: string, type: TokenType) {
+  const record = await db.verificationToken.findUnique({
+    where: { tokenHash: sha256(token) },
+  });
+  if (!record || record.type !== type || record.expiresAt < new Date()) {
+    return null;
+  }
+  return record.userId;
+}
+
 export async function consumeToken(token: string, type: TokenType) {
   const record = await db.verificationToken.findUnique({
     where: { tokenHash: sha256(token) },

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { JobStatus, JobVisibility, Role } from "@prisma/client";
+import { JobStatus, Role } from "@prisma/client";
 import { db } from "@/lib/db";
 import { getSessionUser } from "@/lib/dal";
 import { closeExpiredOffers } from "@/lib/jobs";
@@ -26,19 +26,6 @@ export default async function PublicJobDetailPage({
   if (!offer) notFound();
 
   const user = await getSessionUser();
-  const isOwner =
-    user?.role === Role.RECRUITER
-      ? Boolean(
-          await db.user.findFirst({
-            where: { id: user.id, companyId: offer.companyId },
-          }),
-        )
-      : false;
-
-  if (offer.visibility === JobVisibility.INVITE && !user && !isOwner) {
-    notFound();
-  }
-
   const candidate =
     user?.role === Role.CANDIDATE
       ? await db.candidate.findUnique({
@@ -91,6 +78,13 @@ export default async function PublicJobDetailPage({
         ) : user.role !== Role.CANDIDATE ? (
           <p className="mt-2 text-sm text-muted-foreground">
             Connectez-vous avec un compte candidat pour postuler.
+          </p>
+        ) : !user.isVerified ? (
+          <p className="mt-2 text-sm">
+            Vérifiez votre e-mail et votre téléphone avant de postuler.{" "}
+            <Link href="/verify" className="text-primary underline">
+              Aller à la vérification
+            </Link>
           </p>
         ) : existing ? (
           <p className="mt-2 text-sm">

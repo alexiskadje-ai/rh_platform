@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 const TONES: Record<ApplicationStatus, string> = {
   RECEIVED: "bg-muted text-muted-foreground",
-  SHORTLISTED: "bg-accent/20 text-accent-foreground",
+  SHORTLISTED: "bg-accent/15 text-accent",
   INTERVIEW: "bg-primary/15 text-primary",
   ACCEPTED: "bg-primary text-primary-foreground",
   REJECTED: "bg-destructive/15 text-destructive",

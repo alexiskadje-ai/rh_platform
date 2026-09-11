@@ -62,10 +62,12 @@ export function CourseForm({
   const quizJson = useMemo(
     () =>
       JSON.stringify(
-        quiz.map((item) => ({
-          ...item,
-          choices: item.choices.filter((choice) => choice.trim()),
-        })),
+        quiz.map((item) => {
+          const marked = item.choices[item.correctIndex];
+          const choices = item.choices.filter((choice) => choice.trim());
+          const correctIndex = marked ? Math.max(0, choices.indexOf(marked)) : 0;
+          return { ...item, choices, correctIndex };
+        }),
       ),
     [quiz],
   );
