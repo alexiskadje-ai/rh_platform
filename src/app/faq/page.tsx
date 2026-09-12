@@ -20,7 +20,7 @@ const FAQS = [
   },
   {
     q: "Quels paiements sont prévus ?",
-    a: "La boutique prépare déjà la commande. MTN MoMo, Orange Money, carte et virement seront branchés en Phase 7.",
+    a: "Le checkout boutique encaisse via MTN MoMo (Collection API). La commande reste en attente jusqu'au webhook, puis la facture PDF est générée. Orange Money, carte et virement suivent dès les credentials sandbox.",
   },
   {
     q: "Puis-je gérer mon équipe depuis mon téléphone ?",

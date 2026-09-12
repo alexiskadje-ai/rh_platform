@@ -408,14 +408,20 @@ model OrderItem {
 }
 
 model Payment {
-  id        String          @id @default(cuid())
-  order     Order?          @relation(fields: [orderId], references: [id])
-  orderId   String?         @unique
-  provider  PaymentProvider
-  amount    Int
-  status    String
-  reference String          @unique
-  createdAt DateTime        @default(now())
+  id            String          @id @default(cuid())
+  order         Order?          @relation(fields: [orderId], references: [id])
+  orderId       String?         @unique
+  provider      PaymentProvider
+  amount        Int
+  status        String
+  reference     String          @unique
+  providerRef   String?         @unique
+  phone         String?
+  invoiceUrl    String?
+  failureReason String?
+  paidAt        DateTime?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 }
 
 model Subscription {

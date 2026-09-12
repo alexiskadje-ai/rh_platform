@@ -170,9 +170,11 @@ export async function requireOwnOrder(orderId: string) {
   const order = await db.order.findUnique({
     where: { id: orderId },
     include: {
+      payment: true,
+      user: { select: { phone: true, email: true, firstName: true, lastName: true } },
       items: {
         include: {
-          product: { select: { title: true, type: true } },
+          product: { select: { title: true, type: true, price: true, fileUrl: true } },
         },
       },
     },

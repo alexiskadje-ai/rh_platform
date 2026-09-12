@@ -148,8 +148,8 @@ export function CartView() {
       </div>
       {message ? <p className="text-sm text-destructive">{message}</p> : null}
       <p className="text-xs text-muted-foreground">
-        Les prix sont recalculés côté serveur au checkout. Le paiement (MoMo, Orange,
-        carte, virement) sera branché en Phase 7.
+        Les prix sont recalculés côté serveur au checkout. Le paiement MTN MoMo est
+        confirmé par webhook, puis la facture PDF est émise automatiquement.
       </p>
     </div>
   );

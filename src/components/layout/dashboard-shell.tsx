@@ -17,6 +17,7 @@ import {
   Shield,
   ShoppingCart,
   Store,
+  Wallet,
   UserRound,
   Users,
 } from "lucide-react";
@@ -32,6 +33,7 @@ const LINKS: Record<Role, { href: string; label: string; icon: LucideIcon }[]> =
     { href: "/admin", label: "Vue d'ensemble", icon: LayoutDashboard },
     { href: "/admin/formations", label: "Formations", icon: GraduationCap },
     { href: "/admin/boutique", label: "Boutique", icon: Store },
+    { href: "/admin/paiements", label: "Paiements", icon: Wallet },
     { href: "/settings/security", label: "Sécurité / 2FA", icon: Shield },
   ],
   RECRUITER: [

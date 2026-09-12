@@ -21,3 +21,9 @@ export const ORDER_STATUS_LABELS: Record<string, string> = {
   paid: "Payée",
   failed: "Échouée",
 };
+
+export const PAYMENT_STATUS_LABELS: Record<string, string> = {
+  pending: "En attente de confirmation",
+  paid: "Payé",
+  failed: "Échoué",
+};

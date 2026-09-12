@@ -1,10 +1,16 @@
 import Link from "next/link";
-import { Store } from "lucide-react";
+import { FileText, Store } from "lucide-react";
 import type { Role } from "@prisma/client";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { formatFcfa, ORDER_STATUS_LABELS, productTypeLabel } from "@/lib/shop";
+import {
+  formatFcfa,
+  ORDER_STATUS_LABELS,
+  PAYMENT_STATUS_LABELS,
+  productTypeLabel,
+} from "@/lib/shop";
+import { createPresignedDownload } from "@/lib/storage";
 import { cn } from "@/lib/utils";
 
 const SPACE_TITLE: Record<Role, string> = {
@@ -19,6 +25,11 @@ type OrderRow = {
   total: number;
   status: string;
   createdAt: Date;
+  payment: {
+    status: string;
+    invoiceUrl: string | null;
+    failureReason: string | null;
+  } | null;
   items: {
     id: string;
     quantity: number;
@@ -26,13 +37,22 @@ type OrderRow = {
   }[];
 };
 
-export function MyOrdersPage({
+export async function MyOrdersPage({
   role,
   orders,
 }: {
   role: Role;
   orders: OrderRow[];
 }) {
+  const invoices = new Map<string, string>();
+  await Promise.all(
+    orders.map(async (order) => {
+      if (order.payment?.invoiceUrl) {
+        invoices.set(order.id, await createPresignedDownload(order.payment.invoiceUrl));
+      }
+    }),
+  );
+
   return (
     <DashboardShell role={role} title={SPACE_TITLE[role]}>
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -47,13 +67,16 @@ export function MyOrdersPage({
           <p className="text-sm text-muted-foreground">Aucune commande pour le moment.</p>
         ) : (
           orders.map((order) => (
-            <Card key={order.id}>
+            <Card key={order.id} className="hover:translate-y-0">
               <CardContent className="space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="font-medium">{formatFcfa(order.total)}</p>
                   <p className="text-sm text-muted-foreground">
-                    {ORDER_STATUS_LABELS[order.status] ?? order.status} ·{" "}
-                    {order.createdAt.toLocaleDateString("fr-FR")}
+                    {ORDER_STATUS_LABELS[order.status] ?? order.status}
+                    {order.payment
+                      ? ` · ${PAYMENT_STATUS_LABELS[order.payment.status] ?? order.payment.status}`
+                      : ""}{" "}
+                    · {order.createdAt.toLocaleDateString("fr-FR")}
                   </p>
                 </div>
                 <ul className="text-sm text-muted-foreground">
@@ -64,18 +87,31 @@ export function MyOrdersPage({
                     </li>
                   ))}
                 </ul>
-                {order.status === "pending" ? (
-                  <Link
-                    href={`/boutique/commande/${order.id}/paiement`}
-                    className={cn(buttonVariants({ size: "sm" }))}
-                  >
-                    Choisir le paiement
-                  </Link>
-                ) : (
-                  <p className="text-xs text-muted-foreground">
-                    Le fichier livrable sera disponible après confirmation du paiement.
-                  </p>
-                )}
+                <div className="flex flex-wrap gap-2">
+                  {order.status !== "paid" ? (
+                    <Link
+                      href={`/boutique/commande/${order.id}/paiement`}
+                      className={cn(buttonVariants({ size: "sm" }))}
+                    >
+                      {order.payment?.status === "failed" ? "Réessayer le paiement" : "Payer maintenant"}
+                    </Link>
+                  ) : order.payment?.invoiceUrl ? (
+                    <a
+                      href={invoices.get(order.id) ?? order.payment.invoiceUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
+                    >
+                      <FileText className="size-4" />
+                      Facture
+                    </a>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Facture en cours de génération.</p>
+                  )}
+                </div>
+                {order.payment?.failureReason ? (
+                  <p className="text-xs text-destructive">{order.payment.failureReason}</p>
+                ) : null}
               </CardContent>
             </Card>
           ))
