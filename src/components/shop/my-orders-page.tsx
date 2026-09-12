@@ -10,7 +10,7 @@ import {
   PAYMENT_STATUS_LABELS,
   productTypeLabel,
 } from "@/lib/shop";
-import { createPresignedDownload } from "@/lib/storage";
+import type { OrderRow } from "@/lib/orders";
 import { cn } from "@/lib/utils";
 
 const SPACE_TITLE: Record<Role, string> = {
@@ -20,39 +20,13 @@ const SPACE_TITLE: Record<Role, string> = {
   EMPLOYEE: "Espace employé",
 };
 
-type OrderRow = {
-  id: string;
-  total: number;
-  status: string;
-  createdAt: Date;
-  payment: {
-    status: string;
-    invoiceUrl: string | null;
-    failureReason: string | null;
-  } | null;
-  items: {
-    id: string;
-    quantity: number;
-    product: { title: string; type: string };
-  }[];
-};
-
-export async function MyOrdersPage({
+export function MyOrdersPage({
   role,
   orders,
 }: {
   role: Role;
   orders: OrderRow[];
 }) {
-  const invoices = new Map<string, string>();
-  await Promise.all(
-    orders.map(async (order) => {
-      if (order.payment?.invoiceUrl) {
-        invoices.set(order.id, await createPresignedDownload(order.payment.invoiceUrl));
-      }
-    }),
-  );
-
   return (
     <DashboardShell role={role} title={SPACE_TITLE[role]}>
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -95,9 +69,9 @@ export async function MyOrdersPage({
                     >
                       {order.payment?.status === "failed" ? "Réessayer le paiement" : "Payer maintenant"}
                     </Link>
-                  ) : order.payment?.invoiceUrl ? (
+                  ) : order.payment?.invoiceHref ? (
                     <a
-                      href={invoices.get(order.id) ?? order.payment.invoiceUrl}
+                      href={order.payment.invoiceHref}
                       target="_blank"
                       rel="noreferrer"
                       className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
