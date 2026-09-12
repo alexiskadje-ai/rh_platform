@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Store } from "lucide-react";
 import type { Role } from "@prisma/client";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { buttonVariants } from "@/components/ui/button";
@@ -37,6 +38,7 @@ export function MyOrdersPage({
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold">Mes achats</h1>
         <Link href="/boutique" className={cn(buttonVariants({ variant: "outline" }))}>
+          <Store className="size-4" />
           Boutique
         </Link>
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Check, ShoppingCart } from "lucide-react";
 import { useCart } from "@/lib/cart";
 import { Button } from "@/components/ui/button";
 
@@ -25,7 +26,8 @@ export function AddToCartButton({
   }
 
   return (
-    <Button type="button" size="sm" onClick={add}>
+    <Button type="button" size="sm" onClick={add} aria-live="polite">
+      {added ? <Check className="size-4" /> : <ShoppingCart className="size-4" />}
       {added ? "Ajouté" : "Ajouter au panier"}
     </Button>
   );

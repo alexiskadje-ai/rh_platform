@@ -3,12 +3,13 @@
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { cartTotal, useCart } from "@/lib/cart";
+import { Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
+import { cartCount, cartTotal, useCart } from "@/lib/cart";
 import { formatFcfa, productTypeLabel } from "@/lib/shop";
 import { checkoutCart } from "@/server/actions/shop";
+import { ProductTypeIcon } from "@/components/shop/product-type-icon";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 export function CartView() {
@@ -53,10 +54,17 @@ export function CartView() {
 
   if (items.length === 0) {
     return (
-      <Card>
-        <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground">Votre panier est vide.</p>
-          <Link href="/boutique" className={cn(buttonVariants())}>
+      <Card className="hover:translate-y-0">
+        <CardContent className="flex flex-col items-center py-14 text-center">
+          <span className="flex size-16 items-center justify-center rounded-full bg-accent/10 text-accent">
+            <ShoppingCart className="size-8" strokeWidth={1.6} />
+          </span>
+          <p className="mt-5 font-display text-2xl text-primary">Votre panier est vide</p>
+          <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+            Parcourez le catalogue et ajoutez modèles, guides ou formations.
+          </p>
+          <Link href="/boutique" className={cn(buttonVariants(), "mt-6")}>
+            <ShoppingCart className="size-4" />
             Voir le catalogue
           </Link>
         </CardContent>
@@ -68,51 +76,72 @@ export function CartView() {
     <div className="space-y-6">
       <div className="space-y-3">
         {items.map((item) => (
-          <Card key={item.productId}>
+          <Card key={item.productId} className="hover:translate-y-0">
             <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="font-medium">{item.title}</p>
-                <p className="text-sm text-muted-foreground">
-                  {productTypeLabel(item.type)} · {formatFcfa(item.price)}
-                </p>
+              <div className="flex items-start gap-3">
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-accent/10 text-accent">
+                  <ProductTypeIcon type={item.type} />
+                </span>
+                <div>
+                  <p className="font-medium">{item.title}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {productTypeLabel(item.type)} · {formatFcfa(item.price)}
+                  </p>
+                </div>
               </div>
               <div className="flex items-center gap-3">
-                <label className="text-sm text-muted-foreground">
-                  Qté
-                  <Input
-                    type="number"
-                    min={1}
-                    max={99}
-                    value={item.quantity}
-                    className="mt-1 w-20"
-                    onChange={(event) =>
-                      setQuantity(item.productId, Number(event.target.value))
-                    }
-                  />
-                </label>
+                <div className="inline-flex items-center rounded-full border border-border bg-muted/40">
+                  <button
+                    type="button"
+                    className="inline-flex size-9 items-center justify-center text-muted-foreground hover:text-foreground"
+                    aria-label={`Diminuer ${item.title}`}
+                    onClick={() => setQuantity(item.productId, item.quantity - 1)}
+                  >
+                    <Minus className="size-3.5" />
+                  </button>
+                  <span className="min-w-8 text-center text-sm font-medium" aria-live="polite">
+                    {item.quantity}
+                  </span>
+                  <button
+                    type="button"
+                    className="inline-flex size-9 items-center justify-center text-muted-foreground hover:text-foreground"
+                    aria-label={`Augmenter ${item.title}`}
+                    onClick={() => setQuantity(item.productId, item.quantity + 1)}
+                  >
+                    <Plus className="size-3.5" />
+                  </button>
+                </div>
                 <p className="w-28 text-right text-sm font-medium">
                   {formatFcfa(item.price * item.quantity)}
                 </p>
                 <Button
                   type="button"
                   variant="ghost"
-                  size="sm"
+                  size="icon"
+                  className="text-muted-foreground hover:text-destructive"
+                  aria-label={`Retirer ${item.title}`}
                   onClick={() => removeItem(item.productId)}
                 >
-                  Retirer
+                  <Trash2 className="size-4" />
                 </Button>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <p className="text-lg font-semibold">Total : {formatFcfa(cartTotal(items))}</p>
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-border/80 bg-card p-5">
+        <div>
+          <p className="text-sm text-muted-foreground">
+            {cartCount(items)} article{cartCount(items) > 1 ? "s" : ""}
+          </p>
+          <p className="font-display text-2xl text-primary">Total : {formatFcfa(cartTotal(items))}</p>
+        </div>
         <div className="flex gap-2">
           <Button type="button" variant="outline" onClick={() => clear()}>
             Vider
           </Button>
           <Button type="button" onClick={checkout} disabled={pending}>
+            <ShoppingCart className="size-4" />
             {pending ? "Création de la commande…" : "Passer commande"}
           </Button>
         </div>

@@ -15,7 +15,8 @@ import {
   LayoutDashboard,
   LogOut,
   Shield,
-  ShoppingBag,
+  ShoppingCart,
+  Store,
   UserRound,
   Users,
 } from "lucide-react";
@@ -30,7 +31,7 @@ const LINKS: Record<Role, { href: string; label: string; icon: LucideIcon }[]> =
   ADMIN: [
     { href: "/admin", label: "Vue d'ensemble", icon: LayoutDashboard },
     { href: "/admin/formations", label: "Formations", icon: GraduationCap },
-    { href: "/admin/boutique", label: "Boutique", icon: ShoppingBag },
+    { href: "/admin/boutique", label: "Boutique", icon: Store },
     { href: "/settings/security", label: "Sécurité / 2FA", icon: Shield },
   ],
   RECRUITER: [
@@ -49,7 +50,7 @@ const LINKS: Record<Role, { href: string; label: string; icon: LucideIcon }[]> =
     { href: "/candidate/candidatures", label: "Mes candidatures", icon: ClipboardCheck },
     { href: "/candidate/offres", label: "Offres recommandées", icon: Briefcase },
     { href: "/candidate/formations", label: "Mes formations", icon: GraduationCap },
-    { href: "/candidate/achats", label: "Mes achats", icon: ShoppingBag },
+    { href: "/candidate/achats", label: "Mes achats", icon: ShoppingCart },
     { href: "/settings/security", label: "Sécurité / 2FA", icon: Shield },
   ],
   EMPLOYEE: [
@@ -61,7 +62,7 @@ const LINKS: Record<Role, { href: string; label: string; icon: LucideIcon }[]> =
     { href: "/employee/documents", label: "Mes documents", icon: FileText },
     { href: "/employee/validations", label: "Validations équipe", icon: ClipboardCheck },
     { href: "/employee/formations", label: "Mes formations", icon: GraduationCap },
-    { href: "/employee/achats", label: "Mes achats", icon: ShoppingBag },
+    { href: "/employee/achats", label: "Mes achats", icon: ShoppingCart },
     { href: "/settings/security", label: "Sécurité / 2FA", icon: Shield },
   ],
 };
