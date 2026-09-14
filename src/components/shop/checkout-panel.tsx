@@ -12,10 +12,13 @@ import {
   ShieldCheck,
   Smartphone,
 } from "lucide-react";
-import { PaymentProvider } from "@prisma/client";
 import { PAYMENT_METHOD_LABELS } from "@/lib/constants";
 import { formatFcfa, paymentMethodLabel } from "@/lib/shop";
-import { refreshMomoPayment, startMomoPayment } from "@/server/actions/payments";
+import {
+  refreshPayment,
+  startMomoPayment,
+  startStripePayment,
+} from "@/server/actions/payments";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,6 +30,12 @@ const METHODS: {
   hint: string;
   tone: string;
 }[] = [
+  {
+    id: "CARD",
+    ready: true,
+    hint: "Visa / Mastercard via Stripe Checkout",
+    tone: "bg-primary text-primary-foreground",
+  },
   {
     id: "MTN_MOMO",
     ready: true,
@@ -40,12 +49,6 @@ const METHODS: {
     tone: "bg-[#ff7900] text-white",
   },
   {
-    id: "CARD",
-    ready: false,
-    hint: "Visa / Mastercard via Stripe — Phase 7 suite",
-    tone: "bg-primary text-primary-foreground",
-  },
-  {
     id: "BANK_TRANSFER",
     ready: false,
     hint: "Virement avec référence unique — Phase 7 suite",
@@ -57,41 +60,62 @@ type Props = {
   orderId: string;
   amount: number;
   defaultPhone?: string | null;
-  configured: boolean;
+  momoConfigured: boolean;
+  stripeConfigured: boolean;
   initialStatus: string;
+  initialProvider?: string | null;
   initialMessage?: string | null;
   invoiceHref?: string | null;
+  returnedFromStripe?: "success" | "cancel" | null;
 };
 
 export function CheckoutPanel({
   orderId,
   amount,
   defaultPhone,
-  configured,
+  momoConfigured,
+  stripeConfigured,
   initialStatus,
+  initialProvider,
   initialMessage,
   invoiceHref,
+  returnedFromStripe,
 }: Props) {
-  const [method, setMethod] = useState<keyof typeof PAYMENT_METHOD_LABELS>("MTN_MOMO");
+  const [method, setMethod] = useState<keyof typeof PAYMENT_METHOD_LABELS>(
+    stripeConfigured ? "CARD" : "MTN_MOMO",
+  );
   const [status, setStatus] = useState(initialStatus);
   const [invoice, setInvoice] = useState(invoiceHref ?? null);
-  const [state, action, pending] = useActionState(startMomoPayment, {});
+  const [provider, setProvider] = useState(initialProvider ?? null);
+  const [momoState, momoAction, momoPending] = useActionState(startMomoPayment, {});
+  const [stripeState, stripeAction, stripePending] = useActionState(startStripePayment, {});
   const [refreshing, startRefresh] = useTransition();
 
-  const waiting = status === "pending" && Boolean(state.ok || initialStatus === "pending");
-  const failed = status === "failed";
+  const waiting = status === "pending" && Boolean(momoState.ok || stripeState.ok || initialStatus === "pending");
+  const failed = status === "failed" || returnedFromStripe === "cancel";
   const paid = status === "paid";
+  const cardFlow = method === "CARD" || provider === "CARD";
 
   useEffect(() => {
-    if (state.status) setStatus(state.status);
-    if (state.invoiceUrl) setInvoice(state.invoiceUrl);
-  }, [state]);
+    const next = stripeState.status ?? momoState.status;
+    if (next) setStatus(next);
+    if (stripeState.ok) setProvider("CARD");
+    if (momoState.ok) setProvider("MTN_MOMO");
+    const url = stripeState.invoiceUrl ?? momoState.invoiceUrl;
+    if (url) setInvoice(url);
+  }, [momoState, stripeState]);
+
+  useEffect(() => {
+    if (stripeState.checkoutUrl) {
+      window.location.assign(stripeState.checkoutUrl);
+    }
+  }, [stripeState.checkoutUrl]);
 
   useEffect(() => {
     if (!waiting || paid || failed) return;
     const timer = window.setInterval(() => {
       startRefresh(async () => {
-        const next = await refreshMomoPayment(orderId);
+        const next = await refreshPayment(orderId);
         if (next.status) setStatus(next.status);
         if (next.invoiceUrl) setInvoice(next.invoiceUrl);
       });
@@ -101,10 +125,12 @@ export function CheckoutPanel({
 
   const headline = useMemo(() => {
     if (paid) return "Paiement confirmé";
+    if (returnedFromStripe === "cancel") return "Paiement carte annulé";
     if (failed) return "Paiement échoué";
+    if (waiting && cardFlow) return "Paiement carte en cours";
     if (waiting) return "En attente de validation";
     return "Réglez en toute sécurité";
-  }, [paid, failed, waiting]);
+  }, [paid, failed, waiting, cardFlow, returnedFromStripe]);
 
   return (
     <div className="overflow-hidden rounded-[2rem] border border-border/80 bg-card shadow-[0_18px_50px_rgba(20,33,28,0.08)]">
@@ -113,7 +139,7 @@ export function CheckoutPanel({
           <Lock className="size-4 text-highlight" />
           PES-RH Checkout
         </div>
-        <p className="text-xs text-primary-foreground/70">Chiffrement TLS · webhook opérateur</p>
+        <p className="text-xs text-primary-foreground/70">Chiffrement TLS · Stripe · MoMo</p>
       </div>
 
       <div className="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
@@ -124,9 +150,11 @@ export function CheckoutPanel({
             <p className="mt-2 text-sm text-muted-foreground">
               {paid
                 ? "La facture PDF a été générée automatiquement."
-                : failed
-                  ? "Aucun débit n'a été confirmé. Vous pouvez réessayer immédiatement."
-                  : "La commande reste en attente jusqu'à confirmation MTN MoMo."}
+                : returnedFromStripe === "cancel"
+                  ? "Aucun débit n'a été effectué. Vous pouvez réessayer immédiatement."
+                  : failed
+                    ? "Aucun débit n'a été confirmé. Vous pouvez réessayer immédiatement."
+                    : "La commande reste en attente jusqu'à confirmation du fournisseur."}
             </p>
           </div>
 
@@ -148,18 +176,22 @@ export function CheckoutPanel({
                   )}
                 >
                   <span className={cn("inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase", item.tone)}>
-                    {item.id === "MTN_MOMO" ? (
+                    {item.id === "MTN_MOMO" || item.id === "ORANGE_MONEY" ? (
                       <Smartphone className="mr-1 size-3" />
                     ) : item.id === "CARD" ? (
                       <CreditCard className="mr-1 size-3" />
-                    ) : item.id === "BANK_TRANSFER" ? (
-                      <Landmark className="mr-1 size-3" />
                     ) : (
-                      <Smartphone className="mr-1 size-3" />
+                      <Landmark className="mr-1 size-3" />
                     )}
                     {paymentMethodLabel(item.id)}
                   </span>
                   <p className="mt-2 text-xs text-muted-foreground">{item.hint}</p>
+                  {item.id === "CARD" && !stripeConfigured ? (
+                    <p className="mt-1 text-[11px] text-destructive">Clé Stripe manquante</p>
+                  ) : null}
+                  {item.id === "MTN_MOMO" && !momoConfigured ? (
+                    <p className="mt-1 text-[11px] text-destructive">Sandbox MoMo non configuré</p>
+                  ) : null}
                 </button>
               );
             })}
@@ -181,24 +213,35 @@ export function CheckoutPanel({
               ) : null}
             </div>
           ) : waiting ? (
-            <div className="rounded-2xl border border-[#ffcc00]/40 bg-[#fff8d6] p-5 text-[#1a1a1a]">
+            <div
+              className={cn(
+                "rounded-2xl border p-5",
+                cardFlow
+                  ? "border-primary/20 bg-primary/5"
+                  : "border-[#ffcc00]/40 bg-[#fff8d6] text-[#1a1a1a]",
+              )}
+            >
               <div className="flex items-center gap-3">
-                <LoaderCircle className="size-6 animate-spin text-[#c48a00]" />
+                <LoaderCircle className={cn("size-6 animate-spin", cardFlow ? "text-primary" : "text-[#c48a00]")} />
                 <div>
-                  <p className="font-medium">Validez sur votre téléphone MTN</p>
-                  <p className="text-sm opacity-80">
-                    Composez *126# si le push n&apos;apparaît pas. Nous écoutons le webhook MoMo.
+                  <p className="font-medium">
+                    {cardFlow ? "Confirmation Stripe en cours" : "Validez sur votre téléphone MTN"}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {cardFlow
+                      ? "Si vous revenez de Stripe, le webhook finalise la facture en quelques secondes."
+                      : "Composez *126# si le push n'apparaît pas. Nous écoutons le webhook MoMo."}
                   </p>
                 </div>
               </div>
               <Button
                 type="button"
                 variant="outline"
-                className="mt-4 border-[#1a1a1a]/20 bg-white"
+                className="mt-4"
                 disabled={refreshing}
                 onClick={() =>
                   startRefresh(async () => {
-                    const next = await refreshMomoPayment(orderId);
+                    const next = await refreshPayment(orderId);
                     if (next.status) setStatus(next.status);
                     if (next.invoiceUrl) setInvoice(next.invoiceUrl);
                   })
@@ -208,8 +251,38 @@ export function CheckoutPanel({
                 Vérifier le statut
               </Button>
             </div>
+          ) : method === "CARD" ? (
+            <form action={stripeAction} className="space-y-4 rounded-2xl border border-border/80 p-5">
+              <input type="hidden" name="orderId" value={orderId} />
+              <div className="flex items-center gap-2 text-sm">
+                <span className="inline-flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                  <CreditCard className="size-4" />
+                </span>
+                <div>
+                  <p className="font-medium">Carte bancaire</p>
+                  <p className="text-xs text-muted-foreground">Stripe Checkout · page hébergée PCI</p>
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Vous serez redirigé vers Stripe pour saisir la carte. Nous ne stockons aucun numéro.
+              </p>
+              {!stripeConfigured ? (
+                <p className="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                  STRIPE_SECRET_KEY manquante.
+                </p>
+              ) : null}
+              {stripeState.message && !stripeState.ok ? (
+                <p className="text-sm text-destructive">{stripeState.message}</p>
+              ) : null}
+              {failed && initialMessage ? (
+                <p className="text-sm text-destructive">{initialMessage}</p>
+              ) : null}
+              <Button type="submit" className="w-full" disabled={stripePending || !stripeConfigured}>
+                {stripePending ? "Ouverture de Stripe…" : `Payer ${formatFcfa(amount)} par carte`}
+              </Button>
+            </form>
           ) : (
-            <form action={action} className="space-y-4 rounded-2xl border border-border/80 p-5">
+            <form action={momoAction} className="space-y-4 rounded-2xl border border-border/80 p-5">
               <input type="hidden" name="orderId" value={orderId} />
               <div className="flex items-center gap-2 text-sm">
                 <span className="inline-flex size-8 items-center justify-center rounded-full bg-[#ffcc00] font-bold text-[#1a1a1a]">
@@ -229,28 +302,27 @@ export function CheckoutPanel({
                   placeholder="+237 6XX XX XX XX"
                   autoComplete="tel"
                 />
-                {state.errors?.phone?.[0] ? (
-                  <p className="text-sm text-destructive">{state.errors.phone[0]}</p>
+                {momoState.errors?.phone?.[0] ? (
+                  <p className="text-sm text-destructive">{momoState.errors.phone[0]}</p>
                 ) : (
                   <p className="text-xs text-muted-foreground">
                     Un message de confirmation sera envoyé à ce numéro.
                   </p>
                 )}
               </div>
-              {!configured ? (
+              {!momoConfigured ? (
                 <p className="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                  Credentials sandbox manquants. Ajoutez MOMO_API_USER, MOMO_API_KEY et
-                  MOMO_SUBSCRIPTION_KEY, puis confirmez-les avant Orange Money.
+                  Credentials sandbox MoMo manquants. Orange Money attend toujours votre feu vert.
                 </p>
               ) : null}
-              {state.message && !state.ok ? (
-                <p className="text-sm text-destructive">{state.message}</p>
+              {momoState.message && !momoState.ok ? (
+                <p className="text-sm text-destructive">{momoState.message}</p>
               ) : null}
               {failed && initialMessage ? (
                 <p className="text-sm text-destructive">{initialMessage}</p>
               ) : null}
-              <Button type="submit" className="w-full" disabled={pending || !configured}>
-                {pending ? "Envoi de la demande…" : `Payer ${formatFcfa(amount)}`}
+              <Button type="submit" className="w-full" disabled={momoPending || !momoConfigured}>
+                {momoPending ? "Envoi de la demande…" : `Payer ${formatFcfa(amount)}`}
               </Button>
             </form>
           )}
@@ -261,11 +333,11 @@ export function CheckoutPanel({
           <div className="space-y-3 text-sm">
             <p className="flex gap-2">
               <ShieldCheck className="mt-0.5 size-4 shrink-0 text-accent" />
-              Le montant est recalculé côté serveur. MoMo confirme via webhook.
+              Le montant est recalculé côté serveur. Stripe et MoMo confirment par webhook.
             </p>
             <p className="flex gap-2">
               <Clock3 className="mt-0.5 size-4 shrink-0 text-accent" />
-              Statut « En attente » jusqu&apos;à SUCCESSFUL ou FAILED.
+              Statut « En attente » jusqu&apos;à confirmation ou échec.
             </p>
             <p className="flex gap-2">
               <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-accent" />
@@ -276,7 +348,7 @@ export function CheckoutPanel({
             <p className="text-xs text-muted-foreground">Total à débiter</p>
             <p className="mt-1 font-display text-3xl text-primary">{formatFcfa(amount)}</p>
             <p className="mt-2 text-xs text-muted-foreground">
-              Fournisseur : {paymentMethodLabel(PaymentProvider.MTN_MOMO)}
+              Fournisseur : {paymentMethodLabel(method)}
             </p>
           </div>
         </aside>

@@ -20,7 +20,7 @@ const FAQS = [
   },
   {
     q: "Quels paiements sont prévus ?",
-    a: "Le checkout boutique encaisse via MTN MoMo (Collection API). La commande reste en attente jusqu'au webhook, puis la facture PDF est générée. Orange Money, carte et virement suivent dès les credentials sandbox.",
+    a: "Le checkout boutique encaisse via Stripe (carte) et MTN MoMo. La commande reste en attente jusqu'au webhook, puis la facture PDF est générée. Orange Money et virement suivent dès les credentials sandbox.",
   },
   {
     q: "Puis-je gérer mon équipe depuis mon téléphone ?",

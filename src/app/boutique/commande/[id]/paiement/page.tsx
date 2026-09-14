@@ -3,6 +3,8 @@ import Link from "next/link";
 import { requireOwnOrder } from "@/server/actions/shop";
 import { formatFcfa, ORDER_STATUS_LABELS, productTypeLabel } from "@/lib/shop";
 import { isMomoConfigured } from "@/lib/payments/momo";
+import { isStripeConfigured } from "@/lib/payments/stripe";
+import { applyStripeStatus } from "@/lib/payments/sync";
 import { PAYMENT_STATUS } from "@/lib/payments/confirm";
 import { createPresignedDownload } from "@/lib/storage";
 import { CheckoutPanel } from "@/components/shop/checkout-panel";
@@ -12,13 +14,23 @@ import { cn } from "@/lib/utils";
 
 export default async function OrderPaymentPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ stripe?: string; session_id?: string }>;
 }) {
   const { id } = await params;
+  const query = await searchParams;
   const result = await requireOwnOrder(id);
   if (!result) notFound();
-  const { order } = result;
+
+  if (query.session_id) {
+    await applyStripeStatus(query.session_id);
+  }
+
+  const owned = query.session_id ? await requireOwnOrder(id) : result;
+  if (!owned) notFound();
+  const { order } = owned;
   const payment = order.payment;
   const invoiceHref =
     payment?.invoiceUrl ? await createPresignedDownload(payment.invoiceUrl) : null;
@@ -33,6 +45,9 @@ export default async function OrderPaymentPage({
           })),
         )
       : [];
+
+  const returnedFromStripe =
+    query.stripe === "success" || query.stripe === "cancel" ? query.stripe : null;
 
   return (
     <main className="mx-auto w-full max-w-5xl flex-1 space-y-8 px-4 py-16">
@@ -90,10 +105,13 @@ export default async function OrderPaymentPage({
           orderId={order.id}
           amount={order.total}
           defaultPhone={order.user.phone}
-          configured={isMomoConfigured()}
+          momoConfigured={isMomoConfigured()}
+          stripeConfigured={isStripeConfigured()}
           initialStatus={payment?.status ?? "new"}
+          initialProvider={payment?.provider}
           initialMessage={payment?.failureReason}
           invoiceHref={invoiceHref}
+          returnedFromStripe={returnedFromStripe}
         />
       </div>
       <div className="flex flex-wrap gap-3">

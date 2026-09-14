@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
     "pdfjs-dist",
     "openai",
     "@react-pdf/renderer",
+    "stripe",
   ],
 };
 
