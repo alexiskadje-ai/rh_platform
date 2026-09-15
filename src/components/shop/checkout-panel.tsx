@@ -82,7 +82,7 @@ export function CheckoutPanel({
   returnedFromStripe,
 }: Props) {
   const [method, setMethod] = useState<keyof typeof PAYMENT_METHOD_LABELS>(
-    stripeConfigured ? "CARD" : "MTN_MOMO",
+    momoConfigured ? "MTN_MOMO" : stripeConfigured ? "CARD" : "MTN_MOMO",
   );
   const [status, setStatus] = useState(initialStatus);
   const [invoice, setInvoice] = useState(invoiceHref ?? null);
@@ -230,7 +230,7 @@ export function CheckoutPanel({
                   <p className="text-sm text-muted-foreground">
                     {cardFlow
                       ? "Si vous revenez de Stripe, le webhook finalise la facture en quelques secondes."
-                      : "Composez *126# si le push n'apparaît pas. Nous écoutons le webhook MoMo."}
+                      : "Composez *126# en production. En sandbox, le statut est vérifié auprès de MoMo."}
                   </p>
                 </div>
               </div>
@@ -298,21 +298,22 @@ export function CheckoutPanel({
                 <Input
                   id="momo-phone"
                   name="phone"
-                  defaultValue={defaultPhone ?? ""}
-                  placeholder="+237 6XX XX XX XX"
+                  defaultValue={defaultPhone ?? (momoConfigured ? "46733123453" : "")}
+                  placeholder="46733123453"
                   autoComplete="tel"
                 />
                 {momoState.errors?.phone?.[0] ? (
                   <p className="text-sm text-destructive">{momoState.errors.phone[0]}</p>
                 ) : (
                   <p className="text-xs text-muted-foreground">
-                    Un message de confirmation sera envoyé à ce numéro.
+                    Sandbox MTN : utilisez 46733123453 (succès). Le statut est lu via
+                    checkPaymentStatus, sans webhook localhost.
                   </p>
                 )}
               </div>
               {!momoConfigured ? (
                 <p className="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                  Credentials sandbox MoMo manquants. Orange Money attend toujours votre feu vert.
+                  Credentials sandbox MoMo manquants.
                 </p>
               ) : null}
               {momoState.message && !momoState.ok ? (

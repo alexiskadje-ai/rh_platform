@@ -51,11 +51,10 @@ export function isMomoConfigured() {
 }
 
 export function momoCallbackUrl() {
-  const origin = (
-    process.env.AUTH_URL ??
-    process.env.NEXTAUTH_URL ??
-    "http://localhost:3000"
-  ).replace(/\/$/, "");
+  const explicit = process.env.MOMO_CALLBACK_URL?.trim();
+  if (explicit) return explicit.replace(/\/$/, "");
+  const origin = (process.env.AUTH_URL ?? process.env.NEXTAUTH_URL ?? "").replace(/\/$/, "");
+  if (!origin || /localhost|127\.0\.0\.1/i.test(origin)) return null;
   return `${origin}/api/webhooks/momo`;
 }
 
@@ -145,7 +144,7 @@ export async function requestToPayment(input: MomoRequestInput): Promise<MomoReq
         headers: {
           ...collectionHeaders(accessToken),
           "X-Reference-Id": referenceId,
-          "X-Callback-Url": momoCallbackUrl(),
+          ...(momoCallbackUrl() ? { "X-Callback-Url": momoCallbackUrl()! } : {}),
           "Content-Type": "application/json",
         },
         timeout: 20_000,
