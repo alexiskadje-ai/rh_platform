@@ -379,12 +379,14 @@ model Enrollment {
 }
 
 model Product {
-  id      String      @id @default(cuid())
-  title   String
-  type    String
-  price   Int
-  fileUrl String
-  orders  OrderItem[]
+  id          String      @id @default(cuid())
+  title       String
+  type        String
+  price       Int
+  fileUrl     String
+  description String      @default("")
+  excerpt     String      @default("")
+  orders      OrderItem[]
 }
 
 model Order {

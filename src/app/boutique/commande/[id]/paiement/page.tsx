@@ -2,12 +2,14 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { requireOwnOrder } from "@/server/actions/shop";
 import { formatFcfa, ORDER_STATUS_LABELS, productTypeLabel } from "@/lib/shop";
+import { productApercu, productIncludes } from "@/lib/shop-preview";
 import { isMomoConfigured } from "@/lib/payments/momo";
 import { isStripeConfigured } from "@/lib/payments/stripe";
 import { applyStripeStatus } from "@/lib/payments/sync";
 import { PAYMENT_STATUS } from "@/lib/payments/confirm";
 import { createPresignedDownload } from "@/lib/storage";
 import { CheckoutPanel } from "@/components/shop/checkout-panel";
+import { ShopSteps } from "@/components/shop/shop-steps";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -51,6 +53,7 @@ export default async function OrderPaymentPage({
 
   return (
     <main className="mx-auto w-full max-w-5xl flex-1 space-y-8 px-4 py-16">
+      <ShopSteps current="paiement" />
       <div>
         <p className="text-xs uppercase tracking-[0.28em] text-accent">Checkout sécurisé</p>
         <h1 className="mt-3 font-display text-4xl font-medium text-primary">Paiement</h1>
@@ -66,14 +69,24 @@ export default async function OrderPaymentPage({
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
             {order.items.map((item) => (
-              <div key={item.id} className="flex items-start justify-between gap-3">
-                <p>
-                  {item.product.title}
-                  <span className="block text-xs text-muted-foreground">
-                    {productTypeLabel(item.product.type)} × {item.quantity}
-                  </span>
+              <div key={item.id} className="space-y-2 rounded-2xl border border-border/70 p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <p>
+                    {item.product.title}
+                    <span className="block text-xs text-muted-foreground">
+                      {productTypeLabel(item.product.type)} × {item.quantity}
+                    </span>
+                  </p>
+                  <p className="font-medium">{formatFcfa(item.product.price * item.quantity)}</p>
+                </div>
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  {productApercu(item.product)}
                 </p>
-                <p className="font-medium">{formatFcfa(item.product.price * item.quantity)}</p>
+                <ul className="space-y-1 text-xs text-muted-foreground">
+                  {productIncludes(item.product.type).map((line) => (
+                    <li key={line}>• {line}</li>
+                  ))}
+                </ul>
               </div>
             ))}
             <p className="border-t border-border pt-3 font-display text-xl text-primary">
@@ -104,6 +117,12 @@ export default async function OrderPaymentPage({
         <CheckoutPanel
           orderId={order.id}
           amount={order.total}
+          items={order.items.map((item) => ({
+            title: item.product.title,
+            type: item.product.type,
+            quantity: item.quantity,
+            price: item.product.price,
+          }))}
           defaultPhone={order.user.phone}
           momoConfigured={isMomoConfigured()}
           stripeConfigured={isStripeConfigured()}

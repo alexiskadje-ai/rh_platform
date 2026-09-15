@@ -13,7 +13,8 @@ import {
   Smartphone,
 } from "lucide-react";
 import { PAYMENT_METHOD_LABELS } from "@/lib/constants";
-import { formatFcfa, paymentMethodLabel } from "@/lib/shop";
+import { formatFcfa, paymentMethodLabel, productTypeLabel } from "@/lib/shop";
+import { productIncludes } from "@/lib/shop-preview";
 import {
   refreshPayment,
   startMomoPayment,
@@ -56,9 +57,17 @@ const METHODS: {
   },
 ];
 
+type RecapItem = {
+  title: string;
+  type: string;
+  quantity: number;
+  price: number;
+};
+
 type Props = {
   orderId: string;
   amount: number;
+  items?: RecapItem[];
   defaultPhone?: string | null;
   momoConfigured: boolean;
   stripeConfigured: boolean;
@@ -72,6 +81,7 @@ type Props = {
 export function CheckoutPanel({
   orderId,
   amount,
+  items = [],
   defaultPhone,
   momoConfigured,
   stripeConfigured,
@@ -330,7 +340,46 @@ export function CheckoutPanel({
         </div>
 
         <aside className="space-y-4 border-t border-border/70 bg-muted/40 p-5 md:p-6 lg:border-l lg:border-t-0">
-          <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">Sécurité</p>
+          <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">
+            Aperçu avant paiement
+          </p>
+          {items.length > 0 ? (
+            <ul className="space-y-3 text-sm">
+              {items.map((item, index) => (
+                <li key={`${item.title}-${index}`} className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-medium">{item.title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {productTypeLabel(item.type)} × {item.quantity}
+                    </p>
+                  </div>
+                  <p className="shrink-0 font-medium">{formatFcfa(item.price * item.quantity)}</p>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          <div>
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-accent">
+              Ce que vous recevez
+            </p>
+            <ul className="mt-2 space-y-1.5 text-sm text-muted-foreground">
+              {[...new Set(items.flatMap((item) => productIncludes(item.type)))].slice(0, 6).map((line) => (
+                <li key={line} className="flex gap-2">
+                  <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-accent" />
+                  {line}
+                </li>
+              ))}
+              <li className="flex gap-2">
+                <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-accent" />
+                Facture PDF automatique dès confirmation
+              </li>
+            </ul>
+            {!paid ? (
+              <p className="mt-3 text-xs text-muted-foreground">
+                Le fichier livrable reste verrouillé jusqu’au paiement confirmé.
+              </p>
+            ) : null}
+          </div>
           <div className="space-y-3 text-sm">
             <p className="flex gap-2">
               <ShieldCheck className="mt-0.5 size-4 shrink-0 text-accent" />
@@ -339,10 +388,6 @@ export function CheckoutPanel({
             <p className="flex gap-2">
               <Clock3 className="mt-0.5 size-4 shrink-0 text-accent" />
               Statut « En attente » jusqu&apos;à confirmation ou échec.
-            </p>
-            <p className="flex gap-2">
-              <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-accent" />
-              Facture PDF automatique dès confirmation.
             </p>
           </div>
           <div className="rounded-2xl bg-background p-4">

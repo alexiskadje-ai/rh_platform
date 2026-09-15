@@ -1,9 +1,13 @@
-import { Search } from "lucide-react";
+import Link from "next/link";
+import { Search, Lock } from "lucide-react";
 import { db } from "@/lib/db";
 import { PRODUCT_TYPES, PRODUCT_TYPE_LABELS } from "@/lib/constants";
 import { formatFcfa, productTypeLabel } from "@/lib/shop";
+import { productApercu } from "@/lib/shop-preview";
 import { AddToCartButton } from "@/components/shop/add-to-cart-button";
+import { ProductPreviewButton, TrustRow } from "@/components/shop/product-preview";
 import { ProductTypeIcon } from "@/components/shop/product-type-icon";
+import { ShopSteps } from "@/components/shop/shop-steps";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,6 +30,14 @@ export default async function ShopCatalogPage({
       ...(filters.q ? { title: { contains: filters.q, mode: "insensitive" } } : {}),
       ...(type ? { type } : {}),
     },
+    select: {
+      id: true,
+      title: true,
+      type: true,
+      price: true,
+      description: true,
+      excerpt: true,
+    },
     orderBy: { title: "asc" },
   });
 
@@ -34,8 +46,12 @@ export default async function ShopCatalogPage({
       <PageHero
         eyebrow="Librairie"
         title="Boutique"
-        description="Modèles, guides et formations premium. Ajoutez au panier, commandez, puis choisissez le moyen de paiement."
+        description="Modèles, guides et formations premium. Un aperçu net avant paiement, puis le livrable dès confirmation."
       />
+      <div className="mt-8">
+        <ShopSteps current="catalogue" />
+      </div>
+      <TrustRow className="mt-6 max-w-3xl" />
       <form
         className="mt-10 grid gap-3 rounded-3xl border border-border/80 bg-card p-4 md:grid-cols-3 md:p-5"
         action="/boutique"
@@ -66,16 +82,32 @@ export default async function ShopCatalogPage({
                 </div>
                 <Badge>{productTypeLabel(product.type)}</Badge>
               </CardHeader>
-              <CardContent className="flex flex-1 flex-col justify-between gap-6">
-                <CardTitle className="font-display text-2xl leading-snug">{product.title}</CardTitle>
-                <div className="flex items-center justify-between gap-3">
+              <CardContent className="flex flex-1 flex-col justify-between gap-5">
+                <div>
+                  <Link href={`/boutique/${product.id}`}>
+                    <CardTitle className="font-display text-2xl leading-snug hover:text-accent">
+                      {product.title}
+                    </CardTitle>
+                  </Link>
+                  <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-muted-foreground">
+                    {product.description || productApercu(product)}
+                  </p>
+                  <p className="mt-3 inline-flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-muted-foreground">
+                    <Lock className="size-3" />
+                    Livrable après paiement
+                  </p>
+                </div>
+                <div className="space-y-3">
                   <p className="font-display text-xl text-primary">{formatFcfa(product.price)}</p>
-                  <AddToCartButton
-                    productId={product.id}
-                    title={product.title}
-                    type={product.type}
-                    price={product.price}
-                  />
+                  <div className="flex flex-wrap gap-2">
+                    <ProductPreviewButton product={product} />
+                    <AddToCartButton
+                      productId={product.id}
+                      title={product.title}
+                      type={product.type}
+                      price={product.price}
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>

@@ -6,6 +6,8 @@ export const productSchema = z.object({
   type: z.enum(PRODUCT_TYPES),
   price: z.coerce.number().int().min(1, "Prix obligatoire."),
   fileUrl: z.string().trim().min(1, "Fichier livrable obligatoire."),
+  description: z.string().trim().max(2000).default(""),
+  excerpt: z.string().trim().max(1200).default(""),
 });
 
 export const checkoutSchema = z.object({

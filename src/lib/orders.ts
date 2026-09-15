@@ -15,6 +15,7 @@ export type OrderRow = {
   items: {
     id: string;
     quantity: number;
+    downloadHref: string | null;
     product: { title: string; type: string };
   }[];
 };
@@ -24,7 +25,7 @@ export async function loadUserOrders(userId: string): Promise<OrderRow[]> {
     where: { userId },
     include: {
       payment: true,
-      items: { include: { product: { select: { title: true, type: true } } } },
+      items: { include: { product: { select: { title: true, type: true, fileUrl: true } } } },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -45,11 +46,17 @@ export async function loadUserOrders(userId: string): Promise<OrderRow[]> {
               failureReason: order.payment.failureReason ?? null,
             }
           : null,
-        items: order.items.map((item) => ({
-          id: item.id,
-          quantity: item.quantity,
-          product: { title: item.product.title, type: item.product.type },
-        })),
+        items: await Promise.all(
+          order.items.map(async (item) => ({
+            id: item.id,
+            quantity: item.quantity,
+            downloadHref:
+              order.status === "paid"
+                ? await createPresignedDownload(item.product.fileUrl)
+                : null,
+            product: { title: item.product.title, type: item.product.type },
+          })),
+        ),
       };
     }),
   );

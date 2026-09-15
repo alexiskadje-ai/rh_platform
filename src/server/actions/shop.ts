@@ -27,6 +27,8 @@ function productPayload(formData: FormData) {
     type: formData.get("type"),
     price: formData.get("price"),
     fileUrl: formData.get("fileUrl"),
+    description: formData.get("description") ?? "",
+    excerpt: formData.get("excerpt") ?? "",
   });
 }
 
@@ -51,6 +53,7 @@ export async function createProduct(
   const product = await db.product.create({ data: parsed.data });
   revalidatePath("/admin/boutique");
   revalidatePath("/boutique");
+  revalidatePath(`/boutique/${product.id}`);
   redirect(`/admin/boutique/${product.id}`);
 }
 
@@ -70,6 +73,7 @@ export async function updateProduct(
   revalidatePath("/admin/boutique");
   revalidatePath(`/admin/boutique/${id}`);
   revalidatePath("/boutique");
+  revalidatePath(`/boutique/${id}`);
   return { ok: true, message: "Produit enregistré." };
 }
 
@@ -174,7 +178,16 @@ export async function requireOwnOrder(orderId: string) {
       user: { select: { phone: true, email: true, firstName: true, lastName: true } },
       items: {
         include: {
-          product: { select: { title: true, type: true, price: true, fileUrl: true } },
+          product: {
+            select: {
+              title: true,
+              type: true,
+              price: true,
+              fileUrl: true,
+              description: true,
+              excerpt: true,
+            },
+          },
         },
       },
     },

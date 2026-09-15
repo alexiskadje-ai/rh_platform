@@ -6,8 +6,10 @@ import { useRouter } from "next/navigation";
 import { Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
 import { cartCount, cartTotal, useCart } from "@/lib/cart";
 import { formatFcfa, productTypeLabel } from "@/lib/shop";
+import { productIncludes } from "@/lib/shop-preview";
 import { checkoutCart } from "@/server/actions/shop";
 import { ProductTypeIcon } from "@/components/shop/product-type-icon";
+import { TrustRow } from "@/components/shop/product-preview";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -83,10 +85,18 @@ export function CartView() {
                   <ProductTypeIcon type={item.type} />
                 </span>
                 <div>
-                  <p className="font-medium">{item.title}</p>
+                  <Link href={`/boutique/${item.productId}`} className="font-medium hover:text-accent">
+                    {item.title}
+                  </Link>
                   <p className="text-sm text-muted-foreground">
                     {productTypeLabel(item.type)} · {formatFcfa(item.price)}
                   </p>
+                  <Link
+                    href={`/boutique/${item.productId}`}
+                    className="mt-1 inline-block text-xs text-primary underline-offset-4 hover:underline"
+                  >
+                    Aperçu avant paiement
+                  </Link>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -129,10 +139,24 @@ export function CartView() {
           </Card>
         ))}
       </div>
+      <div className="rounded-3xl border border-border/80 bg-muted/30 p-5">
+        <p className="text-xs uppercase tracking-[0.22em] text-accent">Avant paiement</p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Vérifiez le récapitulatif. L’aperçu est public ; le livrable s’ouvre après confirmation
+          MoMo ou Stripe.
+        </p>
+        <ul className="mt-3 space-y-1.5 text-sm">
+          {[...new Set(items.flatMap((item) => productIncludes(item.type)))].slice(0, 5).map((line) => (
+            <li key={line} className="text-muted-foreground">
+              • {line}
+            </li>
+          ))}
+        </ul>
+      </div>
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-border/80 bg-card p-5">
         <div>
           <p className="text-sm text-muted-foreground">
-            {cartCount(items)} article{cartCount(items) > 1 ? "s" : ""}
+            Récapitulatif · {cartCount(items)} article{cartCount(items) > 1 ? "s" : ""}
           </p>
           <p className="font-display text-2xl text-primary">Total : {formatFcfa(cartTotal(items))}</p>
         </div>
@@ -142,14 +166,15 @@ export function CartView() {
           </Button>
           <Button type="button" onClick={checkout} disabled={pending}>
             <ShoppingCart className="size-4" />
-            {pending ? "Création de la commande…" : "Passer commande"}
+            {pending ? "Création de la commande…" : "Vérifier et payer"}
           </Button>
         </div>
       </div>
       {message ? <p className="text-sm text-destructive">{message}</p> : null}
+      <TrustRow />
       <p className="text-xs text-muted-foreground">
-        Les prix sont recalculés côté serveur au checkout. Le paiement MTN MoMo est
-        confirmé par webhook, puis la facture PDF est émise automatiquement.
+        Les prix sont recalculés côté serveur. Le livrable et la facture PDF s’ouvrent après
+        confirmation MoMo ou Stripe.
       </p>
     </div>
   );

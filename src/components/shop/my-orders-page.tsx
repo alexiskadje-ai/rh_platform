@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FileText, Store } from "lucide-react";
+import { FileText, Store, Download } from "lucide-react";
 import type { Role } from "@prisma/client";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { buttonVariants } from "@/components/ui/button";
@@ -55,9 +55,21 @@ export function MyOrdersPage({
                 </div>
                 <ul className="text-sm text-muted-foreground">
                   {order.items.map((item) => (
-                    <li key={item.id}>
-                      {item.product.title} ({productTypeLabel(item.product.type)}) ×{" "}
-                      {item.quantity}
+                    <li key={item.id} className="flex flex-wrap items-center justify-between gap-2">
+                      <span>
+                        {item.product.title} ({productTypeLabel(item.product.type)}) × {item.quantity}
+                      </span>
+                      {item.downloadHref ? (
+                        <a
+                          href={item.downloadHref}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 text-xs text-primary underline-offset-4 hover:underline"
+                        >
+                          <Download className="size-3.5" />
+                          Livrable
+                        </a>
+                      ) : null}
                     </li>
                   ))}
                 </ul>

@@ -10,6 +10,7 @@ import {
 import { FileUrlField } from "@/components/employees/file-url-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { SubmitButton } from "@/components/ui/submit-button";
 
 export function ProductForm({
@@ -22,6 +23,8 @@ export function ProductForm({
     type: string;
     price: number;
     fileUrl: string;
+    description?: string;
+    excerpt?: string;
   };
 }) {
   const action = productId ? updateProduct : createProduct;
@@ -71,6 +74,34 @@ export function ProductForm({
             <p className="text-xs text-destructive">{state.errors.price[0]}</p>
           ) : null}
         </div>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="description">Description (affichée en boutique)</Label>
+        <Textarea
+          id="description"
+          name="description"
+          defaultValue={initial?.description}
+          placeholder="Ce que contient le produit, à qui il s’adresse…"
+        />
+        {state.errors?.description ? (
+          <p className="text-xs text-destructive">{state.errors.description[0]}</p>
+        ) : null}
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="excerpt">Aperçu avant paiement</Label>
+        <Textarea
+          id="excerpt"
+          name="excerpt"
+          defaultValue={initial?.excerpt}
+          placeholder="Extrait public, filigrané. Le fichier livrable reste caché jusqu’au paiement."
+        />
+        {state.errors?.excerpt ? (
+          <p className="text-xs text-destructive">{state.errors.excerpt[0]}</p>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            Visible avant paiement. Ne collez jamais le fichier livrable ici.
+          </p>
+        )}
       </div>
       <FileUrlField
         name="fileUrl"
