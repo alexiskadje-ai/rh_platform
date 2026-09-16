@@ -9,7 +9,8 @@ import { getOpenAI } from "@/lib/ai/openai";
 import { logAiCall } from "@/lib/ai/logs";
 import { consumeAiQuota } from "@/lib/ai/rate-limit";
 import { refreshCandidateEmbedding } from "@/lib/ai/embeddings";
-import { readUploadBuffer, saveUpload } from "@/lib/storage";
+import { readUploadBuffer, saveBuffer } from "@/lib/storage";
+import { assertSafeCvUpload } from "@/lib/upload-guard";
 import { CV_JSON_SCHEMA, parsedCvSchema, type ParsedCv } from "@/lib/validations/cv-parse";
 
 export type ParseCvState = {
@@ -96,10 +97,10 @@ export async function parseCvFromUpload(
   const uploaded = formData.get("cv");
   let fileUrl = candidate.cvUrl ?? undefined;
   if (uploaded instanceof File && uploaded.size > 0) {
-    if (uploaded.type !== "application/pdf") {
-      return { message: "Le CV doit être un PDF." };
-    }
-    fileUrl = await saveUpload("cv", uploaded);
+    const bytes = Buffer.from(await uploaded.arrayBuffer());
+    const unsafe = assertSafeCvUpload(uploaded, bytes);
+    if (unsafe) return { message: unsafe };
+    fileUrl = await saveBuffer("cv", uploaded.name, bytes, "application/pdf");
     await db.candidate.update({
       where: { id: candidate.id },
       data: { cvUrl: fileUrl },

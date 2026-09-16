@@ -13,7 +13,8 @@ import { db } from "@/lib/db";
 import { closeExpiredOffers } from "@/lib/jobs";
 import { computeMatchScore, formatLocation } from "@/lib/matching";
 import { profileCompletion } from "@/lib/profile";
-import { saveUpload } from "@/lib/storage";
+import { saveBuffer, saveUpload } from "@/lib/storage";
+import { assertSafeCvUpload } from "@/lib/upload-guard";
 import { fieldErrorsFromZod } from "@/lib/users";
 import {
   applySchema,
@@ -296,10 +297,12 @@ export async function saveCvFile(formData: FormData): Promise<ActionState> {
   if (!(file instanceof File) || file.size === 0) {
     return { message: "Choisissez un PDF." };
   }
-  if (file.type !== "application/pdf") {
-    return { message: "Le CV doit être un fichier PDF." };
+  const bytes = Buffer.from(await file.arrayBuffer());
+  const unsafe = assertSafeCvUpload(file, bytes);
+  if (unsafe) {
+    return { message: unsafe };
   }
-  const cvUrl = await saveUpload("cv", file);
+  const cvUrl = await saveBuffer("cv", file.name, bytes, "application/pdf");
   await db.candidate.update({
     where: { id: candidate.id },
     data: { cvUrl },
@@ -415,10 +418,10 @@ export async function applyToJob(
   let cvUrl = candidate.cvUrl;
   const uploaded = formData.get("cv");
   if (uploaded instanceof File && uploaded.size > 0) {
-    if (uploaded.type !== "application/pdf") {
-      return { message: "Le CV doit être un PDF." };
-    }
-    cvUrl = await saveUpload("cv", uploaded);
+    const bytes = Buffer.from(await uploaded.arrayBuffer());
+    const unsafe = assertSafeCvUpload(uploaded, bytes);
+    if (unsafe) return { message: unsafe };
+    cvUrl = await saveBuffer("cv", uploaded.name, bytes, "application/pdf");
   }
   if (!cvUrl) {
     return { message: "Un CV est obligatoire." };

@@ -6,7 +6,7 @@ const passwordSchema = z
   .regex(/[A-Z]/, "Le mot de passe doit contenir au moins une majuscule.")
   .regex(/[0-9]/, "Le mot de passe doit contenir au moins un chiffre.");
 
-const phoneSchema = z
+export const phoneSchema = z
   .string()
   .trim()
   .min(1, "Le téléphone est obligatoire.")

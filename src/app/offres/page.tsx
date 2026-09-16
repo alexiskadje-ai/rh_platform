@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
+import { getSessionUser } from "@/lib/dal";
 import { closeExpiredOffers, publicJobWhere } from "@/lib/jobs";
 import { CONTRACT_LABELS } from "@/lib/constants";
 import { JobOfferCard } from "@/components/recruitment/job-offer-card";
@@ -15,6 +16,7 @@ export default async function PublicJobsPage({
 }) {
   const filters = await searchParams;
   await closeExpiredOffers();
+  const user = await getSessionUser();
   const offers = await db.jobOffer.findMany({
     where: publicJobWhere(filters),
     include: { company: true },
@@ -53,7 +55,11 @@ export default async function PublicJobsPage({
           <p className="text-sm text-muted-foreground">Aucune offre ne correspond à votre recherche.</p>
         ) : (
           offers.map((offer) => (
-            <JobOfferCard key={offer.id} offer={offer} href={`/offres/${offer.id}`} />
+            <JobOfferCard
+              key={offer.id}
+              offer={offer}
+              href={user ? `/offres/${offer.id}` : `/login?callbackUrl=/offres/${offer.id}`}
+            />
           ))
         )}
       </div>

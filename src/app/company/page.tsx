@@ -11,6 +11,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { ApplicationsChart } from "@/components/company/applications-chart";
 import { ReportDownloadForm } from "@/components/company/report-download-form";
 import { cn } from "@/lib/utils";
+import { candidateDisplayName } from "@/lib/users";
 
 export default async function CompanyDashboardPage() {
   const { user, companyId } = await requireRecruiter();
@@ -111,8 +112,7 @@ export default async function CompanyDashboardPage() {
               stats.upcomingInterviews.map((item) => (
                 <div key={item.id} className="rounded-xl border border-border p-3 text-sm">
                   <p className="font-medium">
-                    {item.application.candidate.user.firstName}{" "}
-                    {item.application.candidate.user.lastName}
+                    {candidateDisplayName(item.application.candidate)}
                   </p>
                   <p className="text-muted-foreground">
                     {item.application.jobOffer.title} ·{" "}

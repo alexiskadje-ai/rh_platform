@@ -51,14 +51,41 @@ export async function requireCandidate() {
     },
   });
   if (!candidate) {
-    candidate = await db.candidate.create({
-      data: { userId: user.id },
-      include: {
-        educations: true,
-        experiences: true,
-        certifications: true,
-      },
+    const dbUser = await db.user.findUnique({ where: { id: user.id } });
+    if (!dbUser) redirect("/login");
+    const orphan = await db.candidate.findFirst({
+      where: { userId: null, email: dbUser.email.toLowerCase() },
     });
+    if (orphan) {
+      candidate = await db.candidate.update({
+        where: { id: orphan.id },
+        data: {
+          userId: user.id,
+          firstName: orphan.firstName || dbUser.firstName,
+          lastName: orphan.lastName || dbUser.lastName,
+        },
+        include: {
+          educations: { orderBy: { year: "desc" } },
+          experiences: { orderBy: { startDate: "desc" } },
+          certifications: true,
+        },
+      });
+    } else {
+      candidate = await db.candidate.create({
+        data: {
+          userId: user.id,
+          email: dbUser.email.toLowerCase(),
+          phone: dbUser.phone ?? `+orphan-${user.id}`,
+          firstName: dbUser.firstName,
+          lastName: dbUser.lastName,
+        },
+        include: {
+          educations: true,
+          experiences: true,
+          certifications: true,
+        },
+      });
+    }
   }
   return { user, candidate };
 }

@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { Role, TokenType, UserStatus } from "@prisma/client";
+import { Prisma, Role, TokenType, UserStatus } from "@prisma/client";
 import { signIn, signOut } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { ROLE_HOME } from "@/lib/constants";
@@ -25,6 +25,7 @@ import {
   twoFactorSchema,
   verifySmsSchema,
 } from "@/lib/validations/auth";
+import { GUEST_CV_DUPLICATE_MESSAGE } from "@/lib/validations/free-cv";
 import { fieldErrorsFromZod, normalizeIdentifier, splitContactName } from "@/lib/users";
 
 export type ActionState = {
@@ -140,26 +141,75 @@ export async function registerCandidate(
   }
 
   const data = parsed.data;
+  const email = data.email.toLowerCase();
   const existing = await db.user.findFirst({
-    where: { OR: [{ email: data.email.toLowerCase() }, { phone: data.phone }] },
+    where: { OR: [{ email }, { phone: data.phone }] },
   });
   if (existing) {
     return { message: "Un compte existe déjà avec cet e-mail ou ce téléphone." };
   }
 
-  const user = await db.user.create({
-    data: {
-      firstName: data.firstName,
-      lastName: data.lastName,
-      email: data.email.toLowerCase(),
-      phone: data.phone,
-      passwordHash: await hashPassword(data.password),
-      role: Role.CANDIDATE,
-      status: UserStatus.PENDING,
-      termsAcceptedAt: new Date(),
-      candidate: { create: {} },
-    },
+  const orphanByEmail = await db.candidate.findFirst({
+    where: { email, userId: null },
   });
+  const orphanByPhone = await db.candidate.findFirst({
+    where: { phone: data.phone, userId: null },
+  });
+  if (orphanByEmail && orphanByPhone && orphanByEmail.id !== orphanByPhone.id) {
+    return { message: GUEST_CV_DUPLICATE_MESSAGE };
+  }
+
+  const profile = {
+    email,
+    phone: data.phone,
+    firstName: data.firstName,
+    lastName: data.lastName,
+  };
+
+  let user;
+  try {
+    if (orphanByEmail) {
+      user = await db.user.create({
+        data: {
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email,
+          phone: data.phone,
+          passwordHash: await hashPassword(data.password),
+          role: Role.CANDIDATE,
+          status: UserStatus.PENDING,
+          termsAcceptedAt: new Date(),
+        },
+      });
+      await db.candidate.update({
+        where: { id: orphanByEmail.id },
+        data: {
+          userId: user.id,
+          firstName: data.firstName,
+          lastName: data.lastName,
+        },
+      });
+    } else {
+      user = await db.user.create({
+        data: {
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email,
+          phone: data.phone,
+          passwordHash: await hashPassword(data.password),
+          role: Role.CANDIDATE,
+          status: UserStatus.PENDING,
+          termsAcceptedAt: new Date(),
+          candidate: { create: profile },
+        },
+      });
+    }
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return { message: GUEST_CV_DUPLICATE_MESSAGE };
+    }
+    throw error;
+  }
 
   const emailToken = await issueToken(user.id, TokenType.EMAIL);
   const smsCode = await issueToken(user.id, TokenType.SMS);

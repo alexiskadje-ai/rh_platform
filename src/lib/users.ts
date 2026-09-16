@@ -34,6 +34,16 @@ export function fieldErrorsFromZod(error: {
   return error.flatten().fieldErrors;
 }
 
+export function candidateDisplayName(candidate: {
+  firstName?: string | null;
+  lastName?: string | null;
+  user?: { firstName: string; lastName: string } | null;
+}) {
+  const first = candidate.user?.firstName || candidate.firstName || "";
+  const last = candidate.user?.lastName || candidate.lastName || "";
+  return `${first} ${last}`.trim() || "Candidat";
+}
+
 export function isCandidateReady(user: {
   role: Role;
   isVerified: boolean;

@@ -139,8 +139,12 @@ model Company {
 
 model Candidate {
   id             String   @id @default(cuid())
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId         String   @unique
+  user           User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String?  @unique
+  email          String   @unique
+  phone          String   @unique
+  firstName      String   @default("")
+  lastName       String   @default("")
   photoUrl       String?
   headline       String?
   bio            String?

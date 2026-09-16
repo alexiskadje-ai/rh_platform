@@ -10,6 +10,7 @@ import { RecalculateScoresButton } from "@/components/recruitment/recalculate-sc
 import { StatusBadge } from "@/components/recruitment/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { candidateDisplayName } from "@/lib/users";
 
 export default async function CompanyOfferDetailPage({
   params,
@@ -70,7 +71,7 @@ export default async function CompanyOfferDetailPage({
                 >
                   <div>
                     <p className="font-medium">
-                      {application.candidate.user.firstName} {application.candidate.user.lastName}
+                      {candidateDisplayName(application.candidate)}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {application.candidate.skills.slice(0, 5).join(", ")}

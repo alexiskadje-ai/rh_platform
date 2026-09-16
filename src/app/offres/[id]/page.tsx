@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { JobStatus, Role } from "@prisma/client";
 import { db } from "@/lib/db";
 import { getSessionUser } from "@/lib/dal";
@@ -26,6 +26,9 @@ export default async function PublicJobDetailPage({
   if (!offer) notFound();
 
   const user = await getSessionUser();
+  if (!user) {
+    redirect(`/login?callbackUrl=/offres/${offer.id}`);
+  }
   const candidate =
     user?.role === Role.CANDIDATE
       ? await db.candidate.findUnique({

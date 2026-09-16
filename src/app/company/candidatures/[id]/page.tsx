@@ -7,6 +7,7 @@ import { ApplicationTimeline } from "@/components/recruitment/application-timeli
 import { InterviewForm } from "@/components/recruitment/interview-form";
 import { StatusActions } from "@/components/recruitment/status-actions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { candidateDisplayName } from "@/lib/users";
 
 export default async function RecruiterApplicationPage({
   params,
@@ -36,7 +37,7 @@ export default async function RecruiterApplicationPage({
   return (
     <DashboardShell role={Role.RECRUITER} title="Espace entreprise">
       <h1 className="text-2xl font-semibold">
-        {candidate.user.firstName} {candidate.user.lastName}
+        {candidateDisplayName(candidate)}
       </h1>
       <p className="text-muted-foreground">
         {application.jobOffer.title} · score {application.matchScore ?? 0}%

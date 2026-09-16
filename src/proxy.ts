@@ -18,6 +18,8 @@ const PUBLIC_PATHS = [
   "/contact",
   "/a-propos",
   "/services",
+  "/candidat",
+  "/inscription",
 ];
 
 const ROLE_PREFIX: Record<string, Role> = {

@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
+import { getSessionUser } from "@/lib/dal";
 import { closeExpiredOffers, publicJobWhere } from "@/lib/jobs";
 import { JobOfferCard } from "@/components/recruitment/job-offer-card";
 import { HomeHero } from "@/components/home/home-hero";
 import { StatsRow } from "@/components/home/stats-row";
 import { ServicesGrid } from "@/components/home/services-grid";
 import { HowItWorks } from "@/components/home/how-it-works";
+import { WhyAccompany } from "@/components/home/why-accompany";
 import { Testimonials } from "@/components/home/testimonials";
 import { CtaBand } from "@/components/home/cta-band";
 import { FadeIn } from "@/components/motion/reveal";
@@ -39,6 +41,7 @@ export default async function HomePage() {
       <HomeHero />
       <StatsRow stats={stats} />
       <ServicesGrid />
+      <WhyAccompany />
       <HowItWorks />
       <RecentOffers />
       <Testimonials />
@@ -65,6 +68,7 @@ async function RecentOffers() {
     return null;
   }
   if (offers.length === 0) return null;
+  const user = await getSessionUser();
   return (
     <section className="mx-auto max-w-6xl px-4 py-20">
       <FadeIn className="flex items-end justify-between gap-4">
@@ -80,7 +84,12 @@ async function RecentOffers() {
       </FadeIn>
       <div className="mt-10 grid gap-4 md:grid-cols-2">
         {offers.map((offer) => (
-          <JobOfferCard key={offer.id} offer={offer} href={`/offres/${offer.id}`} compact />
+          <JobOfferCard
+            key={offer.id}
+            offer={offer}
+            href={user ? `/offres/${offer.id}` : `/login?callbackUrl=/offres/${offer.id}`}
+            compact
+          />
         ))}
       </div>
     </section>
