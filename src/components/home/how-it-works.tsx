@@ -35,21 +35,21 @@ const STEPS = [
 
 export function HowItWorks() {
   return (
-    <section className="bg-primary py-20 text-primary-foreground">
+    <section className="bg-primary py-10 text-primary-foreground md:py-12">
       <div className="mx-auto max-w-6xl px-4">
         <FadeIn>
           <p className="text-xs uppercase tracking-[0.28em] text-accent">Parcours</p>
-          <h2 className="mt-3 font-display text-3xl font-medium md:text-4xl">Comment ça marche</h2>
+          <h2 className="mt-2 font-display text-2xl font-medium md:text-3xl">Comment ça marche</h2>
         </FadeIn>
-        <Stagger className="mt-12 grid gap-6 md:grid-cols-4">
+        <Stagger className="mt-6 grid gap-4 md:grid-cols-4">
           {STEPS.map((step) => {
             const Icon = step.icon;
             return (
               <StaggerItem key={step.n}>
                 <Link href={step.href} className="group block h-full">
-                  <p className="font-display text-3xl text-accent/80">{step.n}</p>
-                  <Icon className="mt-4 size-5 text-accent" />
-                  <p className="mt-3 font-display text-xl">{step.title}</p>
+                  <p className="font-display text-2xl text-accent/80">{step.n}</p>
+                  <Icon className="mt-3 size-5 text-accent" />
+                  <p className="mt-2 font-display text-lg">{step.title}</p>
                   <p className="mt-2 text-sm leading-relaxed text-primary-foreground/70">{step.body}</p>
                   <span className="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-wider text-accent">
                     Continuer

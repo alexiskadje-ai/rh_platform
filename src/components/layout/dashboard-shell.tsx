@@ -12,6 +12,7 @@ import {
   Clock,
   FileText,
   GraduationCap,
+  HelpCircle,
   LayoutDashboard,
   LogOut,
   Shield,
@@ -34,6 +35,7 @@ const LINKS: Record<Role, { href: string; label: string; icon: LucideIcon }[]> =
     { href: "/admin/formations", label: "Formations", icon: GraduationCap },
     { href: "/admin/boutique", label: "Boutique", icon: Store },
     { href: "/admin/paiements", label: "Paiements", icon: Wallet },
+    { href: "/admin/faq", label: "FAQ / Newsletter", icon: HelpCircle },
     { href: "/settings/security", label: "Sécurité / 2FA", icon: Shield },
   ],
   RECRUITER: [

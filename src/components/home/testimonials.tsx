@@ -27,7 +27,7 @@ export function Testimonials() {
       <FadeIn>
         <p className="text-xs uppercase tracking-[0.28em] text-accent">Confiance</p>
         <h2 className="mt-3 font-display text-3xl font-medium text-primary md:text-4xl">
-          Témoignages
+          Ils nous font confiance
         </h2>
       </FadeIn>
       <Stagger className="mt-10 grid gap-4 md:grid-cols-3">

@@ -90,6 +90,12 @@ enum TokenType {
   LOGIN
 }
 
+enum FaqStatus {
+  PENDING
+  PUBLISHED
+  REJECTED
+}
+
 model User {
   id              String    @id @default(cuid())
   email           String    @unique
@@ -487,4 +493,23 @@ model TrustedDevice {
   tokenHash String   @unique
   expiresAt DateTime
   createdAt DateTime @default(now())
+}
+
+model FaqItem {
+  id         String    @id @default(cuid())
+  question   String
+  answer     String?
+  name       String?
+  email      String?
+  status     FaqStatus @default(PENDING)
+  createdAt  DateTime  @default(now())
+  answeredAt DateTime?
+}
+
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  alerts    String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
