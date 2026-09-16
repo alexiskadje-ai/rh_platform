@@ -4,7 +4,6 @@ import { getSessionUser } from "@/lib/dal";
 import { closeExpiredOffers, publicJobWhere } from "@/lib/jobs";
 import { JobOfferCard } from "@/components/recruitment/job-offer-card";
 import { HomeHero } from "@/components/home/home-hero";
-import { StatsRow } from "@/components/home/stats-row";
 import { ServicesGrid } from "@/components/home/services-grid";
 import { HowItWorks } from "@/components/home/how-it-works";
 import { WhyAccompany } from "@/components/home/why-accompany";
@@ -38,8 +37,7 @@ export default async function HomePage() {
 
   return (
     <main>
-      <HomeHero />
-      <StatsRow stats={stats} />
+      <HomeHero stats={stats} />
       <ServicesGrid />
       <WhyAccompany />
       <HowItWorks />

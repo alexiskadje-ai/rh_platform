@@ -1,10 +1,7 @@
 "use client";
 
-import { Briefcase, Building2, FileText, Users } from "lucide-react";
 import { CountUp } from "@/components/motion/count-up";
 import { FadeIn } from "@/components/motion/reveal";
-
-const ICONS = [FileText, Building2, Briefcase, Users];
 
 export function StatsRow({
   stats,
@@ -12,21 +9,15 @@ export function StatsRow({
   stats: { label: string; value: number }[];
 }) {
   return (
-    <section className="border-b border-border bg-card">
-      <FadeIn className="mx-auto grid max-w-6xl grid-cols-2 gap-8 px-4 py-12 md:grid-cols-4">
-        {stats.map((stat, index) => {
-          const Icon = ICONS[index] ?? Briefcase;
-          return (
-            <div key={stat.label} className="space-y-2">
-              <Icon className="size-5 text-accent" />
-              <p className="font-display text-4xl font-medium text-primary">
-                <CountUp value={stat.value} />
-              </p>
-              <p className="text-sm text-muted-foreground">{stat.label}</p>
-            </div>
-          );
-        })}
-      </FadeIn>
-    </section>
+    <FadeIn className="relative mx-auto mt-10 grid w-full max-w-6xl grid-cols-2 gap-x-6 gap-y-8 border-t border-primary-foreground/15 px-4 pb-12 pt-8 md:mt-14 md:grid-cols-4 md:pb-14 md:pt-10">
+      {stats.map((stat) => (
+        <div key={stat.label} className="min-w-0">
+          <p className="font-display text-3xl font-medium leading-none text-highlight md:text-5xl">
+            +<CountUp value={stat.value} />
+          </p>
+          <p className="mt-2 text-sm text-primary-foreground/75">{stat.label}</p>
+        </div>
+      ))}
+    </FadeIn>
   );
 }
