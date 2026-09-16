@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PasswordStrength } from "@/components/auth/password-strength";
+import { RecaptchaField } from "@/components/security/recaptcha-field";
 
 export function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
   const [state, action] = useActionState(login, {} as ActionState);
@@ -56,6 +57,7 @@ export function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
             Se souvenir de cet appareil (30 jours, si 2FA activé)
           </label>
           {state.message ? <p className="text-sm text-destructive">{state.message}</p> : null}
+          <RecaptchaField />
           <SubmitButton>Se connecter</SubmitButton>
         </form>
         <p className="mt-4 text-center text-sm text-muted-foreground">
@@ -164,6 +166,9 @@ export function CandidateRegisterForm() {
             <p className="text-sm text-destructive sm:col-span-2">{state.message}</p>
           ) : null}
           <div className="sm:col-span-2">
+            <RecaptchaField />
+          </div>
+          <div className="sm:col-span-2">
             <SubmitButton>Créer mon profil</SubmitButton>
           </div>
         </form>
@@ -240,6 +245,7 @@ export function CompanyRegisterForm({ sectors }: { sectors: readonly string[] })
             </Link>
           </label>
           {state.message ? <p className="text-sm text-destructive">{state.message}</p> : null}
+          <RecaptchaField />
           <SubmitButton>Envoyer la demande</SubmitButton>
         </form>
       </CardContent>

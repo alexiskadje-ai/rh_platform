@@ -26,6 +26,7 @@ import {
   verifySmsSchema,
 } from "@/lib/validations/auth";
 import { GUEST_CV_DUPLICATE_MESSAGE } from "@/lib/validations/free-cv";
+import { recaptchaFailed, RECAPTCHA_REQUIRED_MESSAGE } from "@/lib/recaptcha";
 import { fieldErrorsFromZod, normalizeIdentifier, splitContactName } from "@/lib/users";
 
 export type ActionState = {
@@ -126,6 +127,9 @@ export async function registerCandidate(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
+  if (await recaptchaFailed(formData)) {
+    return { message: RECAPTCHA_REQUIRED_MESSAGE };
+  }
   const parsed = registerCandidateSchema.safeParse({
     firstName: formData.get("firstName"),
     lastName: formData.get("lastName"),
@@ -225,6 +229,9 @@ export async function registerCompany(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
+  if (await recaptchaFailed(formData)) {
+    return { message: RECAPTCHA_REQUIRED_MESSAGE };
+  }
   const parsed = registerCompanySchema.safeParse({
     companyName: formData.get("companyName"),
     sector: formData.get("sector"),
@@ -285,6 +292,9 @@ export async function login(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
+  if (await recaptchaFailed(formData)) {
+    return { message: RECAPTCHA_REQUIRED_MESSAGE };
+  }
   const parsed = loginSchema.safeParse({
     identifier: formData.get("identifier"),
     password: formData.get("password"),

@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { submitFreeCv, type FreeCvState } from "@/server/actions/free-cv";
-import { RecaptchaField } from "@/components/recruitment/recaptcha-field";
+import { RecaptchaField } from "@/components/security/recaptcha-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SubmitButton } from "@/components/ui/submit-button";

@@ -3,7 +3,7 @@
 import { Prisma } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { verifyRecaptcha } from "@/lib/recaptcha";
+import { recaptchaFailed, RECAPTCHA_REQUIRED_MESSAGE } from "@/lib/recaptcha";
 import { saveBuffer } from "@/lib/storage";
 import { assertSafeCvUpload } from "@/lib/upload-guard";
 import { fieldErrorsFromZod } from "@/lib/users";
@@ -23,9 +23,8 @@ export async function submitFreeCv(
   _prev: FreeCvState,
   formData: FormData,
 ): Promise<FreeCvState> {
-  const captchaOk = await verifyRecaptcha(String(formData.get("g-recaptcha-response") ?? ""));
-  if (!captchaOk) {
-    return { message: "Cochez « Je ne suis pas un robot » avant d'envoyer." };
+  if (await recaptchaFailed(formData)) {
+    return { message: RECAPTCHA_REQUIRED_MESSAGE };
   }
   if (String(formData.get("website") ?? "").trim()) {
     return { message: "Soumission invalide." };
