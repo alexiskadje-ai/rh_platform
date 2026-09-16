@@ -5,6 +5,7 @@ import {
   COMPANY_HOURS,
   COMPANY_NAME,
   COMPANY_OFFICES,
+  COMPANY_SERVICES,
   COMPANY_SLOGAN,
   COMPANY_WEBSITE,
   mailHref,
@@ -28,6 +29,9 @@ export function SiteFooter() {
         <div className="text-sm">
           <p className="text-xs uppercase tracking-[0.2em] text-highlight">Explorer</p>
           <div className="mt-4 flex flex-col gap-2 text-primary-foreground/75">
+            <Link href="/a-propos" className="hover:text-primary-foreground">
+              Qui sommes-nous
+            </Link>
             <Link href="/offres" className="hover:text-primary-foreground">
               Offres d&apos;emploi
             </Link>
@@ -40,31 +44,26 @@ export function SiteFooter() {
             <Link href="/faq" className="hover:text-primary-foreground">
               FAQ
             </Link>
-          </div>
-        </div>
-        <div className="text-sm">
-          <p className="text-xs uppercase tracking-[0.2em] text-highlight">Entreprise</p>
-          <div className="mt-4 flex flex-col gap-2 text-primary-foreground/75">
-            <Link href="/a-propos" className="hover:text-primary-foreground">
-              Qui sommes-nous
-            </Link>
-            <Link href="/services" className="hover:text-primary-foreground">
-              Nos services
+            <Link href="/contact" className="hover:text-primary-foreground">
+              Contact
             </Link>
             <Link href="/register/company" className="hover:text-primary-foreground">
               Espace recruteur
             </Link>
-            <Link href="/contact" className="hover:text-primary-foreground">
-              Contact
-            </Link>
-            <a
-              href={COMPANY_WEBSITE}
-              target="_blank"
-              rel="noreferrer"
-              className="hover:text-primary-foreground"
-            >
-              pes-rh.net
-            </a>
+          </div>
+        </div>
+        <div className="text-sm">
+          <p className="text-xs uppercase tracking-[0.2em] text-highlight">Nos services</p>
+          <div className="mt-4 flex flex-col gap-2 text-primary-foreground/75">
+            {COMPANY_SERVICES.map((service) => (
+              <Link
+                key={service.slug}
+                href={`/services/${service.slug}`}
+                className="hover:text-primary-foreground"
+              >
+                {service.title}
+              </Link>
+            ))}
           </div>
         </div>
         <div className="text-sm text-primary-foreground/75">
@@ -89,6 +88,14 @@ export function SiteFooter() {
             {COMPANY_EMAIL}
           </a>
           <p className="mt-2 text-primary-foreground/60">{COMPANY_HOURS}</p>
+          <a
+            href={COMPANY_WEBSITE}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-3 inline-block hover:text-primary-foreground"
+          >
+            pes-rh.net
+          </a>
         </div>
       </div>
       <div className="border-t border-primary-foreground/10">

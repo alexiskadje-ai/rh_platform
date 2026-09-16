@@ -12,7 +12,7 @@ export default function ServicesPage() {
         <PageHero
           eyebrow={COMPANY_SHORT}
           title="Nos services"
-          description="Simplifiez votre gestion des ressources humaines avec des experts à vos côtés. Des services RH professionnels accessibles aux PME."
+          description="Simplifiez votre gestion des ressources humaines avec des experts à vos côtés. Survolez une carte, puis ouvrez En savoir plus pour la page complète de chaque offre."
         />
       </div>
       <ServicesGrid hideHeading />
