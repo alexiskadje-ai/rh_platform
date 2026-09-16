@@ -25,7 +25,7 @@ export async function submitFreeCv(
 ): Promise<FreeCvState> {
   const captchaOk = await verifyRecaptcha(String(formData.get("g-recaptcha-response") ?? ""));
   if (!captchaOk) {
-    return { message: "Veuillez valider le CAPTCHA avant d'envoyer votre CV." };
+    return { message: "Cochez « Je ne suis pas un robot » avant d'envoyer." };
   }
   if (String(formData.get("website") ?? "").trim()) {
     return { message: "Soumission invalide." };
