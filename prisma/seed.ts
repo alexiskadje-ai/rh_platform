@@ -1,5 +1,6 @@
 import { PrismaClient, Role, UserStatus } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { PACK_IDS, PACK_PRICES } from "../src/lib/shop-packs";
 
 const db = new PrismaClient();
 
@@ -34,60 +35,90 @@ async function main() {
 
   console.log(`Admin prêt : ${email}`);
 
-  const course = await db.course.upsert({
-    where: { id: "course_pack_carriere" },
+  await db.platformSetting.upsert({
+    where: { key: "leave_accrual_rate" },
     update: {},
+    create: { key: "leave_accrual_rate", value: "1.5" },
+  });
+  await db.platformSetting.upsert({
+    where: { key: "max_carryover_days" },
+    update: {},
+    create: { key: "max_carryover_days", value: "15" },
+  });
+
+  const course = await db.course.upsert({
+    where: { id: PACK_IDS.packCarriereCourse },
+    update: { price: 0 },
     create: {
-      id: "course_pack_carriere",
+      id: PACK_IDS.packCarriereCourse,
       title: "Pack Carrière — entretien et positionnement",
       description:
-        "Parcours premium lié au pack Boutique : CV, pitch et préparation aux entretiens.",
+        "Parcours premium offert avec le Pack Carrière : CV, pitch et préparation aux entretiens.",
       category: "Carrière",
-      price: 15000,
+      price: 0,
     },
   });
 
   await db.product.upsert({
-    where: { id: "product_booster_cv" },
+    where: { id: PACK_IDS.boosterCv },
     update: {
       title: "Booster CV",
       type: "modele_cv",
-      price: 5000,
+      price: PACK_PRICES.boosterCv,
     },
     create: {
-      id: "product_booster_cv",
+      id: PACK_IDS.boosterCv,
       title: "Booster CV",
       type: "modele_cv",
-      price: 5000,
+      price: PACK_PRICES.boosterCv,
       fileUrl: "packs/booster-cv.pdf",
-      excerpt: "Modèle et relecture pour un CV qui passe vraiment.",
+      excerpt: "CV optimisé par IA et lettre de motivation assortie. Export illimité.",
       description:
-        "Achat unique. Pas de renouvellement automatique. Modèle de CV et conseils de relecture pour le marché camerounais.",
+        "Achat unique. Pas de renouvellement automatique. CV optimisé par IA + lettre de motivation, export illimité.",
     },
   });
 
   await db.product.upsert({
-    where: { id: "product_pack_carriere" },
+    where: { id: PACK_IDS.packCarriere },
     update: {
       title: "Pack Carrière",
       type: "formation_premium",
-      price: 15000,
+      price: PACK_PRICES.packCarriere,
       courseId: course.id,
     },
     create: {
-      id: "product_pack_carriere",
+      id: PACK_IDS.packCarriere,
       title: "Pack Carrière",
       type: "formation_premium",
-      price: 15000,
+      price: PACK_PRICES.packCarriere,
       fileUrl: "packs/pack-carriere.pdf",
       courseId: course.id,
-      excerpt: "Formation premium + outils de positionnement.",
+      excerpt: "Booster CV + formation premium + mise en avant du profil 30 jours.",
       description:
-        "Achat unique. Pas de renouvellement automatique. Accès à la formation Pack Carrière (entretien et positionnement).",
+        "Achat unique. Pas de renouvellement automatique. Inclut Booster CV, une formation premium et la mise en avant du profil pendant 30 jours.",
     },
   });
 
-  console.log("Packs Boutique prêts : Booster CV, Pack Carrière");
+  await db.product.upsert({
+    where: { id: PACK_IDS.premiumCandidat },
+    update: {
+      title: "Premium Candidat",
+      type: "abonnement",
+      price: PACK_PRICES.premiumCandidat,
+    },
+    create: {
+      id: PACK_IDS.premiumCandidat,
+      title: "Premium Candidat",
+      type: "abonnement",
+      price: PACK_PRICES.premiumCandidat,
+      fileUrl: "packs/premium-candidat.pdf",
+      excerpt: "Profil mis en avant, alertes de matching, formations illimitées — 30 jours.",
+      description:
+        "Abonnement mensuel explicite (3 000 FCFA). Aucun renouvellement automatique : un nouvel achat prolonge la période. Profil mis en avant, alertes de matching, formations illimitées.",
+    },
+  });
+
+  console.log("Packs Boutique prêts : Booster CV, Pack Carrière, Premium Candidat");
 }
 
 main()

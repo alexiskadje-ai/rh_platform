@@ -11,6 +11,7 @@ import {
   askFaqSchema,
   newsletterSchema,
 } from "@/lib/validations/content";
+import { contactSchema } from "@/lib/validations/platform";
 
 export type ContentActionState = {
   ok?: boolean;
@@ -123,4 +124,60 @@ export async function loadPublishedFaqs() {
   } catch {
     return [];
   }
+}
+
+export async function submitContactMessage(
+  _prev: ContentActionState,
+  formData: FormData,
+): Promise<ContentActionState> {
+  if (await recaptchaFailed(formData)) {
+    return { message: RECAPTCHA_REQUIRED_MESSAGE };
+  }
+  if (honeypotBlocked(formData)) return { message: "Soumission invalide." };
+
+  const parsed = contactSchema.safeParse({
+    name: formData.get("name"),
+    email: formData.get("email"),
+    phone: formData.get("phone") || undefined,
+    subject: formData.get("subject") || "contact",
+    message: formData.get("message"),
+  });
+  if (!parsed.success) return { errors: fieldErrorsFromZod(parsed.error) };
+
+  await db.contactMessage.create({
+    data: {
+      name: parsed.data.name,
+      email: parsed.data.email.toLowerCase(),
+      phone: parsed.data.phone,
+      subject: parsed.data.subject,
+      message: parsed.data.message,
+    },
+  });
+
+  const admins = await db.user.findMany({
+    where: { role: Role.ADMIN, status: "ACTIVE" },
+    select: { id: true },
+  });
+  if (admins.length > 0) {
+    await db.notification.createMany({
+      data: admins.map((admin) => ({
+        userId: admin.id,
+        channel: "in-app",
+        message:
+          parsed.data.subject === "recruteur_pro"
+            ? `Demande Recruteur Pro — ${parsed.data.name} (${parsed.data.email})`
+            : `Nouveau message contact — ${parsed.data.name} (${parsed.data.email})`,
+      })),
+    });
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/messages");
+  return {
+    ok: true,
+    message:
+      parsed.data.subject === "recruteur_pro"
+        ? "Demande envoyée. Un conseiller vous recontacte pour le devis Recruteur Pro."
+        : "Message envoyé. Nous vous répondrons rapidement.",
+  };
 }

@@ -92,7 +92,10 @@ export function computeLeaveBalance(
   hireDate: Date,
   leaves: LeaveTaken[],
   asOf = new Date(),
+  settings?: { accrualRate?: number; maxCarryoverDays?: number },
 ) {
+  const accrualRate = settings?.accrualRate ?? LEAVE_ACCRUAL_RATE;
+  const maxCarryover = settings?.maxCarryoverDays ?? MAX_CARRYOVER_DAYS;
   const asOfYmd = doualaYmd(asOf);
   const year = Number(asOfYmd.slice(0, 4));
   const jan1 = toDateOnly(`${year}-01-01`);
@@ -110,10 +113,10 @@ export function computeLeaveBalance(
     .reduce((sum, item) => sum + item.days, 0);
 
   const accruedTo = (date: Date) =>
-    completeMonthsBetween(hireDate, date) * LEAVE_ACCRUAL_RATE;
+    completeMonthsBetween(hireDate, date) * accrualRate;
 
   const leftoverPrev = Math.max(0, accruedTo(jan1) - takenBefore(jan1));
-  const carryover = hireDate < jan1 ? Math.min(MAX_CARRYOVER_DAYS, leftoverPrev) : 0;
+  const carryover = hireDate < jan1 ? Math.min(maxCarryover, leftoverPrev) : 0;
   const accruedThisYear = accruedTo(toDateOnly(asOfYmd)) - accruedTo(jan1);
 
   const available = carryover + accruedThisYear - takenInYear;

@@ -567,6 +567,22 @@ C'est le pont entre la Partie 2 (expérience utilisateur) et la Partie 4 (feuill
 | Quantité (panier)   | Nombre                           | Défaut 1                   |
 | Méthode de paiement | MoMo / Orange / Carte / Virement | Obligatoire au checkout    |
 
+### 4.12bis Packs et offres (monétisation)
+
+*Structure de packs inspirée des plateformes de référence (LinkedIn Premium, Novoresume, Kickresume) : freemium honnête (le gratuit reste utilisable), packs à l'unité payés via MoMo/Orange (mieux adaptés au marché local qu'un abonnement récurrent par carte), abonnement réservé aux features à valeur continue.*
+
+| **Pack**         | **Type**              | **Prix indicatif** | **Contenu**                                                                                        | **Modèle(s) Prisma**             |
+|------------------|-----------------------|--------------------|----------------------------------------------------------------------------------------------------|----------------------------------|
+| Gratuit          | —                     | 0 FCFA             | Dépôt CV libre, candidature de base, 1 CV simple                                                   | Candidate                        |
+| Booster CV       | Achat unique          | 2 000-3 000 FCFA   | CV optimisé par IA (§12.3) + lettre de motivation assortie, export illimité                        | Product (type: modele_cv), Order |
+| Pack Carrière    | Achat unique          | 5 000-7 000 FCFA   | Booster CV + 1 formation premium offerte + mise en avant du profil 30 jours                        | Product, Enrollment              |
+| Premium Candidat | Abonnement mensuel    | ~3 000 FCFA/mois   | Profil mis en avant en continu, alertes prioritaires (Matching Score §12.3), formations illimitées | Subscription                     |
+| Recruteur Pro    | Abonnement entreprise | Sur devis          | Offres mises en avant, plus de candidatures simultanées, rapports avancés                          | Subscription (lié à Company)     |
+
+- Le bouton « Boost your Career » / « Booster ma carrière » est positionné en contexte dans le dashboard candidat (§6.1) et sur les pages d'offre — pas seulement comme lien générique dans le menu.
+
+- Éviter tout renouvellement automatique non explicite sur les packs à l'unité — un dark pattern de ce type détruit la confiance sur ce marché (contre-exemple constaté chez un concurrent : essai à prix cassé qui bascule silencieusement en abonnement).
+
 ### 4.13 Gestion des utilisateurs et rôles (admin)
 
 *Tableau avec recherche et actions rapides. → modèles User, Company.*

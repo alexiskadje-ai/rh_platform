@@ -4,11 +4,13 @@ import { db } from "@/lib/db";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { approveCompany } from "@/server/actions/admin";
+import { formatFcfa } from "@/lib/shop";
 import { Button } from "@/components/ui/button";
 
 export default async function AdminDashboardPage() {
   const user = await requireRole([Role.ADMIN]);
-  const [candidates, companies, pendingCompanies, employees] = await Promise.all([
+  const [candidates, companies, pendingCompanies, employees, offers, paidOrders, accepted, decided] =
+    await Promise.all([
     db.user.count({ where: { role: Role.CANDIDATE } }),
     db.company.count(),
     db.company.findMany({
@@ -17,7 +19,13 @@ export default async function AdminDashboardPage() {
       orderBy: { createdAt: "desc" },
     }),
     db.employee.count(),
+    db.jobOffer.count({ where: { status: "OPEN" } }),
+    db.order.aggregate({ where: { status: "paid" }, _sum: { total: true } }),
+    db.application.count({ where: { status: "ACCEPTED" } }),
+    db.application.count({ where: { status: { in: ["ACCEPTED", "REJECTED"] } } }),
   ]);
+  const revenue = paidOrders._sum.total ?? 0;
+  const retention = decided === 0 ? 0 : Math.round((accepted / decided) * 100);
 
   return (
     <DashboardShell role={Role.ADMIN} title="Administration">
@@ -28,6 +36,9 @@ export default async function AdminDashboardPage() {
           ["Entreprises", companies],
           ["En attente", pendingCompanies.length],
           ["Employés", employees],
+          ["Offres ouvertes", offers],
+          ["Revenus boutique", formatFcfa(revenue)],
+          ["Taux de recrutement", `${retention} %`],
         ].map(([label, value]) => (
           <Card key={String(label)}>
             <CardHeader>

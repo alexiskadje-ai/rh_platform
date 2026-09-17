@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Check } from "lucide-react";
 import { db } from "@/lib/db";
 import { formatFcfa, productTypeLabel } from "@/lib/shop";
-import { isOneShotPack, ONE_SHOT_NOTICE } from "@/lib/shop-packs";
+import { isOneShotPack, ONE_SHOT_NOTICE, PREMIUM_CANDIDAT_TITLE, SUBSCRIPTION_NOTICE } from "@/lib/shop-packs";
 import { productApercu, productIncludes } from "@/lib/shop-preview";
 import { AddToCartButton } from "@/components/shop/add-to-cart-button";
 import { ProductPreviewButton, TrustRow } from "@/components/shop/product-preview";
@@ -53,6 +53,8 @@ export default async function ProductPage({
             <Badge>{productTypeLabel(product.type)}</Badge>
             {isOneShotPack(product.title) ? (
               <Badge className="bg-primary/10 text-primary">Achat unique</Badge>
+            ) : product.title === PREMIUM_CANDIDAT_TITLE ? (
+              <Badge className="bg-highlight/20 text-primary">Mensuel explicite</Badge>
             ) : null}
           </div>
           <h1 className="mt-4 font-display text-4xl text-primary md:text-5xl">{product.title}</h1>
@@ -93,6 +95,10 @@ export default async function ProductPage({
           {isOneShotPack(product.title) ? (
             <p className="mt-3 rounded-2xl bg-muted/80 px-4 py-3 text-sm leading-relaxed text-muted-foreground">
               {ONE_SHOT_NOTICE}
+            </p>
+          ) : product.title === PREMIUM_CANDIDAT_TITLE ? (
+            <p className="mt-3 rounded-2xl bg-muted/80 px-4 py-3 text-sm leading-relaxed text-muted-foreground">
+              {SUBSCRIPTION_NOTICE}
             </p>
           ) : null}
           <div className="mt-6 flex flex-wrap gap-2">

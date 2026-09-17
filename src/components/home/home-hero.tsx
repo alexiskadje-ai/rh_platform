@@ -12,7 +12,7 @@ import { fieldClass } from "@/lib/ui";
 export function HomeHero({
   stats,
 }: {
-  stats: { label: string; value: number }[];
+  stats: { label: string; value: number; suffix?: string; plus?: boolean }[];
 }) {
   return (
     <section className="relative -mt-[4.25rem] overflow-hidden bg-primary text-primary-foreground">

@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { Role } from "@prisma/client";
 import { requireRecruiter } from "@/lib/dal";
 import { db } from "@/lib/db";
-import { computeLeaveBalance } from "@/lib/leave";
+import { leaveBalance } from "@/lib/leave-settings";
 import { CONTRACT_LABELS, DOCUMENT_TYPE_LABELS } from "@/lib/constants";
 import { createPresignedDownload } from "@/lib/storage";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
@@ -24,7 +24,7 @@ export default async function CompanyEmployeeDetailPage({
     include: { user: true, documents: { orderBy: { uploadedAt: "desc" } }, leaves: true },
   });
   if (!employee) notFound();
-  const balance = computeLeaveBalance(employee.hireDate, employee.leaves);
+  const balance = await leaveBalance(employee.hireDate, employee.leaves);
   const docs = await Promise.all(
     employee.documents.map(async (doc) => ({
       ...doc,

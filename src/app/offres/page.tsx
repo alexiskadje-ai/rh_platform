@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { getSessionUser } from "@/lib/dal";
 import { closeExpiredOffers, publicJobWhere } from "@/lib/jobs";
 import { CONTRACT_LABELS } from "@/lib/constants";
+import { recruteurProCompanyIds } from "@/lib/subscriptions";
 import { JobOfferCard } from "@/components/recruitment/job-offer-card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -16,11 +16,16 @@ export default async function PublicJobsPage({
 }) {
   const filters = await searchParams;
   await closeExpiredOffers();
-  const user = await getSessionUser();
   const offers = await db.jobOffer.findMany({
     where: publicJobWhere(filters),
     include: { company: true },
     orderBy: { createdAt: "desc" },
+  });
+  const proIds = await recruteurProCompanyIds(offers.map((item) => item.companyId));
+  const ranked = [...offers].sort((a, b) => {
+    const featured = Number(proIds.has(b.companyId)) - Number(proIds.has(a.companyId));
+    if (featured !== 0) return featured;
+    return b.createdAt.getTime() - a.createdAt.getTime();
   });
 
   return (
@@ -51,14 +56,14 @@ export default async function PublicJobsPage({
         <Button type="submit">Filtrer</Button>
       </form>
       <div className="mt-10 grid gap-4 md:grid-cols-2">
-        {offers.length === 0 ? (
+        {ranked.length === 0 ? (
           <p className="text-sm text-muted-foreground">Aucune offre ne correspond à votre recherche.</p>
         ) : (
-          offers.map((offer) => (
+          ranked.map((offer) => (
             <JobOfferCard
               key={offer.id}
               offer={offer}
-              href={user ? `/offres/${offer.id}` : `/login?callbackUrl=/offres/${offer.id}`}
+              href={`/offres/${offer.id}`}
             />
           ))
         )}

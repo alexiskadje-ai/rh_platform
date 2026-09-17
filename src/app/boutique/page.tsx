@@ -3,7 +3,7 @@ import { Search, Lock } from "lucide-react";
 import { db } from "@/lib/db";
 import { PRODUCT_TYPES, PRODUCT_TYPE_LABELS } from "@/lib/constants";
 import { formatFcfa, productTypeLabel } from "@/lib/shop";
-import { CANDIDATE_PACK_QUERY, CANDIDATE_PACK_TITLES, isOneShotPack } from "@/lib/shop-packs";
+import { CANDIDATE_PACK_QUERY, CANDIDATE_SHOP_TITLES, isOneShotPack, PREMIUM_CANDIDAT_TITLE } from "@/lib/shop-packs";
 import { productApercu } from "@/lib/shop-preview";
 import { AddToCartButton } from "@/components/shop/add-to-cart-button";
 import { ProductPreviewButton, TrustRow } from "@/components/shop/product-preview";
@@ -31,7 +31,7 @@ export default async function ShopCatalogPage({
     where: {
       ...(filters.q ? { title: { contains: filters.q, mode: "insensitive" } } : {}),
       ...(type ? { type } : {}),
-      ...(candidatePacks ? { title: { in: [...CANDIDATE_PACK_TITLES] } } : {}),
+      ...(candidatePacks ? { title: { in: [...CANDIDATE_SHOP_TITLES] } } : {}),
     },
     select: {
       id: true,
@@ -51,7 +51,7 @@ export default async function ShopCatalogPage({
         title="Boutique"
         description={
           candidatePacks
-            ? "Packs candidat : Booster CV et Pack Carrière. Achat unique, sans renouvellement automatique."
+            ? "Packs candidat : Booster CV, Pack Carrière et Premium Candidat. Les achats unitaires n'ont pas de renouvellement automatique."
             : "Modèles, guides et formations premium. Un aperçu net avant paiement, puis le livrable dès confirmation."
         }
       />
@@ -91,6 +91,8 @@ export default async function ShopCatalogPage({
                   <Badge>{productTypeLabel(product.type)}</Badge>
                   {isOneShotPack(product.title) ? (
                     <Badge className="bg-primary/10 text-primary">Achat unique</Badge>
+                  ) : product.title === PREMIUM_CANDIDAT_TITLE ? (
+                    <Badge className="bg-highlight/20 text-primary">Mensuel</Badge>
                   ) : null}
                 </div>
               </CardHeader>

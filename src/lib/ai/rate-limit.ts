@@ -1,18 +1,20 @@
 import { AiCallKind } from "@prisma/client";
 import {
   AI_EMBEDDING_DAILY_LIMIT,
+  AI_GENERATE_DAILY_LIMIT,
   AI_PARSE_CV_DAILY_LIMIT,
 } from "@/lib/constants";
 import { countAiCallsToday } from "@/lib/ai/logs";
 
-const LIMITS: Record<"PARSE_CV" | "EMBEDDING", number> = {
+const LIMITS: Record<"PARSE_CV" | "EMBEDDING" | "GENERATE", number> = {
   PARSE_CV: AI_PARSE_CV_DAILY_LIMIT,
   EMBEDDING: AI_EMBEDDING_DAILY_LIMIT,
+  GENERATE: AI_GENERATE_DAILY_LIMIT,
 };
 
 export async function consumeAiQuota(
   userId: string,
-  kind: "PARSE_CV" | "EMBEDDING",
+  kind: "PARSE_CV" | "EMBEDDING" | "GENERATE",
 ) {
   const used = await countAiCallsToday(userId, kind as AiCallKind);
   const limit = LIMITS[kind];

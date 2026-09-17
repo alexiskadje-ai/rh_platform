@@ -30,6 +30,7 @@ import {
 } from "@/lib/validations/recruitment";
 import { refreshCandidateEmbedding, refreshJobOfferEmbedding } from "@/lib/ai/embeddings";
 import { computeMatchScoresForOffer } from "@/server/actions/ai-matching";
+import { convertAcceptedCandidate } from "@/server/actions/employees";
 
 export type ActionState = {
   ok?: boolean;
@@ -490,9 +491,17 @@ export async function updateApplicationStatus(
   }
 
   await recordStatus(application.id, next);
+  let hiredNote = "";
+  if (next === ApplicationStatus.ACCEPTED) {
+    const employee = await convertAcceptedCandidate(application.id, companyId);
+    if (employee) {
+      hiredNote = ` Fiche employé créée (${employee.matricule}).`;
+    }
+  }
   revalidatePath(`/company/offres/${application.jobOfferId}`);
   revalidatePath(`/company/candidatures/${application.id}`);
-  return { ok: true, message: "Statut mis à jour." };
+  revalidatePath("/company/employes");
+  return { ok: true, message: `Statut mis à jour.${hiredNote}` };
 }
 
 export async function inviteToInterview(

@@ -8,6 +8,7 @@ import { JobOfferCard } from "@/components/recruitment/job-offer-card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { GenerateOfferButton } from "@/components/recruitment/generate-offer-button";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -82,6 +83,16 @@ export function JobOfferForm({
             <Field label="Intitulé du poste" error={state.errors?.title?.[0]}>
               <Input name="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
             </Field>
+            <GenerateOfferButton
+              title={title}
+              city={city}
+              region={region}
+              contractType={contractType}
+              onGenerated={(copy) => {
+                setDescription(copy.description);
+                setRequirements(copy.requirements);
+              }}
+            />
             <Field label="Description" error={state.errors?.description?.[0]}>
               <Textarea
                 name="description"

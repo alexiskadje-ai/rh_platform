@@ -4,6 +4,7 @@ import { saveBuffer } from "@/lib/storage";
 import { sendEmail, sendSms } from "@/lib/notify";
 import { APP_NAME } from "@/lib/constants";
 import { formatFcfa } from "@/lib/shop";
+import { grantPaidOrderEntitlements } from "@/lib/entitlements";
 import { renderInvoicePdf } from "@/lib/payments/invoice";
 
 export const PAYMENT_STATUS = {
@@ -82,6 +83,11 @@ export async function confirmPaidPayment(paymentId: string) {
       },
     });
     return next;
+  });
+
+  await grantPaidOrderEntitlements({
+    userId: order.userId,
+    items: order.items,
   });
 
   const text = `Bonjour ${order.user.firstName},\n\nVotre paiement ${payment.reference} de ${formatFcfa(order.total)} a été confirmé.\nVotre facture ${number} est disponible dans vos achats.\n\n${APP_NAME}`;

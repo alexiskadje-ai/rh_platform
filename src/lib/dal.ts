@@ -1,12 +1,15 @@
 import { redirect } from "next/navigation";
 import { CompanyStatus, Role, UserStatus } from "@prisma/client";
+import { auditStore } from "@/lib/audit";
 import { auth } from "@/lib/auth";
 import { ROLE_HOME } from "@/lib/constants";
 import { db } from "@/lib/db";
 
 export async function getSessionUser() {
   const session = await auth();
-  return session?.user ?? null;
+  const user = session?.user ?? null;
+  if (user) auditStore.enterWith({ userId: user.id });
+  return user;
 }
 
 export async function requireUser() {

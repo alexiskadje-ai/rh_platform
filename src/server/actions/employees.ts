@@ -238,3 +238,47 @@ export async function attachEmployeeDocument(
   revalidatePath(`/company/employes/${employeeId}`);
   return { ok: true, message: "Document enregistré." };
 }
+
+export async function convertAcceptedCandidate(applicationId: string, companyId: string) {
+  const application = await db.application.findFirst({
+    where: { id: applicationId, jobOffer: { companyId } },
+    include: {
+      candidate: { include: { user: true } },
+      jobOffer: true,
+    },
+  });
+  if (!application?.candidate.user) return null;
+  const user = application.candidate.user;
+  const existing = await db.employee.findUnique({ where: { userId: user.id } });
+  if (existing) return existing;
+  if (user.role === Role.ADMIN) return null;
+
+  const matricule = await nextMatricule();
+  const employee = await db.$transaction(async (tx) => {
+    await tx.user.update({
+      where: { id: user.id },
+      data: {
+        role: Role.EMPLOYEE,
+        status: UserStatus.ACTIVE,
+        companyId,
+      },
+    });
+    return tx.employee.create({
+      data: {
+        userId: user.id,
+        companyId,
+        matricule,
+        position: application.jobOffer.title,
+        department: "À compléter",
+        contractType: application.jobOffer.contractType,
+        hireDate: new Date(),
+        address: application.candidate.city || "À compléter",
+        emergencyName: "À compléter",
+        emergencyPhone: user.phone || "00000000",
+      },
+    });
+  });
+  revalidatePath("/company/employes");
+  revalidatePath("/employee");
+  return employee;
+}

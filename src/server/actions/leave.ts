@@ -3,13 +3,11 @@
 import { LeaveStatus, LeaveType, Role } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { requireEmployee, requireRecruiter, requireUser } from "@/lib/dal";
+import { sendEmail } from "@/lib/notify";
 import { db } from "@/lib/db";
 import { fieldErrorsFromZod } from "@/lib/users";
-import {
-  computeLeaveBalance,
-  leaveDaysForType,
-  toDateOnly,
-} from "@/lib/leave";
+import { leaveDaysForType, toDateOnly } from "@/lib/leave";
+import { leaveBalance } from "@/lib/leave-settings";
 import {
   absenceSchema,
   leaveDecisionSchema,
@@ -77,7 +75,17 @@ async function notifyHr(companyId: string, message: string) {
       message,
     })),
   });
-  // TODO(notifications): email RH (Phase 8).
+  await Promise.all(
+    recruiters
+      .filter((user) => user.email)
+      .map((user) =>
+        sendEmail({
+          to: user.email,
+          subject: "Justificatif maladie manquant",
+          text: message,
+        }),
+      ),
+  );
 }
 
 export async function requestLeave(
@@ -105,7 +113,7 @@ export async function requestLeave(
     const leaves = await db.leaveRequest.findMany({
       where: { employeeId: employee.id },
     });
-    const balance = computeLeaveBalance(employee.hireDate, leaves);
+    const balance = await leaveBalance(employee.hireDate, leaves);
     if (days > balance.available) {
       return {
         message: `Solde insuffisant : ${balance.available} jour(s) disponible(s).`,
@@ -164,7 +172,7 @@ export async function decideLeave(
     const leaves = await db.leaveRequest.findMany({
       where: { employeeId: leave.employeeId },
     });
-    const balance = computeLeaveBalance(leave.employee.hireDate, leaves);
+    const balance = await leaveBalance(leave.employee.hireDate, leaves);
     if (leave.days > balance.available) {
       return {
         message: `Solde insuffisant : ${balance.available} jour(s) disponible(s).`,
@@ -265,7 +273,7 @@ export async function leaveBalanceFor(employeeId: string) {
     include: { leaves: true },
   });
   if (!employee) return null;
-  return computeLeaveBalance(employee.hireDate, employee.leaves);
+  return leaveBalance(employee.hireDate, employee.leaves);
 }
 
 export async function decideLeaveForm(formData: FormData) {

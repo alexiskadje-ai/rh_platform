@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { getSessionUser } from "@/lib/dal";
 import { closeExpiredOffers, publicJobWhere } from "@/lib/jobs";
+import { recruteurProCompanyIds } from "@/lib/subscriptions";
 import { JobOfferCard } from "@/components/recruitment/job-offer-card";
 import { HomeHero } from "@/components/home/home-hero";
 import { ServicesGrid } from "@/components/home/services-grid";
@@ -14,24 +14,29 @@ import { FadeIn } from "@/components/motion/reveal";
 export default async function HomePage() {
   let cvCount = 0;
   let companyCount = 0;
-  let offerCount = 0;
+  let satisfaction = 0;
   let recruiterCount = 0;
 
   try {
-    [cvCount, companyCount, offerCount, recruiterCount] = await Promise.all([
+    const [cvs, companies, decided, accepted, recruiters] = await Promise.all([
       db.candidate.count(),
       db.company.count({ where: { status: "ACTIVE" } }),
-      db.jobOffer.count({ where: { status: "OPEN" } }),
+      db.application.count({ where: { status: { in: ["ACCEPTED", "REJECTED"] } } }),
+      db.application.count({ where: { status: "ACCEPTED" } }),
       db.user.count({ where: { role: "RECRUITER", status: "ACTIVE" } }),
     ]);
+    cvCount = cvs;
+    companyCount = companies;
+    satisfaction = decided === 0 ? 0 : Math.round((accepted / decided) * 100);
+    recruiterCount = recruiters;
   } catch {
     // Database may be unavailable during first boot.
   }
 
   const stats = [
     { label: "CV disponibles", value: cvCount },
+    { label: "Taux de satisfaction", value: satisfaction, suffix: "%", plus: false },
     { label: "Entreprises suivies", value: companyCount },
-    { label: "Offres actives", value: offerCount },
     { label: "Recruteurs actifs", value: recruiterCount },
   ];
 
@@ -66,7 +71,12 @@ async function RecentOffers() {
     return null;
   }
   if (offers.length === 0) return null;
-  const user = await getSessionUser();
+  const proIds = await recruteurProCompanyIds(offers.map((item) => item.companyId));
+  const ranked = [...offers].sort((a, b) => {
+    const featured = Number(proIds.has(b.companyId)) - Number(proIds.has(a.companyId));
+    if (featured !== 0) return featured;
+    return b.createdAt.getTime() - a.createdAt.getTime();
+  });
   return (
     <section className="mx-auto max-w-6xl px-4 py-20">
       <FadeIn className="flex items-end justify-between gap-4">
@@ -81,11 +91,11 @@ async function RecentOffers() {
         </Link>
       </FadeIn>
       <div className="mt-10 grid gap-4 md:grid-cols-2">
-        {offers.map((offer) => (
+        {ranked.map((offer) => (
           <JobOfferCard
             key={offer.id}
             offer={offer}
-            href={user ? `/offres/${offer.id}` : `/login?callbackUrl=/offres/${offer.id}`}
+            href={`/offres/${offer.id}`}
             compact
           />
         ))}

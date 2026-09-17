@@ -35,6 +35,11 @@ export function MyOrdersPage({
           <Store className="size-4" />
           Boutique
         </Link>
+        {role === "CANDIDATE" ? (
+          <Link href="/candidate/booster" className={cn(buttonVariants())}>
+            Générer CV / lettre
+          </Link>
+        ) : null}
       </div>
       <div className="mt-6 space-y-3">
         {orders.length === 0 ? (

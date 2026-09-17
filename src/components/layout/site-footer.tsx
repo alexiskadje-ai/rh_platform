@@ -7,12 +7,12 @@ import {
   COMPANY_OFFICES,
   COMPANY_SERVICES,
   COMPANY_SLOGAN,
-  COMPANY_WEBSITE,
   mailHref,
   telHref,
 } from "@/lib/company";
 import { BrandLogo } from "@/components/layout/brand-logo";
 import { SocialLinks } from "@/components/layout/social-links";
+import { ContactForm } from "@/components/content/contact-form";
 
 export function SiteFooter() {
   const office = COMPANY_OFFICES[0];
@@ -88,14 +88,12 @@ export function SiteFooter() {
             {COMPANY_EMAIL}
           </a>
           <p className="mt-2 text-primary-foreground/60">{COMPANY_HOURS}</p>
-          <a
-            href={COMPANY_WEBSITE}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-3 inline-block hover:text-primary-foreground"
-          >
-            pes-rh.net
-          </a>
+          <div className="mt-6">
+            <p className="text-xs uppercase tracking-[0.2em] text-highlight">Écrire</p>
+            <div className="mt-3">
+              <ContactForm compact inverted />
+            </div>
+          </div>
         </div>
       </div>
       <div className="border-t border-primary-foreground/10">

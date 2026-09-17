@@ -6,6 +6,7 @@ import { requireRecruiter } from "@/lib/dal";
 import { db } from "@/lib/db";
 import { logAiCall } from "@/lib/ai/logs";
 import { refreshJobOfferEmbedding } from "@/lib/ai/embeddings";
+import { isPremiumSubscriber } from "@/lib/subscriptions";
 import {
   availabilitySoftScore,
   combineMatchScore,
@@ -97,6 +98,26 @@ export async function computeMatchScoresForOffer(jobOfferId: string, userId?: st
         breakdown: { cosine, location, availability, contract },
       },
     });
+    const candidateUser = await db.candidate.findUnique({
+      where: { id: candidate.id },
+      select: { userId: true },
+    });
+    if (candidateUser?.userId && score >= 70 && (await isPremiumSubscriber(candidateUser.userId))) {
+      const marker = `matching:${jobOfferId}`;
+      const already = await db.notification.findFirst({
+        where: { userId: candidateUser.userId, message: { contains: marker } },
+        select: { id: true },
+      });
+      if (!already) {
+        await db.notification.create({
+          data: {
+            userId: candidateUser.userId,
+            channel: "in-app",
+            message: `Nouvelle offre à fort matching (${score} %). ${marker}`,
+          },
+        });
+      }
+    }
   }
 
   if (userId) {
@@ -136,4 +157,71 @@ export async function recomputeOfferScoresAction(
   const jobOfferId = String(formData.get("jobOfferId") ?? "");
   if (!jobOfferId) return { message: "Offre introuvable." };
   return computeMatchScores(jobOfferId);
+}
+
+type RankedOffer = {
+  id: string;
+  score: number;
+};
+
+export async function recommendOfferIdsForCandidate(candidateId: string) {
+  const candidate = await db.candidate.findUnique({
+    where: { id: candidateId },
+    select: {
+      id: true,
+      skills: true,
+      city: true,
+      region: true,
+      availability: true,
+      desiredContractTypes: true,
+    },
+  });
+  if (!candidate) return [] as RankedOffer[];
+
+  const embeddingRows = await db.$queryRaw<{ embedding: string | null }[]>`
+    SELECT "cvEmbedding"::text AS embedding
+    FROM "Candidate"
+    WHERE id = ${candidateId}
+  `;
+  const embedding = embeddingRows[0]?.embedding;
+  if (!embedding) return [];
+
+  const rows = await db.$queryRaw<{ id: string; cosine: number }[]>`
+    SELECT
+      o.id,
+      GREATEST(0, LEAST(1, 1 - (o."offerEmbedding" <=> ${embedding}::vector))) AS cosine
+    FROM "JobOffer" o
+    WHERE o."offerEmbedding" IS NOT NULL
+      AND o.status = 'OPEN'
+      AND o.visibility = 'PUBLIC'
+      AND o.deadline >= NOW()
+    ORDER BY cosine DESC
+    LIMIT 40
+  `;
+
+  const offers = await db.jobOffer.findMany({
+    where: { id: { in: rows.map((row) => row.id) } },
+    select: { id: true, city: true, region: true, contractType: true },
+  });
+  const byId = new Map(offers.map((item) => [item.id, item]));
+  return rows
+    .map((row) => {
+      const offer = byId.get(row.id);
+      if (!offer) return null;
+      const score = combineMatchScore({
+        cosine: Number(row.cosine) || 0,
+        location: locationSoftScore({
+          candidateCity: candidate.city,
+          candidateRegion: candidate.region,
+          offerCity: offer.city,
+          offerRegion: offer.region,
+        }),
+        availability: availabilitySoftScore(candidate.availability),
+        contract: contractSoftScore(candidate.desiredContractTypes as ContractType[], offer.contractType),
+      });
+      return { id: offer.id, score };
+    })
+    .filter((item): item is RankedOffer => Boolean(item))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 12);
 }

@@ -74,6 +74,7 @@ export const INTERVIEW_FORMAT_LABELS = {
 
 export const AI_PARSE_CV_DAILY_LIMIT = 10;
 export const AI_EMBEDDING_DAILY_LIMIT = 50;
+export const AI_GENERATE_DAILY_LIMIT = 10;
 export const MATCH_WEIGHTS = {
   cosine: 0.7,
   location: 0.1,
@@ -83,11 +84,11 @@ export const MATCH_WEIGHTS = {
 
 export const TZ_DOUALA = "Africa/Douala";
 
-/** TODO(phase2) : taux paramétrable par type de contrat (CDI/CDD/STAGE). */
+/** Défauts CDC §5.2 (1,5 j/mois CDI) et Art. 96 — surchargeables par l'admin. */
 export const LEAVE_ACCRUAL_RATE = 1.5;
-
-/** TODO(phase2) : configurable par entreprise. Art. 96 Code du Travail. */
 export const MAX_CARRYOVER_DAYS = 15;
+export const LEAVE_ACCRUAL_SETTING = "leave_accrual_rate";
+export const MAX_CARRYOVER_SETTING = "max_carryover_days";
 
 export const MATERNITY_CALENDAR_DAYS = 98;
 
@@ -196,6 +197,7 @@ export const PRODUCT_TYPES = [
   "modele_cv",
   "modele_lettre",
   "formation_premium",
+  "abonnement",
 ] as const;
 
 export type ProductType = (typeof PRODUCT_TYPES)[number];
@@ -206,6 +208,7 @@ export const PRODUCT_TYPE_LABELS: Record<ProductType, string> = {
   modele_cv: "Modèle de CV",
   modele_lettre: "Modèle de lettre",
   formation_premium: "Formation premium",
+  abonnement: "Abonnement",
 };
 
 export const PAYMENT_METHOD_LABELS = {

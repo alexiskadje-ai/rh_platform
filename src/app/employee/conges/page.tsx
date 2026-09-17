@@ -1,7 +1,7 @@
 import { Role } from "@prisma/client";
 import { requireEmployee } from "@/lib/dal";
 import { db } from "@/lib/db";
-import { computeLeaveBalance } from "@/lib/leave";
+import { leaveBalance } from "@/lib/leave-settings";
 import { LEAVE_TYPE_LABELS } from "@/lib/constants";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { LeaveForm } from "@/components/employees/leave-form";
@@ -13,7 +13,7 @@ export default async function EmployeeLeavesPage() {
     where: { employeeId: employee.id },
     orderBy: { createdAt: "desc" },
   });
-  const balance = computeLeaveBalance(employee.hireDate, leaves);
+  const balance = await leaveBalance(employee.hireDate, leaves);
 
   return (
     <DashboardShell role={Role.EMPLOYEE} title="Espace employé">

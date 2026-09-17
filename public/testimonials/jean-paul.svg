@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Portrait">
+  <rect width="128" height="128" rx="64" fill="#0b3d4a"/>
+  <circle cx="64" cy="50" r="22" fill="#d9e8ee"/>
+  <ellipse cx="64" cy="112" rx="38" ry="32" fill="#042963"/>
+  <text x="64" y="56" text-anchor="middle" fill="#042963" font-size="22" font-family="Georgia, serif">J</text>
+</svg>

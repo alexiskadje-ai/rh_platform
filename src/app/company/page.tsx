@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Role } from "@prisma/client";
 import { requireRecruiter } from "@/lib/dal";
 import { closeExpiredOffers } from "@/lib/jobs";
+import { raiseMissingJustificationAlerts } from "@/server/actions/leave";
 import { getCompanyDashboard } from "@/lib/company-dashboard";
 import { doualaYmd, monthStartYmd } from "@/lib/leave";
 import { INTERVIEW_FORMAT_LABELS, LEAVE_TYPE_LABELS } from "@/lib/constants";
@@ -16,6 +17,7 @@ import { candidateDisplayName } from "@/lib/users";
 export default async function CompanyDashboardPage() {
   const { user, companyId } = await requireRecruiter();
   await closeExpiredOffers();
+  await raiseMissingJustificationAlerts();
   const stats = await getCompanyDashboard(companyId);
   const today = doualaYmd();
 

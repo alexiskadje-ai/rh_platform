@@ -45,14 +45,17 @@ export default async function CompanyOfferDetailPage({
     },
   });
 
+  const premiumIds = await premiumCandidateUserIds(
+    applications.map((item) => item.candidate.userId).filter((id): id is string => Boolean(id)),
+  );
   const ranked = [...applications].sort((a, b) => {
+    const featuredA = a.candidate.userId && premiumIds.has(a.candidate.userId) ? 1 : 0;
+    const featuredB = b.candidate.userId && premiumIds.has(b.candidate.userId) ? 1 : 0;
+    if (featuredB !== featuredA) return featuredB - featuredA;
     const scoreA = a.candidate.matchScores[0]?.score ?? a.matchScore ?? 0;
     const scoreB = b.candidate.matchScores[0]?.score ?? b.matchScore ?? 0;
     return scoreB - scoreA;
   });
-  const premiumIds = await premiumCandidateUserIds(
-    applications.map((item) => item.candidate.userId).filter((id): id is string => Boolean(id)),
-  );
 
   return (
     <DashboardShell role={Role.RECRUITER} title="Espace entreprise">

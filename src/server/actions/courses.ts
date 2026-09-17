@@ -22,6 +22,7 @@ import {
   enrollSchema,
   quizAttemptSchema,
 } from "@/lib/validations/courses";
+import { canEnrollInPaidCourse } from "@/lib/entitlements";
 
 export type ActionState = {
   ok?: boolean;
@@ -128,7 +129,10 @@ export async function enrollCourse(formData: FormData) {
   if (!parsed.success) return;
   const course = await db.course.findUnique({ where: { id: parsed.data.courseId } });
   if (!course) return;
-  // TODO(phase7) : bloquer l'inscription si price > 0 tant que le paiement n'est pas confirmé.
+  const access = await canEnrollInPaidCourse(user.id, course.id, course.price);
+  if (!access.ok) {
+    redirect(`/boutique?pack=candidat`);
+  }
   await db.enrollment.upsert({
     where: { courseId_userId: { courseId: course.id, userId: user.id } },
     update: {},

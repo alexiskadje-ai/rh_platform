@@ -26,6 +26,11 @@ const INCLUDED: Record<ProductType, string[]> = {
     "Supports associés",
     "Livrable débloqué après confirmation",
   ],
+  abonnement: [
+    "Profil mis en avant auprès des recruteurs",
+    "Alertes de matching prioritaires",
+    "Formations en accès illimité pendant la période",
+  ],
 };
 
 const APERCU: Record<ProductType, string> = {
@@ -34,6 +39,7 @@ const APERCU: Record<ProductType, string> = {
   modele_cv: "Aperçu : en-tête, bloc profil, expériences, formations et compétences. Les contenus d’exemple sont filigranés.",
   modele_lettre: "Aperçu : objet, accroche, argumentaire et formule de politesse. Le modèle final est envoyé après confirmation.",
   formation_premium: "Aperçu : déroulé du parcours, modules et format des supports. L’accès premium s’ouvre après paiement.",
+  abonnement: "Aperçu : mise en avant du profil, alertes de matching et formations illimitées pendant 30 jours. L’accès s’active après paiement confirmé.",
 };
 
 export function productIncludes(type: string) {

@@ -5,6 +5,7 @@ import {
   GraduationCap,
   Mail,
   Package,
+  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 import type { ProductType } from "@/lib/constants";
@@ -16,6 +17,7 @@ const ICONS: Record<ProductType, LucideIcon> = {
   modele_cv: FileUser,
   modele_lettre: Mail,
   formation_premium: GraduationCap,
+  abonnement: Sparkles,
 };
 
 export function ProductTypeIcon({

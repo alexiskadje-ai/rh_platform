@@ -61,6 +61,7 @@ enum AiCallKind {
   PARSE_CV
   EMBEDDING
   MATCH
+  GENERATE
 }
 
 enum LeaveStatus {
@@ -121,10 +122,12 @@ model User {
   notifications  Notification[]
   enrollments    Enrollment[]
   orders         Order[]
-  tokens         VerificationToken[]
-  trustedDevices TrustedDevice[]
-  aiCallLogs     AiCallLog[]
-  subscription   Subscription?
+  tokens           VerificationToken[]
+  trustedDevices   TrustedDevice[]
+  aiCallLogs       AiCallLog[]
+  subscription     Subscription?
+  activityLogs     ActivityLog[]
+  careerDocuments  CareerDocument[]
 }
 
 model Company {
@@ -165,6 +168,7 @@ model Candidate {
   parsedCvRaw    Json?
   cvEmbedding    Unsupported("vector(1536)")?
   embeddingInputHash String?
+  featuredUntil  DateTime?
   educations     Education[]
   experiences    Experience[]
   certifications Certification[]
@@ -519,4 +523,46 @@ model NewsletterSubscriber {
   alerts    String[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model PlatformSetting {
+  key   String @id
+  value String
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([entity, createdAt])
+  @@index([userId, createdAt])
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String   @default("contact")
+  message   String
+  createdAt DateTime @default(now())
+}
+
+model CareerDocument {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  kind      String
+  title     String
+  content   String
+  fileUrl   String?
+  createdAt DateTime @default(now())
+
+  @@index([userId, kind, createdAt])
 }

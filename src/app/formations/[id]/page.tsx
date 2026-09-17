@@ -60,6 +60,15 @@ export default async function PublicCourseDetailPage({
         {modules.length} module(s) · {quiz.length} question(s) · {course.documents.length}{" "}
         document(s)
       </p>
+      {course.price > 0 && !enrollment ? (
+        <p className="mt-4 text-sm text-muted-foreground">
+          Formation payante : inscrivez-vous après achat du Pack Carrière, ou via Premium Candidat
+          (formations illimitées).{" "}
+          <Link href="/boutique?pack=candidat" className="text-primary underline-offset-4 hover:underline">
+            Voir les packs
+          </Link>
+        </p>
+      ) : null}
       <div className="mt-8">
         {enrollment ? (
           <Link href={`/learn/${course.id}`} className={cn(buttonVariants())}>
@@ -72,7 +81,9 @@ export default async function PublicCourseDetailPage({
         ) : canEnroll ? (
           <form action={enrollCourse}>
             <input type="hidden" name="courseId" value={course.id} />
-            <Button type="submit">S&apos;inscrire</Button>
+            <Button type="submit">
+              {course.price > 0 ? "S'inscrire (si déjà payée)" : "S'inscrire"}
+            </Button>
           </form>
         ) : (
           <Link href="/login" className={cn(buttonVariants())}>
