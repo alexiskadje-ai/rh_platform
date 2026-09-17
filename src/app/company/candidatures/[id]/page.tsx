@@ -8,6 +8,8 @@ import { InterviewForm } from "@/components/recruitment/interview-form";
 import { StatusActions } from "@/components/recruitment/status-actions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { candidateDisplayName } from "@/lib/users";
+import { isPremiumCandidate } from "@/lib/subscriptions";
+import { PremiumBadge } from "@/components/recruitment/premium-badge";
 
 export default async function RecruiterApplicationPage({
   params,
@@ -33,11 +35,13 @@ export default async function RecruiterApplicationPage({
   });
   if (!application) notFound();
   const { candidate } = application;
+  const premium = await isPremiumCandidate(candidate.userId);
 
   return (
     <DashboardShell role={Role.RECRUITER} title="Espace entreprise">
-      <h1 className="text-2xl font-semibold">
+      <h1 className="flex flex-wrap items-center gap-2 text-2xl font-semibold">
         {candidateDisplayName(candidate)}
+        {premium ? <PremiumBadge /> : null}
       </h1>
       <p className="text-muted-foreground">
         {application.jobOffer.title} · score {application.matchScore ?? 0}%
@@ -48,7 +52,10 @@ export default async function RecruiterApplicationPage({
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Profil</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              Profil
+              {premium ? <PremiumBadge /> : null}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             <p>{candidate.headline}</p>

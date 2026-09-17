@@ -3,6 +3,7 @@ import { Search, Lock } from "lucide-react";
 import { db } from "@/lib/db";
 import { PRODUCT_TYPES, PRODUCT_TYPE_LABELS } from "@/lib/constants";
 import { formatFcfa, productTypeLabel } from "@/lib/shop";
+import { CANDIDATE_PACK_QUERY, CANDIDATE_PACK_TITLES, isOneShotPack } from "@/lib/shop-packs";
 import { productApercu } from "@/lib/shop-preview";
 import { AddToCartButton } from "@/components/shop/add-to-cart-button";
 import { ProductPreviewButton, TrustRow } from "@/components/shop/product-preview";
@@ -18,17 +19,19 @@ import { fieldClass } from "@/lib/ui";
 export default async function ShopCatalogPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; type?: string }>;
+  searchParams: Promise<{ q?: string; type?: string; pack?: string }>;
 }) {
   const filters = await searchParams;
   const type =
     filters.type && PRODUCT_TYPES.includes(filters.type as (typeof PRODUCT_TYPES)[number])
       ? filters.type
       : undefined;
+  const candidatePacks = filters.pack === CANDIDATE_PACK_QUERY;
   const products = await db.product.findMany({
     where: {
       ...(filters.q ? { title: { contains: filters.q, mode: "insensitive" } } : {}),
       ...(type ? { type } : {}),
+      ...(candidatePacks ? { title: { in: [...CANDIDATE_PACK_TITLES] } } : {}),
     },
     select: {
       id: true,
@@ -46,7 +49,11 @@ export default async function ShopCatalogPage({
       <PageHero
         eyebrow="Librairie"
         title="Boutique"
-        description="Modèles, guides et formations premium. Un aperçu net avant paiement, puis le livrable dès confirmation."
+        description={
+          candidatePacks
+            ? "Packs candidat : Booster CV et Pack Carrière. Achat unique, sans renouvellement automatique."
+            : "Modèles, guides et formations premium. Un aperçu net avant paiement, puis le livrable dès confirmation."
+        }
       />
       <div className="mt-8">
         <ShopSteps current="catalogue" />
@@ -80,7 +87,12 @@ export default async function ShopCatalogPage({
                 <div className="flex size-12 items-center justify-center rounded-2xl bg-accent/10 text-accent">
                   <ProductTypeIcon type={product.type} className="size-6" />
                 </div>
-                <Badge>{productTypeLabel(product.type)}</Badge>
+                <div className="flex flex-wrap justify-end gap-1.5">
+                  <Badge>{productTypeLabel(product.type)}</Badge>
+                  {isOneShotPack(product.title) ? (
+                    <Badge className="bg-primary/10 text-primary">Achat unique</Badge>
+                  ) : null}
+                </div>
               </CardHeader>
               <CardContent className="flex flex-1 flex-col justify-between gap-5">
                 <div>

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Check } from "lucide-react";
 import { db } from "@/lib/db";
 import { formatFcfa, productTypeLabel } from "@/lib/shop";
+import { isOneShotPack, ONE_SHOT_NOTICE } from "@/lib/shop-packs";
 import { productApercu, productIncludes } from "@/lib/shop-preview";
 import { AddToCartButton } from "@/components/shop/add-to-cart-button";
 import { ProductPreviewButton, TrustRow } from "@/components/shop/product-preview";
@@ -48,7 +49,12 @@ export default async function ProductPage({
       </Link>
       <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
         <div>
-          <Badge>{productTypeLabel(product.type)}</Badge>
+          <div className="flex flex-wrap gap-2">
+            <Badge>{productTypeLabel(product.type)}</Badge>
+            {isOneShotPack(product.title) ? (
+              <Badge className="bg-primary/10 text-primary">Achat unique</Badge>
+            ) : null}
+          </div>
           <h1 className="mt-4 font-display text-4xl text-primary md:text-5xl">{product.title}</h1>
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground">
             {product.description || productApercu(product)}
@@ -70,6 +76,12 @@ export default async function ProductPage({
                 {item}
               </li>
             ))}
+            {isOneShotPack(product.title) ? (
+              <li className="flex gap-2">
+                <Check className="mt-0.5 size-4 shrink-0 text-accent" />
+                Sans renouvellement automatique
+              </li>
+            ) : null}
           </ul>
         </div>
         <aside className="h-fit rounded-[1.75rem] border border-border/80 bg-card p-6 shadow-[0_18px_50px_rgba(20,33,28,0.06)]">
@@ -78,6 +90,11 @@ export default async function ProductPage({
           </div>
           <p className="mt-6 text-xs uppercase tracking-[0.2em] text-muted-foreground">Prix</p>
           <p className="mt-1 font-display text-4xl text-primary">{formatFcfa(product.price)}</p>
+          {isOneShotPack(product.title) ? (
+            <p className="mt-3 rounded-2xl bg-muted/80 px-4 py-3 text-sm leading-relaxed text-muted-foreground">
+              {ONE_SHOT_NOTICE}
+            </p>
+          ) : null}
           <div className="mt-6 flex flex-wrap gap-2">
             <AddToCartButton
               productId={product.id}

@@ -5,6 +5,7 @@ import { requireCandidate } from "@/lib/dal";
 import { db } from "@/lib/db";
 import { profileCompletion } from "@/lib/profile";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { BoostCareerCta } from "@/components/shop/boost-career-cta";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -21,13 +22,18 @@ export default async function CandidateDashboardPage() {
 
   return (
     <DashboardShell role={Role.CANDIDATE} title="Espace candidat">
-      <h1 className="font-display text-3xl font-medium text-primary">Bonjour {user.firstName}</h1>
-      <p className="mt-2 text-muted-foreground">
-        Profil complété à {completion.percent}%.{" "}
-        {completion.canApply
-          ? "Vous pouvez postuler."
-          : "Ajoutez un CV et 3 compétences pour postuler."}
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="font-display text-3xl font-medium text-primary">Bonjour {user.firstName}</h1>
+          <p className="mt-2 text-muted-foreground">
+            Profil complété à {completion.percent}%.{" "}
+            {completion.canApply
+              ? "Vous pouvez postuler."
+              : "Ajoutez un CV et 3 compétences pour postuler."}
+          </p>
+        </div>
+        <BoostCareerCta />
+      </div>
       <div className="mt-8 grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader>

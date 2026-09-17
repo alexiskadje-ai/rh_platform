@@ -8,6 +8,7 @@ import { CONTRACT_LABELS } from "@/lib/constants";
 import { formatSalary } from "@/lib/matching";
 import { profileCompletion } from "@/lib/profile";
 import { ApplyForm } from "@/components/recruitment/apply-form";
+import { BoostCareerCta } from "@/components/shop/boost-career-cta";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -52,7 +53,10 @@ export default async function PublicJobDetailPage({
         {offer.status === JobStatus.CLOSED ? <Badge>Clôturée</Badge> : null}
       </div>
       <p className="mt-6 text-xs uppercase tracking-[0.28em] text-accent">{offer.company.name}</p>
-      <h1 className="mt-3 font-display text-4xl font-medium leading-tight text-primary">{offer.title}</h1>
+      <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
+        <h1 className="font-display text-4xl font-medium leading-tight text-primary">{offer.title}</h1>
+        {user?.role === Role.CANDIDATE ? <BoostCareerCta /> : null}
+      </div>
       <p className="mt-3 text-muted-foreground">
         {offer.location}
       </p>

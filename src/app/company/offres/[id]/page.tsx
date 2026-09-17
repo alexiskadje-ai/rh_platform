@@ -11,6 +11,8 @@ import { StatusBadge } from "@/components/recruitment/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { candidateDisplayName } from "@/lib/users";
+import { premiumCandidateUserIds } from "@/lib/subscriptions";
+import { PremiumBadge } from "@/components/recruitment/premium-badge";
 
 export default async function CompanyOfferDetailPage({
   params,
@@ -31,6 +33,7 @@ export default async function CompanyOfferDetailPage({
       candidate: {
         select: {
           skills: true,
+          userId: true,
           user: { select: { firstName: true, lastName: true } },
           matchScores: {
             where: { jobOfferId: id },
@@ -47,6 +50,9 @@ export default async function CompanyOfferDetailPage({
     const scoreB = b.candidate.matchScores[0]?.score ?? b.matchScore ?? 0;
     return scoreB - scoreA;
   });
+  const premiumIds = await premiumCandidateUserIds(
+    applications.map((item) => item.candidate.userId).filter((id): id is string => Boolean(id)),
+  );
 
   return (
     <DashboardShell role={Role.RECRUITER} title="Espace entreprise">
@@ -70,8 +76,11 @@ export default async function CompanyOfferDetailPage({
                   className="flex flex-col gap-2 rounded-xl border border-border p-3 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div>
-                    <p className="font-medium">
+                    <p className="flex flex-wrap items-center gap-2 font-medium">
                       {candidateDisplayName(application.candidate)}
+                      {application.candidate.userId && premiumIds.has(application.candidate.userId) ? (
+                        <PremiumBadge />
+                      ) : null}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {application.candidate.skills.slice(0, 5).join(", ")}

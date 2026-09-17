@@ -124,6 +124,7 @@ model User {
   tokens         VerificationToken[]
   trustedDevices TrustedDevice[]
   aiCallLogs     AiCallLog[]
+  subscription   Subscription?
 }
 
 model Company {
@@ -371,6 +372,7 @@ model Course {
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
   enrollments  Enrollment[]
+  products     Product[]
 }
 
 model Enrollment {
@@ -396,6 +398,8 @@ model Product {
   fileUrl     String
   description String      @default("")
   excerpt     String      @default("")
+  course      Course?     @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  courseId    String?
   orders      OrderItem[]
 }
 
@@ -438,9 +442,12 @@ model Payment {
 
 model Subscription {
   id        String   @id @default(cuid())
-  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  companyId String   @unique
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId String?  @unique
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String?  @unique
   plan      String
+  tier      String
   status    String
   renewsAt  DateTime
 }
