@@ -166,7 +166,7 @@ model Candidate {
   region         String?
   desiredContractTypes ContractType[]
   parsedCvRaw    Json?
-  cvEmbedding    Unsupported("vector(1536)")?
+  cvEmbedding    Unsupported("vector(1024)")?
   embeddingInputHash String?
   featuredUntil  DateTime?
   educations     Education[]
@@ -198,7 +198,7 @@ model JobOffer {
   visibility         JobVisibility  @default(PUBLIC)
   status             JobStatus      @default(OPEN)
   closedAt           DateTime?
-  offerEmbedding     Unsupported("vector(1536)")?
+  offerEmbedding     Unsupported("vector(1024)")?
   embeddingInputHash String?
   applications       Application[]
   matchScores        MatchScore[]

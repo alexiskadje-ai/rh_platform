@@ -959,8 +959,8 @@ Une feature IA n'est retenue en Tier 1 (MVP) que si : (1) le coût par appel est
 
 | **Besoin**                                     | **Outil retenu**                                                       | **Remarque**                                                                           |
 |------------------------------------------------|------------------------------------------------------------------------|----------------------------------------------------------------------------------------|
-| Extraction de CV (parsing)                     | OpenAI GPT-4o-mini (mode JSON structuré) + pdf-parse                   | Sortie validée par un schéma Zod avant écriture en base                                |
-| Matching sémantique offre/candidat             | text-embedding-3-small + pgvector (extension PostgreSQL)               | Score combiné : similarité vectorielle + filtres durs (localisation, type de contrat)  |
+| Extraction de CV (parsing)                     | Mistral `mistral-small-latest` (`json_object`) + pdf-parse             | Sortie validée par un schéma Zod avant écriture en base ; écran de relecture obligatoire |
+| Matching sémantique offre/candidat             | Mistral `mistral-embed` (1024 dims) + pgvector (extension PostgreSQL)  | Score combiné : similarité vectorielle + filtres durs (localisation, type de contrat)  |
 | Génération de texte (offres, lettres, résumés) | OpenAI GPT-4o-mini via Vercel AI SDK                                   | Coût très faible par génération, streaming possible côté UI                            |
 | Chatbot RH (V2)                                | Vercel AI SDK + function-calling vers des requêtes Prisma prédéfinies  | Le modèle ne touche jamais la base directement — uniquement des fonctions whitelistées |
 | OCR documentaire (V2)                          | Tesseract.js (gratuit) avec fallback GPT-4o Vision si confiance faible | Contrôle des coûts : GPT-4o Vision utilisé seulement en dernier recours                |
@@ -973,21 +973,21 @@ Deux ajouts sont nécessaires pour le Tier 1 : un modèle pour stocker le score 
 -- Migration SQL à ajouter manuellement (prisma/migrations/.../migration.sql)  
 CREATE EXTENSION IF NOT EXISTS vector;  
   
-ALTER TABLE "Candidate" ADD COLUMN "cvEmbedding" vector(1536);  
-ALTER TABLE "JobOffer" ADD COLUMN "offerEmbedding" vector(1536);
+ALTER TABLE "Candidate" ADD COLUMN "cvEmbedding" vector(1024);  
+ALTER TABLE "JobOffer" ADD COLUMN "offerEmbedding" vector(1024);
 
 // Ajouts au schema.prisma  
   
 model Candidate {  
 // ...champs existants  
 parsedCvRaw Json? // sortie brute du parsing IA, pour audit/relecture  
-cvEmbedding Unsupported("vector(1536)")?  
+cvEmbedding Unsupported("vector(1024)")?  
 matchScores MatchScore\[\]  
 }  
   
 model JobOffer {  
 // ...champs existants  
-offerEmbedding Unsupported("vector(1536)")?  
+offerEmbedding Unsupported("vector(1024)")?  
 matchScores MatchScore\[\]  
 }  
   
@@ -1022,4 +1022,4 @@ computedAt DateTime @default(now())
 
 - Toute fonctionnalité biométrique (reconnaissance faciale) nécessite un consentement explicite et séparé de l'employé, stocké et révocable.
 
-- Plafonner les coûts : limiter le nombre d'appels IA par utilisateur/jour (ex. rate limiting sur les endpoints IA) pour éviter une facture OpenAI incontrôlée.
+- Plafonner les coûts : limiter le nombre d'appels IA par utilisateur/jour (ex. rate limiting sur les endpoints IA). Un HTTP 429 Mistral est journalisé (`AiCallLog`) sans bloquer le parcours utilisateur.

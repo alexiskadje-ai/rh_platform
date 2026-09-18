@@ -1,13 +1,36 @@
 import { APP_NAME } from "@/lib/constants";
+import { getMailer, mailFrom, supportEmail } from "@/lib/mail";
 
 type MailPayload = {
-  to: string;
+  to: string | string[];
   subject: string;
   text: string;
+  html?: string;
+  replyTo?: string;
 };
 
-export async function sendEmail({ to, subject, text }: MailPayload) {
+export async function sendEmail({ to, subject, text, html, replyTo }: MailPayload) {
+  const smtp = getMailer();
+  if (smtp) {
+    try {
+      await smtp.sendMail({
+        from: mailFrom(),
+        to,
+        subject,
+        text,
+        html,
+        replyTo: replyTo ?? supportEmail(),
+      });
+    } catch (error) {
+      console.error("[email] SMTP error", error instanceof Error ? error.message : error);
+    }
+    return;
+  }
+
   if (process.env.RESEND_API_KEY) {
+    const from = process.env.EMAIL_FROM?.trim()
+      ? `${APP_NAME} <${process.env.EMAIL_FROM.trim()}>`
+      : `${APP_NAME} <noreply@rh-platform.local>`;
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -15,10 +38,12 @@ export async function sendEmail({ to, subject, text }: MailPayload) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: `${APP_NAME} <noreply@rh-platform.local>`,
+        from,
         to,
         subject,
         text,
+        html,
+        reply_to: replyTo ?? supportEmail(),
       }),
     });
     if (!response.ok) {
@@ -27,7 +52,7 @@ export async function sendEmail({ to, subject, text }: MailPayload) {
     return;
   }
 
-  console.info(`[email] to=${to} subject=${subject}\n${text}`);
+  console.info(`[email] to=${Array.isArray(to) ? to.join(",") : to} subject=${subject}\n${text}`);
 }
 
 export async function sendSms(to: string, message: string) {
@@ -35,11 +60,24 @@ export async function sendSms(to: string, message: string) {
 }
 
 export async function sendVerificationEmail(email: string, token: string) {
-  const url = `${process.env.AUTH_URL ?? process.env.NEXTAUTH_URL ?? "http://localhost:3000"}/verify?token=${token}`;
+  const origin = process.env.AUTH_URL ?? process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+  const url = `${origin}/verify?token=${token}`;
+  const help = supportEmail();
+  const text = `Bonjour,\n\nVotre code de vérification ${APP_NAME} est : ${token}\n\nVous pouvez aussi confirmer votre e-mail en ouvrant ce lien :\n${url}\n\nLe code et le lien expirent dans 24 heures.${help ? `\n\nBesoin d'aide ? ${help}` : ""}`;
+  const html = `
+    <p>Bonjour,</p>
+    <p>Votre code de vérification <strong>${APP_NAME}</strong> est :</p>
+    <p style="font-size:28px;letter-spacing:6px;font-weight:700">${token}</p>
+    <p>Vous pouvez aussi confirmer votre e-mail en cliquant sur ce lien :</p>
+    <p><a href="${url}">${url}</a></p>
+    <p>Le code et le lien expirent dans 24 heures.</p>
+    ${help ? `<p>Besoin d'aide ? <a href="mailto:${help}">${help}</a></p>` : ""}
+  `;
   await sendEmail({
     to: email,
-    subject: `Vérifiez votre compte ${APP_NAME}`,
-    text: `Bonjour,\n\nConfirmez votre adresse e-mail en ouvrant ce lien :\n${url}\n\nLe lien expire dans 24 heures.`,
+    subject: `Votre code de vérification ${APP_NAME}`,
+    text,
+    html,
   });
   return url;
 }

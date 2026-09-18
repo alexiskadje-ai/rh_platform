@@ -7,7 +7,7 @@ const SMS_TTL_MS = 10 * 60 * 1000;
 const LOGIN_TTL_MS = 2 * 60 * 1000;
 
 export async function issueToken(userId: string, type: TokenType, rawToken?: string) {
-  const token = rawToken ?? (type === TokenType.SMS ? generateOtp() : generateToken());
+  const token = rawToken ?? (type === TokenType.SMS || type === TokenType.EMAIL ? generateOtp() : generateToken());
   const ttl =
     type === TokenType.EMAIL
       ? EMAIL_TTL_MS

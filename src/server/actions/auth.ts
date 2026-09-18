@@ -433,6 +433,41 @@ export async function confirmEmail(token: string) {
   return { ok: true as const, alreadyPhone: Boolean(activated?.phoneVerifiedAt) };
 }
 
+export async function confirmEmailCode(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const parsed = verifySmsSchema.safeParse({ code: formData.get("code") });
+  if (!parsed.success) return { errors: fieldErrorsFromZod(parsed.error) };
+  const result = await confirmEmail(parsed.data.code);
+  if (!result.ok) return { message: result.message };
+  return { ok: true, message: "E-mail confirmé." };
+}
+
+export async function resendVerification(
+  _prev: ActionState,
+  _formData: FormData,
+): Promise<ActionState> {
+  const { auth } = await import("@/lib/auth");
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { message: "Connectez-vous pour renvoyer le code." };
+  }
+  const user = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { email: true, emailVerifiedAt: true },
+  });
+  if (!user) return { message: "Compte introuvable." };
+  if (user.emailVerifiedAt) return { ok: true, message: "Votre e-mail est déjà confirmé." };
+  const emailToken = await issueToken(session.user.id, TokenType.EMAIL);
+  await sendVerificationEmail(user.email, emailToken);
+  if (process.env.NODE_ENV !== "production") {
+    const jar = await cookies();
+    jar.set("rh_debug_email", emailToken, { path: "/", maxAge: 60 * 60 });
+  }
+  return { ok: true, message: "Un nouveau code a été envoyé à votre e-mail." };
+}
+
 export async function confirmSms(
   _prev: ActionState,
   formData: FormData,

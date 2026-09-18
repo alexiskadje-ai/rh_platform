@@ -5,13 +5,20 @@ import { AiCallKind, ContractType } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { requireCandidate } from "@/lib/dal";
 import { db } from "@/lib/db";
-import { getOpenAI } from "@/lib/ai/openai";
 import { logAiCall } from "@/lib/ai/logs";
+import {
+  getMistral,
+  isMistralRateLimitError,
+  MISTRAL_PARSE_MODEL,
+  mistralContentToText,
+  mistralErrorMessage,
+  parseMistralJsonObject,
+} from "@/lib/ai/mistral";
 import { consumeAiQuota } from "@/lib/ai/rate-limit";
 import { refreshCandidateEmbedding } from "@/lib/ai/embeddings";
 import { readUploadBuffer, saveBuffer } from "@/lib/storage";
 import { assertSafeCvUpload } from "@/lib/upload-guard";
-import { CV_JSON_SCHEMA, parsedCvSchema, type ParsedCv } from "@/lib/validations/cv-parse";
+import { parsedCvSchema, type ParsedCv } from "@/lib/validations/cv-parse";
 
 export type ParseCvState = {
   ok?: boolean;
@@ -23,9 +30,9 @@ export type ParseCvState = {
 export async function parseCv(fileUrl: string): Promise<ParseCvState> {
   const { user } = await requireCandidate();
 
-  const client = getOpenAI();
+  const client = getMistral();
   if (!client) {
-    return { message: "La clé OPENAI_API_KEY n'est pas configurée." };
+    return { message: "La clé MISTRAL_API_KEY n'est pas configurée." };
   }
 
   try {
@@ -46,32 +53,25 @@ export async function parseCv(fileUrl: string): Promise<ParseCvState> {
     const quota = await consumeAiQuota(user.id, "PARSE_CV");
     if (!quota.ok) return { message: quota.message };
 
-    const completion = await client.chat.completions.create({
-      model: "gpt-4o-mini",
+    const completion = await client.chat.complete({
+      model: MISTRAL_PARSE_MODEL,
       temperature: 0,
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: "candidate_cv",
-          strict: true,
-          schema: CV_JSON_SCHEMA as unknown as Record<string, unknown>,
-        },
-      },
+      responseFormat: { type: "json_object" },
       messages: [
         {
           role: "system",
           content:
-            "Tu extraits un profil candidat RH camerounais. Dates au format YYYY-MM-DD. Si une information manque, utilise null ou une liste vide. Ne invente pas d'employeur ni de diplôme.",
+            "Tu extraits un profil candidat RH camerounais. Réponds uniquement avec un objet JSON contenant headline, bio, skills, city, region, availability (IMMEDIATE|NOTICE|DATE ou null), availableFrom (YYYY-MM-DD ou null), desiredContractTypes (CDI|CDD|STAGE|PRESTATION), experiences [{title, company, startDate, endDate}], educations [{degree, institution, year}]. Dates au format YYYY-MM-DD. Si une information manque, utilise null ou une liste vide. N'invente pas d'employeur ni de diplôme.",
         },
         { role: "user", content: text },
       ],
     });
 
-    const raw = completion.choices[0]?.message?.content;
+    const raw = mistralContentToText(completion.choices[0]?.message?.content);
     if (!raw) {
       throw new Error("Réponse IA vide.");
     }
-    const parsed = parsedCvSchema.safeParse(JSON.parse(raw));
+    const parsed = parsedCvSchema.safeParse(parseMistralJsonObject(raw));
     if (!parsed.success) {
       throw new Error("Schéma CV invalide.");
     }
@@ -79,12 +79,21 @@ export async function parseCv(fileUrl: string): Promise<ParseCvState> {
     await logAiCall({ userId: user.id, kind: AiCallKind.PARSE_CV, ok: true });
     return { ok: true, data: parsed.data, cvUrl: fileUrl };
   } catch (error) {
+    if (isMistralRateLimitError(error)) {
+      console.error("[ai] 429 rate limit Mistral (PARSE_CV)");
+    }
     await logAiCall({
       userId: user.id,
       kind: AiCallKind.PARSE_CV,
       ok: false,
-      message: error instanceof Error ? error.message : "Parsing CV impossible.",
+      message: mistralErrorMessage(error),
     });
+    if (isMistralRateLimitError(error)) {
+      return {
+        message:
+          "Le service IA est temporairement saturé. Réessayez dans quelques minutes, ou saisissez le profil manuellement.",
+      };
+    }
     return { message: "Le parsing IA a échoué. Vous pouvez saisir le profil manuellement." };
   }
 }

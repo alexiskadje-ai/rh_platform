@@ -2,6 +2,8 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { confirmEmail } from "@/server/actions/auth";
 import { SmsVerifyForm } from "@/components/auth/sms-verify-form";
+import { EmailVerifyForm } from "@/components/auth/email-verify-form";
+import { ResendVerificationButton } from "@/components/auth/resend-verification-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getSessionUser } from "@/lib/dal";
 import { db } from "@/lib/db";
@@ -33,7 +35,7 @@ export default async function VerifyPage({
         <CardHeader>
           <CardTitle>Vérifiez votre compte</CardTitle>
           <CardDescription>
-            Confirmez votre e-mail via le lien reçu, puis saisissez le code SMS.
+            Confirmez votre e-mail avec le code (ou le lien) reçu, puis saisissez le code SMS.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -55,6 +57,12 @@ export default async function VerifyPage({
             <p className="rounded-xl bg-muted px-3 py-2 text-xs text-muted-foreground">
               Code SMS (dev) : {debugSms}
             </p>
+          ) : null}
+          {!dbUser?.emailVerifiedAt ? (
+            <div className="space-y-4">
+              <EmailVerifyForm />
+              <ResendVerificationButton />
+            </div>
           ) : null}
           <SmsVerifyForm />
         </CardContent>

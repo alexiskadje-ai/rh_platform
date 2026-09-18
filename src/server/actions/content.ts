@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/dal";
 import { recaptchaFailed, RECAPTCHA_REQUIRED_MESSAGE } from "@/lib/recaptcha";
+import { sendEmail } from "@/lib/notify";
+import { supportEmail } from "@/lib/mail";
 import { fieldErrorsFromZod } from "@/lib/users";
 import {
   answerFaqSchema,
@@ -168,6 +170,20 @@ export async function submitContactMessage(
             ? `Demande Recruteur Pro — ${parsed.data.name} (${parsed.data.email})`
             : `Nouveau message contact — ${parsed.data.name} (${parsed.data.email})`,
       })),
+    });
+  }
+
+  const inbox = supportEmail();
+  if (inbox) {
+    const title =
+      parsed.data.subject === "recruteur_pro"
+        ? `Demande Recruteur Pro — ${parsed.data.name}`
+        : `Contact PES-RH — ${parsed.data.name}`;
+    await sendEmail({
+      to: inbox,
+      subject: title,
+      replyTo: parsed.data.email,
+      text: `Nom : ${parsed.data.name}\nE-mail : ${parsed.data.email}\nTéléphone : ${parsed.data.phone ?? "—"}\n\n${parsed.data.message}`,
     });
   }
 

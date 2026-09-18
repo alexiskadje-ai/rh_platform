@@ -1,30 +1,41 @@
 import { createHash } from "node:crypto";
 import { AiCallKind } from "@prisma/client";
 import { db } from "@/lib/db";
-import { getOpenAI } from "@/lib/ai/openai";
+import {
+  getMistral,
+  isMistralRateLimitError,
+  MISTRAL_EMBED_DIMS,
+  MISTRAL_EMBED_MODEL,
+  mistralErrorMessage,
+} from "@/lib/ai/mistral";
 import { logAiCall } from "@/lib/ai/logs";
 import { consumeAiQuota } from "@/lib/ai/rate-limit";
 
 export function embeddingTextHash(text: string) {
-  return createHash("sha256").update(text).digest("hex");
+  return createHash("sha256").update(`${MISTRAL_EMBED_MODEL}\n${text}`).digest("hex");
 }
 
 export async function generateEmbedding(text: string) {
-  const client = getOpenAI();
+  const client = getMistral();
   if (!client) {
-    throw new Error("OPENAI_API_KEY manquante.");
+    throw new Error("MISTRAL_API_KEY manquante.");
   }
   const input = text.replace(/\s+/g, " ").trim().slice(0, 8000);
   if (!input) {
     throw new Error("Texte vide, embedding impossible.");
   }
   const result = await client.embeddings.create({
-    model: "text-embedding-3-small",
-    input,
+    model: MISTRAL_EMBED_MODEL,
+    inputs: [input],
   });
   const vector = result.data[0]?.embedding;
   if (!vector?.length) {
     throw new Error("Embedding vide.");
+  }
+  if (vector.length !== MISTRAL_EMBED_DIMS) {
+    throw new Error(
+      `Dimension embedding inattendue (${vector.length}, attendu ${MISTRAL_EMBED_DIMS}).`,
+    );
   }
   return vector;
 }
@@ -50,6 +61,19 @@ export function jobOfferEmbeddingText(input: {
   requirements: string;
 }) {
   return `${input.title}\n${input.description}\n${input.requirements}`;
+}
+
+async function logEmbeddingFailure(userId: string, error: unknown, fallback: string) {
+  const message = mistralErrorMessage(error) || fallback;
+  if (isMistralRateLimitError(error)) {
+    console.error("[ai] 429 rate limit Mistral (embedding)");
+  }
+  await logAiCall({
+    userId,
+    kind: AiCallKind.EMBEDDING,
+    ok: false,
+    message,
+  });
 }
 
 export async function refreshCandidateEmbedding(candidateId: string, userId: string) {
@@ -79,12 +103,7 @@ export async function refreshCandidateEmbedding(candidateId: string, userId: str
     `;
     await logAiCall({ userId, kind: AiCallKind.EMBEDDING, ok: true, message: "candidate" });
   } catch (error) {
-    await logAiCall({
-      userId,
-      kind: AiCallKind.EMBEDDING,
-      ok: false,
-      message: error instanceof Error ? error.message : "Embedding candidat impossible.",
-    });
+    await logEmbeddingFailure(userId, error, "Embedding candidat impossible.");
   }
 }
 
@@ -108,11 +127,6 @@ export async function refreshJobOfferEmbedding(jobOfferId: string, userId: strin
     `;
     await logAiCall({ userId, kind: AiCallKind.EMBEDDING, ok: true, message: "jobOffer" });
   } catch (error) {
-    await logAiCall({
-      userId,
-      kind: AiCallKind.EMBEDDING,
-      ok: false,
-      message: error instanceof Error ? error.message : "Embedding offre impossible.",
-    });
+    await logEmbeddingFailure(userId, error, "Embedding offre impossible.");
   }
 }

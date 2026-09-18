@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
     "pdf-parse",
     "pdfjs-dist",
     "openai",
+    "@mistralai/mistralai",
     "@react-pdf/renderer",
     "stripe",
   ],
