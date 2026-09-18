@@ -7,9 +7,8 @@ import {
   startTwoFactorSetup,
   type ActionState,
 } from "@/server/actions/auth";
+import { OtpInput } from "@/components/auth/otp-input";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { SubmitButton } from "@/components/ui/submit-button";
 
 export function TwoFactorSetup({ enabled }: { enabled: boolean }) {
@@ -50,10 +49,7 @@ export function TwoFactorSetup({ enabled }: { enabled: boolean }) {
             <img src={setup.qr} alt="QR code 2FA" className="h-48 w-48 rounded-xl border border-border" />
           ) : null}
           <p className="break-all text-xs text-muted-foreground">Clé secrète : {setup.secret}</p>
-          <div className="space-y-2">
-            <Label htmlFor="code">Code à 6 chiffres</Label>
-            <Input id="code" name="code" inputMode="numeric" maxLength={6} required />
-          </div>
+          <OtpInput id="two-factor-setup-code" label="Code à 6 chiffres" autoFocus />
           {state.message ? <p className="text-sm">{state.message}</p> : null}
           <SubmitButton>Confirmer l&apos;activation</SubmitButton>
         </form>

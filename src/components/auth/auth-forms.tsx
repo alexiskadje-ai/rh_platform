@@ -9,6 +9,7 @@ import {
   verifyTwoFactor,
   type ActionState,
 } from "@/server/actions/auth";
+import { OtpInput } from "@/components/auth/otp-input";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SubmitButton } from "@/components/ui/submit-button";
@@ -85,10 +86,7 @@ export function TwoFactorForm() {
       </CardHeader>
       <CardContent>
         <form action={action} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="code">Code de vérification</Label>
-            <Input id="code" name="code" inputMode="numeric" maxLength={6} required />
-          </div>
+          <OtpInput id="two-factor-code" label="Code de vérification" autoFocus />
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" name="rememberDevice" className="size-4 accent-primary" />
             Se souvenir de cet appareil pendant 30 jours
