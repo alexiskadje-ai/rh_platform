@@ -35,6 +35,10 @@ export const leaveSettingsSchema = z.object({
   maxCarryoverDays: z.coerce.number().int().min(0).max(60),
 });
 
+export const companyLeavePolicySchema = z.object({
+  leaveDualApproval: z.enum(["true", "false"]),
+});
+
 export const changeRoleSchema = z.object({
   userId: z.string().min(1),
   role: z.enum(["ADMIN", "RECRUITER", "CANDIDATE", "EMPLOYEE"]),

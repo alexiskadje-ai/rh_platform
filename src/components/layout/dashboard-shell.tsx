@@ -36,6 +36,7 @@ const LINKS: Record<Role, { href: string; label: string; icon: LucideIcon }[]> =
   ADMIN: [
     { href: "/admin", label: "Vue d'ensemble", icon: LayoutDashboard },
     { href: "/admin/utilisateurs", label: "Utilisateurs", icon: Users },
+    { href: "/admin/recrutement", label: "Recrutement", icon: Briefcase },
     { href: "/admin/journal", label: "Journal d'activité", icon: ScrollText },
     { href: "/admin/parametres", label: "Paramètres RH", icon: Settings },
     { href: "/admin/messages", label: "Messages", icon: Bell },

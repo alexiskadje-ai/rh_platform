@@ -46,7 +46,7 @@ export default async function EmployeeLeavesPage() {
                     {leave.startDate.toLocaleDateString("fr-FR")} →{" "}
                     {leave.endDate.toLocaleDateString("fr-FR")} · {leave.days} j
                   </p>
-                  <LeaveStatus status={leave.status} />
+                  <LeaveStatus status={leave.status} managerApproved={Boolean(leave.managerApprovedAt)} />
                 </div>
               ))
             )}
@@ -57,7 +57,11 @@ export default async function EmployeeLeavesPage() {
   );
 }
 
-function LeaveStatus({ status }: { status: string }) {
+function LeaveStatus({ status, managerApproved }: { status: string; managerApproved: boolean }) {
   const map = { PENDING: "En attente", APPROVED: "Acceptée", REJECTED: "Refusée" } as const;
-  return <p>{map[status as keyof typeof map] ?? status}</p>;
+  const label =
+    status === "PENDING" && managerApproved
+      ? "Validée par le supérieur — en attente RH"
+      : (map[status as keyof typeof map] ?? status);
+  return <p>{label}</p>;
 }

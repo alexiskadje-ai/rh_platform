@@ -2,20 +2,27 @@
 
 import { PaymentProvider } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+import { requireAdmin } from "@/lib/dal";
 import { requireOwnOrder } from "@/server/actions/shop";
 import { db } from "@/lib/db";
 import { fieldErrorsFromZod } from "@/lib/users";
 import { isMomoConfigured, requestToPayment } from "@/lib/payments/momo";
+import { getBankTransferDetails } from "@/lib/payments/bank";
+import { orangePayHint } from "@/lib/payments/orange";
 import { createCheckoutSession, isStripeConfigured } from "@/lib/payments/stripe";
 import {
   PAYMENT_STATUS,
+  confirmPaidPayment,
   newPaymentReference,
 } from "@/lib/payments/confirm";
 import { applyMomoStatus, applyStripeStatus } from "@/lib/payments/sync";
 import {
+  startBankTransferSchema,
   startMomoPaymentSchema,
+  startOrangePaymentSchema,
   startStripePaymentSchema,
 } from "@/lib/validations/payment";
+import { formatFcfa } from "@/lib/shop";
 
 export type PaymentActionState = {
   ok?: boolean;
@@ -23,6 +30,7 @@ export type PaymentActionState = {
   status?: string;
   invoiceUrl?: string | null;
   checkoutUrl?: string;
+  reference?: string;
   errors?: Record<string, string[] | undefined>;
 };
 
@@ -32,6 +40,43 @@ function revalidatePurchases(orderId?: string) {
   revalidatePath("/employee/achats");
   revalidatePath("/admin/paiements");
   if (orderId) revalidatePath(`/boutique/commande/${orderId}/paiement`);
+}
+
+async function upsertPendingPayment(input: {
+  orderId: string;
+  amount: number;
+  provider: PaymentProvider;
+  reference: string;
+  phone?: string | null;
+  providerRef?: string | null;
+}) {
+  await db.payment.upsert({
+    where: { orderId: input.orderId },
+    create: {
+      orderId: input.orderId,
+      provider: input.provider,
+      amount: input.amount,
+      status: PAYMENT_STATUS.pending,
+      reference: input.reference,
+      providerRef: input.providerRef ?? undefined,
+      phone: input.phone ?? undefined,
+    },
+    update: {
+      provider: input.provider,
+      amount: input.amount,
+      status: PAYMENT_STATUS.pending,
+      reference: input.reference,
+      providerRef: input.providerRef ?? null,
+      phone: input.phone ?? null,
+      failureReason: null,
+      invoiceUrl: null,
+      paidAt: null,
+    },
+  });
+  await db.order.update({
+    where: { id: input.orderId },
+    data: { status: PAYMENT_STATUS.pending },
+  });
 }
 
 export async function startMomoPayment(
@@ -74,41 +119,20 @@ export async function startMomoPayment(
       payeeNote: `Commande boutique ${order.id.slice(-8)}`,
     });
 
-    await db.payment.upsert({
-      where: { orderId: order.id },
-      create: {
-        orderId: order.id,
-        provider: PaymentProvider.MTN_MOMO,
-        amount: order.total,
-        status: PAYMENT_STATUS.pending,
-        reference,
-        providerRef: momo.referenceId,
-        phone: parsed.data.phone,
-      },
-      update: {
-        provider: PaymentProvider.MTN_MOMO,
-        amount: order.total,
-        status: PAYMENT_STATUS.pending,
-        reference,
-        providerRef: momo.referenceId,
-        phone: parsed.data.phone,
-        failureReason: null,
-        invoiceUrl: null,
-        paidAt: null,
-      },
+    await upsertPendingPayment({
+      orderId: order.id,
+      amount: order.total,
+      provider: PaymentProvider.MTN_MOMO,
+      reference,
+      providerRef: momo.referenceId,
+      phone: parsed.data.phone,
     });
-
-    if (order.status !== PAYMENT_STATUS.pending) {
-      await db.order.update({
-        where: { id: order.id },
-        data: { status: PAYMENT_STATUS.pending },
-      });
-    }
 
     revalidatePurchases(order.id);
     return {
       ok: true,
       status: PAYMENT_STATUS.pending,
+      reference,
       message: "Demande envoyée. Validez le paiement sur votre téléphone MTN.",
     };
   } catch (error) {
@@ -161,40 +185,20 @@ export async function startStripePayment(
       return { message: "Stripe n'a pas renvoyé d'URL de paiement." };
     }
 
-    await db.payment.upsert({
-      where: { orderId: order.id },
-      create: {
-        orderId: order.id,
-        provider: PaymentProvider.CARD,
-        amount: order.total,
-        status: PAYMENT_STATUS.pending,
-        reference,
-        providerRef: session.id,
-      },
-      update: {
-        provider: PaymentProvider.CARD,
-        amount: order.total,
-        status: PAYMENT_STATUS.pending,
-        reference,
-        providerRef: session.id,
-        failureReason: null,
-        invoiceUrl: null,
-        paidAt: null,
-      },
+    await upsertPendingPayment({
+      orderId: order.id,
+      amount: order.total,
+      provider: PaymentProvider.CARD,
+      reference,
+      providerRef: session.id,
     });
-
-    if (order.status !== PAYMENT_STATUS.pending) {
-      await db.order.update({
-        where: { id: order.id },
-        data: { status: PAYMENT_STATUS.pending },
-      });
-    }
 
     revalidatePurchases(order.id);
     return {
       ok: true,
       status: PAYMENT_STATUS.pending,
       checkoutUrl: session.url,
+      reference,
       message: "Redirection vers Stripe Checkout…",
     };
   } catch (error) {
@@ -202,6 +206,86 @@ export async function startStripePayment(
       error instanceof Error ? error.message : "Impossible d'ouvrir Stripe Checkout.";
     return { message };
   }
+}
+
+export async function startOrangePayment(
+  _prev: PaymentActionState,
+  formData: FormData,
+): Promise<PaymentActionState> {
+  const parsed = startOrangePaymentSchema.safeParse({
+    orderId: formData.get("orderId"),
+    phone: formData.get("phone"),
+  });
+  if (!parsed.success) return { errors: fieldErrorsFromZod(parsed.error) };
+
+  const owned = await requireOwnOrder(parsed.data.orderId);
+  if (!owned) return { message: "Commande introuvable." };
+  const { order } = owned;
+
+  if (order.status === PAYMENT_STATUS.paid || order.payment?.status === PAYMENT_STATUS.paid) {
+    return { ok: true, status: PAYMENT_STATUS.paid, message: "Cette commande est déjà payée." };
+  }
+
+  const reference =
+    order.payment?.provider === PaymentProvider.ORANGE_MONEY && order.payment.reference
+      ? order.payment.reference
+      : newPaymentReference(PaymentProvider.ORANGE_MONEY);
+
+  await upsertPendingPayment({
+    orderId: order.id,
+    amount: order.total,
+    provider: PaymentProvider.ORANGE_MONEY,
+    reference,
+    phone: parsed.data.phone,
+  });
+
+  revalidatePurchases(order.id);
+  return {
+    ok: true,
+    status: PAYMENT_STATUS.pending,
+    reference,
+    message: `${orangePayHint()} Montant : ${formatFcfa(order.total)}. Référence : ${reference}.`,
+  };
+}
+
+export async function startBankTransfer(
+  _prev: PaymentActionState,
+  formData: FormData,
+): Promise<PaymentActionState> {
+  const parsed = startBankTransferSchema.safeParse({
+    orderId: formData.get("orderId"),
+  });
+  if (!parsed.success) return { errors: fieldErrorsFromZod(parsed.error) };
+
+  const owned = await requireOwnOrder(parsed.data.orderId);
+  if (!owned) return { message: "Commande introuvable." };
+  const { order } = owned;
+
+  if (order.status === PAYMENT_STATUS.paid || order.payment?.status === PAYMENT_STATUS.paid) {
+    return { ok: true, status: PAYMENT_STATUS.paid, message: "Cette commande est déjà payée." };
+  }
+
+  const bank = getBankTransferDetails();
+  const reference =
+    order.payment?.provider === PaymentProvider.BANK_TRANSFER && order.payment.reference
+      ? order.payment.reference
+      : newPaymentReference(PaymentProvider.BANK_TRANSFER);
+
+  await upsertPendingPayment({
+    orderId: order.id,
+    amount: order.total,
+    provider: PaymentProvider.BANK_TRANSFER,
+    reference,
+  });
+
+  revalidatePurchases(order.id);
+  const account = bank.accountNumber ? `Compte ${bank.accountNumber}. ` : "";
+  return {
+    ok: true,
+    status: PAYMENT_STATUS.pending,
+    reference,
+    message: `Virement ${formatFcfa(order.total)} vers ${bank.accountName} — ${bank.bankName}. ${account}Indiquez la référence ${reference} dans le motif. La commande reste en attente jusqu'à confirmation.`,
+  };
 }
 
 export async function refreshPayment(orderId: string): Promise<PaymentActionState> {
@@ -221,10 +305,12 @@ export async function refreshPayment(orderId: string): Promise<PaymentActionStat
       ok: true,
       status: updated?.status ?? payment.status,
       invoiceUrl: updated && "invoiceUrl" in updated ? updated.invoiceUrl : payment.invoiceUrl,
+      reference: payment.reference,
     };
   } catch (error) {
     return {
       status: payment.status,
+      reference: payment.reference,
       message: error instanceof Error ? error.message : "Statut de paiement indisponible.",
     };
   }
@@ -232,4 +318,22 @@ export async function refreshPayment(orderId: string): Promise<PaymentActionStat
 
 export async function refreshMomoPayment(orderId: string): Promise<PaymentActionState> {
   return refreshPayment(orderId);
+}
+
+export async function confirmManualPayment(formData: FormData) {
+  await requireAdmin();
+  const paymentId = String(formData.get("paymentId") ?? "");
+  if (!paymentId) return;
+
+  const payment = await db.payment.findUnique({ where: { id: paymentId } });
+  if (!payment || payment.status === PAYMENT_STATUS.paid) return;
+  if (
+    payment.provider !== PaymentProvider.ORANGE_MONEY &&
+    payment.provider !== PaymentProvider.BANK_TRANSFER
+  ) {
+    return;
+  }
+
+  await confirmPaidPayment(payment.id);
+  revalidatePurchases(payment.orderId ?? undefined);
 }

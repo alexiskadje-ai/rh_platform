@@ -7,6 +7,7 @@ import { sendEmail } from "@/lib/notify";
 import { db } from "@/lib/db";
 import { fieldErrorsFromZod } from "@/lib/users";
 import { leaveDaysForType, toDateOnly } from "@/lib/leave";
+import { resolveLeaveDecision, type LeaveActor } from "@/lib/leave-approval";
 import { leaveBalance } from "@/lib/leave-settings";
 import {
   absenceSchema,
@@ -165,10 +166,23 @@ export async function decideLeave(
     return { message: "Demande introuvable." };
   }
 
-  const allowed = await canValidate(user.id, user.role, leave.employee);
-  if (!allowed) return { message: "Vous ne pouvez pas valider cette demande." };
+  const actor = await leaveActor(user.id, user.role, leave.employee);
+  if (!actor) return { message: "Vous ne pouvez pas valider cette demande." };
 
-  if (parsed.data.decision === "APPROVED" && leave.type === LeaveType.ANNUAL) {
+  const company = await db.company.findUnique({
+    where: { id: leave.employee.companyId },
+    select: { leaveDualApproval: true },
+  });
+  const outcome = resolveLeaveDecision({
+    dualApproval: Boolean(company?.leaveDualApproval),
+    actor,
+    hasManager: Boolean(leave.employee.managerId),
+    managerApproved: Boolean(leave.managerApprovedAt),
+    decision: parsed.data.decision,
+  });
+  if (!outcome.ok) return { message: outcome.message };
+
+  if (outcome.status === LeaveStatus.APPROVED && leave.type === LeaveType.ANNUAL) {
     const leaves = await db.leaveRequest.findMany({
       where: { employeeId: leave.employeeId },
     });
@@ -183,44 +197,55 @@ export async function decideLeave(
   await db.leaveRequest.update({
     where: { id: leave.id },
     data: {
-      status: parsed.data.decision as LeaveStatus,
-      decidedAt: new Date(),
+      status: outcome.status,
+      managerApprovedAt: outcome.setManagerApproved
+        ? (leave.managerApprovedAt ?? new Date())
+        : leave.managerApprovedAt,
+      decidedAt: outcome.status === LeaveStatus.PENDING ? null : new Date(),
     },
   });
+
+  const message =
+    outcome.status === LeaveStatus.PENDING
+      ? "Votre supérieur a validé la demande. Elle est transmise au RH."
+      : outcome.status === LeaveStatus.APPROVED
+        ? "Votre demande de congé a été acceptée."
+        : "Votre demande de congé a été refusée.";
+
   await db.notification.create({
     data: {
       userId: leave.employee.userId,
       channel: "in-app",
-      message:
-        parsed.data.decision === "APPROVED"
-          ? "Votre demande de congé a été acceptée."
-          : "Votre demande de congé a été refusée.",
+      message,
     },
   });
   // TODO(notifications): email employé validation/refus (Phase 8).
   revalidatePath("/employee/conges");
   revalidatePath("/employee/validations");
   revalidatePath("/company/conges");
-  return { ok: true, message: "Décision enregistrée." };
+  return {
+    ok: true,
+    message:
+      outcome.status === LeaveStatus.PENDING
+        ? "Validée par le supérieur. En attente du RH."
+        : "Décision enregistrée.",
+  };
 }
 
-async function canValidate(
+async function leaveActor(
   userId: string,
   role: Role,
   employee: { id: string; companyId: string; managerId: string | null },
-) {
+): Promise<LeaveActor | null> {
   if (role === Role.RECRUITER) {
     const recruiter = await db.user.findUnique({ where: { id: userId } });
-    return recruiter?.companyId === employee.companyId;
+    return recruiter?.companyId === employee.companyId ? "RH" : null;
   }
   if (role === Role.EMPLOYEE && employee.managerId) {
     const manager = await db.employee.findUnique({ where: { userId } });
-    return manager?.id === employee.managerId;
+    return manager?.id === employee.managerId ? "MANAGER" : null;
   }
-  if (role === Role.EMPLOYEE && !employee.managerId) {
-    return false;
-  }
-  return false;
+  return null;
 }
 
 export async function declareAbsence(

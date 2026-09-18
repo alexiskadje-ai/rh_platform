@@ -25,3 +25,12 @@ export const startMomoPaymentSchema = z.object({
 export const startStripePaymentSchema = z.object({
   orderId: z.string().min(1),
 });
+
+export const startOrangePaymentSchema = z.object({
+  orderId: z.string().min(1),
+  phone: momoPhoneSchema,
+});
+
+export const startBankTransferSchema = z.object({
+  orderId: z.string().min(1),
+});

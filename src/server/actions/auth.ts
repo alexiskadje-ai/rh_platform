@@ -13,6 +13,7 @@ import {
   verifyPassword,
 } from "@/lib/crypto";
 import {
+  sendPasswordResetEmail,
   sendVerificationEmail,
   sendVerificationSms,
 } from "@/lib/notify";
@@ -22,6 +23,8 @@ import {
   loginSchema,
   registerCandidateSchema,
   registerCompanySchema,
+  requestPasswordResetSchema,
+  resetPasswordSchema,
   twoFactorSchema,
   verifySmsSchema,
 } from "@/lib/validations/auth";
@@ -597,4 +600,61 @@ export async function disableTwoFactor(): Promise<ActionState> {
     data: { twoFactorSecret: null },
   });
   return { ok: true, message: "Le 2FA a été désactivé." };
+}
+
+export async function requestPasswordReset(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  if (await recaptchaFailed(formData)) {
+    return { message: RECAPTCHA_REQUIRED_MESSAGE };
+  }
+  const parsed = requestPasswordResetSchema.safeParse({
+    email: formData.get("email"),
+  });
+  if (!parsed.success) {
+    return { errors: fieldErrorsFromZod(parsed.error) };
+  }
+
+  const email = parsed.data.email.toLowerCase();
+  const user = await db.user.findUnique({ where: { email } });
+  if (user) {
+    const token = await issueToken(user.id, TokenType.PASSWORD_RESET);
+    await sendPasswordResetEmail(user.email, token);
+  }
+
+  return {
+    ok: true,
+    message:
+      "Si un compte existe pour cette adresse, un lien de réinitialisation vient d'être envoyé.",
+  };
+}
+
+export async function resetPassword(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const parsed = resetPasswordSchema.safeParse({
+    token: formData.get("token"),
+    password: formData.get("password"),
+    confirmPassword: formData.get("confirmPassword"),
+  });
+  if (!parsed.success) {
+    return { errors: fieldErrorsFromZod(parsed.error) };
+  }
+
+  const userId = await consumeToken(parsed.data.token, TokenType.PASSWORD_RESET);
+  if (!userId) {
+    return { message: "Ce lien a expiré ou a déjà été utilisé. Demandez-en un nouveau." };
+  }
+
+  await db.user.update({
+    where: { id: userId },
+    data: { passwordHash: await hashPassword(parsed.data.password) },
+  });
+  await db.verificationToken.deleteMany({
+    where: { userId, type: TokenType.LOGIN },
+  });
+
+  return { ok: true, message: "Mot de passe mis à jour. Vous pouvez vous connecter." };
 }

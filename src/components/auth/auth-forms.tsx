@@ -61,6 +61,11 @@ export function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
           <RecaptchaField />
           <SubmitButton>Se connecter</SubmitButton>
         </form>
+        <p className="mt-3 text-center text-sm">
+          <Link href="/reset-password" className="font-medium text-primary">
+            Mot de passe oublié ?
+          </Link>
+        </p>
         <p className="mt-4 text-center text-sm text-muted-foreground">
           Pas encore de compte ?{" "}
           <Link href="/register" className="font-medium text-primary">

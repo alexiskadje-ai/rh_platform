@@ -77,6 +77,21 @@ export const verifySmsSchema = z.object({
     .regex(/^\d{6}$/, "Le code doit contenir 6 chiffres."),
 });
 
+export const requestPasswordResetSchema = z.object({
+  email: z.email("Adresse e-mail invalide."),
+});
+
+export const resetPasswordSchema = z
+  .object({
+    token: z.string().min(16, "Lien de réinitialisation invalide."),
+    password: passwordSchema,
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Les mots de passe ne correspondent pas.",
+    path: ["confirmPassword"],
+  });
+
 export type RegisterCandidateInput = z.infer<typeof registerCandidateSchema>;
 export type RegisterCompanyInput = z.infer<typeof registerCompanySchema>;
 export type LoginInput = z.infer<typeof loginSchema>;

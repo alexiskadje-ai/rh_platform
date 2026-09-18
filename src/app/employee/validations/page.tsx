@@ -11,9 +11,12 @@ export default async function ManagerValidationsPage() {
   const pending = await db.leaveRequest.findMany({
     where: {
       status: "PENDING",
+      managerApprovedAt: null,
       employee: { managerId: employee.id },
     },
-    include: { employee: { include: { user: true } } },
+    include: {
+      employee: { include: { user: true, company: { select: { leaveDualApproval: true } } } },
+    },
     orderBy: { createdAt: "asc" },
   });
 
@@ -34,12 +37,17 @@ export default async function ManagerValidationsPage() {
                 {leave.startDate.toLocaleDateString("fr-FR")} →{" "}
                 {leave.endDate.toLocaleDateString("fr-FR")} · {leave.days} j
               </p>
+              {leave.employee.company.leaveDualApproval ? (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Niveau 1 : votre validation transmet ensuite la demande au RH.
+                </p>
+              ) : null}
               <div className="mt-3 flex gap-2">
                 <form action={decideLeaveForm}>
                   <input type="hidden" name="leaveId" value={leave.id} />
                   <input type="hidden" name="decision" value="APPROVED" />
                   <Button type="submit" size="sm">
-                    Accepter
+                    {leave.employee.company.leaveDualApproval ? "Valider (niveau 1)" : "Accepter"}
                   </Button>
                 </form>
                 <form action={decideLeaveForm}>

@@ -8,6 +8,7 @@ const PUBLIC_PATHS = [
   "/",
   "/login",
   "/register",
+  "/reset-password",
   "/verify",
   "/pending-approval",
   "/cgu",

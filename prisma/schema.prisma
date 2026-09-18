@@ -89,6 +89,7 @@ enum TokenType {
   EMAIL
   SMS
   LOGIN
+  PASSWORD_RESET
 }
 
 enum FaqStatus {
@@ -131,15 +132,16 @@ model User {
 }
 
 model Company {
-  id                String        @id @default(cuid())
-  name              String
-  sector            String
-  address           String?
-  commerceRegister  String?
-  status            CompanyStatus @default(PENDING)
-  validatedAt       DateTime?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  id                 String        @id @default(cuid())
+  name               String
+  sector             String
+  address            String?
+  commerceRegister   String?
+  status             CompanyStatus @default(PENDING)
+  validatedAt        DateTime?
+  leaveDualApproval  Boolean       @default(false)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
 
   users       User[]
   jobOffers   JobOffer[]
@@ -319,19 +321,20 @@ model Document {
 }
 
 model LeaveRequest {
-  id               String      @id @default(cuid())
-  employee         Employee    @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  employeeId       String
-  type             LeaveType
-  startDate        DateTime
-  endDate          DateTime
-  days             Float
-  status           LeaveStatus @default(PENDING)
-  reason           String?
-  justificationUrl String?
-  alertedAt        DateTime?
-  decidedAt        DateTime?
-  createdAt        DateTime    @default(now())
+  id                 String      @id @default(cuid())
+  employee           Employee    @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employeeId         String
+  type               LeaveType
+  startDate          DateTime
+  endDate            DateTime
+  days               Float
+  status             LeaveStatus @default(PENDING)
+  reason             String?
+  justificationUrl   String?
+  alertedAt          DateTime?
+  managerApprovedAt  DateTime?
+  decidedAt          DateTime?
+  createdAt          DateTime    @default(now())
 }
 
 model Attendance {

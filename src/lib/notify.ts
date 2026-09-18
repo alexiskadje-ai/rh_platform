@@ -88,3 +88,23 @@ export async function sendVerificationSms(phone: string, code: string) {
     `${APP_NAME} : votre code de vérification est ${code}. Il expire dans 10 minutes.`,
   );
 }
+
+export async function sendPasswordResetEmail(email: string, token: string) {
+  const origin = process.env.AUTH_URL ?? process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+  const url = `${origin}/reset-password/${token}`;
+  const help = supportEmail();
+  const text = `Bonjour,\n\nVous avez demandé à réinitialiser votre mot de passe ${APP_NAME}.\nOuvrez ce lien (valable 1 heure) :\n${url}\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail.${help ? `\n\nBesoin d'aide ? ${help}` : ""}`;
+  const html = `
+    <p>Bonjour,</p>
+    <p>Vous avez demandé à réinitialiser votre mot de passe <strong>${APP_NAME}</strong>.</p>
+    <p><a href="${url}">Choisir un nouveau mot de passe</a></p>
+    <p>Ce lien expire dans 1 heure. Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail.</p>
+    ${help ? `<p>Besoin d'aide ? <a href="mailto:${help}">${help}</a></p>` : ""}
+  `;
+  await sendEmail({
+    to: email,
+    subject: `Réinitialisation du mot de passe ${APP_NAME}`,
+    text,
+    html,
+  });
+}

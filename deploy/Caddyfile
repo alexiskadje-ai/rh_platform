@@ -1,0 +1,7 @@
+# TLS termination for PES-RH (Let's Encrypt via Caddy).
+# Point DNS A/AAAA to this host, then:
+#   caddy run --config deploy/Caddyfile
+{$DOMAIN:pes-rh.net} {
+	encode gzip
+	reverse_proxy 127.0.0.1:3000
+}
