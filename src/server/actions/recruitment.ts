@@ -26,11 +26,13 @@ import {
   jobOfferSchema,
   preferencesSchema,
   skillsSchema,
-  statusSchema,
 } from "@/lib/validations/recruitment";
 import { refreshCandidateEmbedding, refreshJobOfferEmbedding } from "@/lib/ai/embeddings";
 import { computeMatchScoresForOffer } from "@/server/actions/ai-matching";
-import { convertAcceptedCandidate } from "@/server/actions/employees";
+import {
+  recordApplicationStatusChange,
+  updateApplicationStatus as persistApplicationStatus,
+} from "@/server/actions/update-application-status";
 
 export type ActionState = {
   ok?: boolean;
@@ -47,30 +49,6 @@ function optionalNumber(value: FormDataEntryValue | null) {
   if (!raw) return undefined;
   const parsed = Number(raw);
   return Number.isFinite(parsed) ? parsed : undefined;
-}
-
-const STATUS_TRANSITIONS: Record<ApplicationStatus, ApplicationStatus[]> = {
-  RECEIVED: [ApplicationStatus.SHORTLISTED, ApplicationStatus.REJECTED],
-  SHORTLISTED: [ApplicationStatus.INTERVIEW, ApplicationStatus.REJECTED],
-  INTERVIEW: [ApplicationStatus.ACCEPTED, ApplicationStatus.REJECTED],
-  ACCEPTED: [],
-  REJECTED: [],
-};
-
-async function recordStatus(
-  applicationId: string,
-  status: ApplicationStatus,
-) {
-  await db.$transaction([
-    db.application.update({
-      where: { id: applicationId },
-      data: { status, statusChangedAt: new Date() },
-    }),
-    db.applicationStatusEvent.create({
-      data: { applicationId, status },
-    }),
-  ]);
-  // TODO(notifications): notifier le candidat du changement de statut (Phase 8).
 }
 
 export async function saveIdentitySection(
@@ -473,35 +451,10 @@ export async function updateApplicationStatus(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const { companyId } = await requireRecruiter();
-  const parsed = statusSchema.safeParse({
-    applicationId: formData.get("applicationId"),
-    status: formData.get("status"),
-  });
-  if (!parsed.success) return { errors: fieldErrorsFromZod(parsed.error) };
-
-  const application = await db.application.findFirst({
-    where: { id: parsed.data.applicationId, jobOffer: { companyId } },
-  });
-  if (!application) return { message: "Candidature introuvable." };
-
-  const next = parsed.data.status as ApplicationStatus;
-  if (!STATUS_TRANSITIONS[application.status].includes(next)) {
-    return { message: "Ce changement de statut n'est pas autorisé." };
-  }
-
-  await recordStatus(application.id, next);
-  let hiredNote = "";
-  if (next === ApplicationStatus.ACCEPTED) {
-    const employee = await convertAcceptedCandidate(application.id, companyId);
-    if (employee) {
-      hiredNote = ` Fiche employé créée (${employee.matricule}).`;
-    }
-  }
-  revalidatePath(`/company/offres/${application.jobOfferId}`);
-  revalidatePath(`/company/candidatures/${application.id}`);
-  revalidatePath("/company/employes");
-  return { ok: true, message: `Statut mis à jour.${hiredNote}` };
+  return persistApplicationStatus(
+    String(formData.get("applicationId") ?? ""),
+    String(formData.get("status") ?? ""),
+  );
 }
 
 export async function inviteToInterview(
@@ -547,7 +500,7 @@ export async function inviteToInterview(
   });
 
   if (application.status !== ApplicationStatus.INTERVIEW) {
-    await recordStatus(application.id, ApplicationStatus.INTERVIEW);
+    await recordApplicationStatusChange(application.id, ApplicationStatus.INTERVIEW);
   }
 
   // TODO(notifications): convocation entretien → candidat (email + SMS + WhatsApp, Phase 8).
