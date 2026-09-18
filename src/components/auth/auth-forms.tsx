@@ -96,6 +96,9 @@ export function TwoFactorForm() {
             <input type="checkbox" name="rememberDevice" className="size-4 accent-primary" />
             Se souvenir de cet appareil pendant 30 jours
           </label>
+          {state.errors?.code?.[0] ? (
+            <p className="text-sm text-destructive">{state.errors.code[0]}</p>
+          ) : null}
           {state.message ? <p className="text-sm text-destructive">{state.message}</p> : null}
           <SubmitButton>Valider</SubmitButton>
         </form>

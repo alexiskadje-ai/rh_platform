@@ -25,7 +25,6 @@ export function OtpInput({
   const baseId = id ?? generatedId;
   const [digits, setDigits] = useState<string[]>(() => Array.from({ length: OTP_LENGTH }, () => ""));
   const boxes = useRef<Array<HTMLInputElement | null>>([]);
-  const hidden = useRef<HTMLInputElement | null>(null);
 
   function focusBox(index: number) {
     const next = Math.max(0, Math.min(OTP_LENGTH - 1, index));
@@ -36,7 +35,6 @@ export function OtpInput({
 
   function write(next: string[], focusIndex?: number) {
     setDigits(next);
-    if (hidden.current) hidden.current.value = next.join("");
     if (focusIndex !== undefined) {
       queueMicrotask(() => focusBox(focusIndex));
     }
@@ -52,7 +50,6 @@ export function OtpInput({
     setDigits((prev) => {
       const next = [...prev];
       next[index] = cleaned;
-      if (hidden.current) hidden.current.value = next.join("");
       return next;
     });
     if (cleaned) focusBox(index + 1);
@@ -69,7 +66,6 @@ export function OtpInput({
           next[index - 1] = "";
           queueMicrotask(() => focusBox(index - 1));
         }
-        if (hidden.current) hidden.current.value = next.join("");
         return next;
       });
       return;
@@ -100,7 +96,7 @@ export function OtpInput({
   return (
     <div className="space-y-2">
       <Label htmlFor={`${baseId}-0`}>{label}</Label>
-      <input ref={hidden} type="hidden" name={name} required defaultValue="" />
+      <input type="hidden" name={name} value={digits.join("")} />
       <div className="flex items-center gap-2 sm:gap-3" role="group" aria-label={label}>
         <div className="flex flex-1 gap-1.5 sm:gap-2">
           {digits.slice(0, 3).map((digit, index) => (

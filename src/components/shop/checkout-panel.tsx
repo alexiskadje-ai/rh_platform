@@ -10,7 +10,6 @@ import {
   Lock,
   RefreshCw,
   ShieldCheck,
-  Smartphone,
 } from "lucide-react";
 import { PAYMENT_METHOD_LABELS } from "@/lib/constants";
 import { formatFcfa, paymentMethodLabel, productTypeLabel } from "@/lib/shop";
@@ -23,6 +22,7 @@ import {
   startOrangePayment,
   startStripePayment,
 } from "@/server/actions/payments";
+import { PaymentBrandLogo } from "@/components/shop/payment-brand-logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -234,22 +234,38 @@ export function CheckoutPanel({
                   disabled={paid}
                   onClick={() => setMethod(item.id)}
                   className={cn(
-                    "rounded-2xl border p-4 text-left transition-all",
+                    "min-w-0 overflow-hidden rounded-2xl border p-4 text-left transition-all",
                     selected
                       ? "border-primary bg-primary/5 shadow-sm"
                       : "border-border/80 hover:border-primary/40",
                   )}
                 >
-                  <span className={cn("inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase", item.tone)}>
-                    {item.id === "MTN_MOMO" || item.id === "ORANGE_MONEY" ? (
-                      <Smartphone className="mr-1 size-3" />
+                  <span
+                    className={cn(
+                      item.id === "MTN_MOMO" || item.id === "ORANGE_MONEY"
+                        ? "flex w-full min-w-0"
+                        : cn(
+                            "inline-flex items-center gap-2 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase",
+                            item.tone,
+                          ),
+                    )}
+                  >
+                    {item.id === "MTN_MOMO" ? (
+                      <PaymentBrandLogo brand="MTN_MOMO" className="size-12 rounded-xl" />
+                    ) : item.id === "ORANGE_MONEY" ? (
+                      <span className="block w-full min-w-0 overflow-hidden">
+                        <PaymentBrandLogo brand="ORANGE_MONEY" className="h-8 w-full max-w-full" />
+                      </span>
                     ) : item.id === "CARD" ? (
                       <CreditCard className="mr-1 size-3" />
                     ) : (
                       <Landmark className="mr-1 size-3" />
                     )}
-                    {paymentMethodLabel(item.id)}
+                    {item.id === "MTN_MOMO" || item.id === "ORANGE_MONEY" ? null : paymentMethodLabel(item.id)}
                   </span>
+                  {(item.id === "MTN_MOMO" || item.id === "ORANGE_MONEY") ? (
+                    <p className="mt-3 text-sm font-medium">{paymentMethodLabel(item.id)}</p>
+                  ) : null}
                   <p className="mt-2 text-xs text-muted-foreground">{item.hint}</p>
                   {item.id === "CARD" && !stripeConfigured ? (
                     <p className="mt-1 text-[11px] text-destructive">Clé Stripe manquante</p>
@@ -393,11 +409,9 @@ export function CheckoutPanel({
           ) : method === "ORANGE_MONEY" ? (
             <form action={orangeAction} className="space-y-4 rounded-2xl border border-border/80 p-5">
               <input type="hidden" name="orderId" value={orderId} />
-              <div className="flex items-center gap-2 text-sm">
-                <span className="inline-flex size-8 items-center justify-center rounded-full bg-[#ff7900] font-bold text-white">
-                  OM
-                </span>
-                <div>
+              <div className="min-w-0 space-y-2">
+                <PaymentBrandLogo brand="ORANGE_MONEY" className="h-8 w-full max-w-full" />
+                <div className="text-sm">
                   <p className="font-medium">Orange Money</p>
                   <p className="text-xs text-muted-foreground">Paiement marchand · confirmation PES-RH</p>
                 </div>
@@ -425,10 +439,8 @@ export function CheckoutPanel({
           ) : (
             <form action={momoAction} className="space-y-4 rounded-2xl border border-border/80 p-5">
               <input type="hidden" name="orderId" value={orderId} />
-              <div className="flex items-center gap-2 text-sm">
-                <span className="inline-flex size-8 items-center justify-center rounded-full bg-[#ffcc00] font-bold text-[#1a1a1a]">
-                  M
-                </span>
+              <div className="flex items-center gap-3 text-sm">
+                <PaymentBrandLogo brand="MTN_MOMO" className="size-10 rounded-xl" />
                 <div>
                   <p className="font-medium">MTN Mobile Money</p>
                   <p className="text-xs text-muted-foreground">Collection API · sandbox</p>

@@ -18,26 +18,26 @@ export function HomeHero({
     <section className="relative -mt-[4.25rem] overflow-hidden bg-primary text-primary-foreground">
       <div
         aria-hidden
-        className="pointer-events-none absolute -bottom-[12%] right-[-6%] select-none font-display text-[11rem] leading-[0.75] text-primary-foreground/[0.08] sm:text-[15rem] md:right-[-2%] md:text-[20rem] lg:right-8 lg:text-[24rem]"
+        className="pointer-events-none absolute -bottom-[8%] right-[-6%] select-none font-display text-[8rem] leading-[0.75] text-primary-foreground/[0.08] sm:text-[12rem] md:right-[-2%] md:text-[16rem] lg:right-8 lg:text-[18rem]"
       >
         RH
       </div>
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(242,98,0,0.28),transparent_42%),radial-gradient(circle_at_80%_80%,rgba(244,169,0,0.18),transparent_46%)]" />
-      <div className="relative mx-auto max-w-6xl px-4 pb-2 pt-32 md:pt-40">
-        <div className="grid gap-12 md:grid-cols-2 md:items-center">
+      <div className="relative mx-auto max-w-6xl px-4 pb-0 pt-24 md:pt-28">
+        <div className="grid gap-8 md:grid-cols-2 md:items-center">
           <motion.div
             initial={{ opacity: 0, y: 28 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-            className="space-y-7"
+            className="w-full max-w-xl space-y-4"
           >
-            <p className="text-xs font-medium uppercase tracking-[0.32em] text-highlight">
+            <p className="w-full text-justify text-xs font-medium uppercase tracking-[0.28em] text-highlight">
               {COMPANY_SLOGAN}
             </p>
-            <h1 className="max-w-xl font-display text-4xl font-medium leading-[1.08] md:text-6xl">
+            <h1 className="w-full text-justify font-display text-3xl font-medium leading-[1.12] md:text-5xl">
               Faites la différence en boostant votre carrière
             </h1>
-            <p className="max-w-lg text-base leading-relaxed text-primary-foreground/75 md:text-lg">
+            <p className="w-full text-justify text-sm leading-relaxed text-primary-foreground/75 md:text-base">
               Nous mettons à votre disposition les talents et les opportunités dont vous avez besoin.
               Le recrutement peut être long, coûteux et complexe — comme la recherche d&apos;un emploi.
               Confiez-nous cette mission et concentrez-vous sur le développement de votre activité et

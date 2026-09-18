@@ -359,7 +359,7 @@ export async function verifyTwoFactor(
   formData: FormData,
 ): Promise<ActionState> {
   const parsed = twoFactorSchema.safeParse({
-    code: formData.get("code"),
+    code: String(formData.get("code") ?? "").replace(/\D/g, ""),
     rememberDevice: booleanFromForm(formData.get("rememberDevice")),
   });
   if (!parsed.success) {
@@ -440,7 +440,7 @@ export async function confirmEmailCode(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const parsed = verifySmsSchema.safeParse({ code: formData.get("code") });
+  const parsed = verifySmsSchema.safeParse({ code: String(formData.get("code") ?? "").replace(/\D/g, "") });
   if (!parsed.success) return { errors: fieldErrorsFromZod(parsed.error) };
   const result = await confirmEmail(parsed.data.code);
   if (!result.ok) return { message: result.message };
@@ -475,7 +475,7 @@ export async function confirmSms(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const parsed = verifySmsSchema.safeParse({ code: formData.get("code") });
+  const parsed = verifySmsSchema.safeParse({ code: String(formData.get("code") ?? "").replace(/\D/g, "") });
   if (!parsed.success) {
     return { errors: fieldErrorsFromZod(parsed.error) };
   }
@@ -556,7 +556,7 @@ export async function confirmTwoFactorSetup(
   formData: FormData,
 ): Promise<ActionState> {
   const parsed = twoFactorSchema.pick({ code: true }).safeParse({
-    code: formData.get("code"),
+    code: String(formData.get("code") ?? "").replace(/\D/g, ""),
   });
   if (!parsed.success) {
     return { errors: fieldErrorsFromZod(parsed.error) };

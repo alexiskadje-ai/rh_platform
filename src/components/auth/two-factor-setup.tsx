@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   confirmTwoFactorSetup,
   disableTwoFactor,
@@ -12,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/components/ui/submit-button";
 
 export function TwoFactorSetup({ enabled }: { enabled: boolean }) {
+  const router = useRouter();
   const [setup, setSetup] = useState<{ qr?: string; secret?: string } | null>(null);
   const [state, action] = useActionState(confirmTwoFactorSetup, {} as ActionState);
   const [disableState, disableAction] = useActionState(
@@ -19,9 +21,21 @@ export function TwoFactorSetup({ enabled }: { enabled: boolean }) {
     {} as ActionState,
   );
 
+  useEffect(() => {
+    if (state.ok) router.refresh();
+  }, [state.ok, router]);
+
   async function beginSetup() {
     const result = await startTwoFactorSetup();
     setSetup({ qr: result.qr, secret: result.secret });
+  }
+
+  if (state.ok) {
+    return (
+      <p className="text-sm text-primary">
+        L&apos;authentification à deux facteurs est activée.
+      </p>
+    );
   }
 
   if (enabled && !setup) {
@@ -50,7 +64,12 @@ export function TwoFactorSetup({ enabled }: { enabled: boolean }) {
           ) : null}
           <p className="break-all text-xs text-muted-foreground">Clé secrète : {setup.secret}</p>
           <OtpInput id="two-factor-setup-code" label="Code à 6 chiffres" autoFocus />
-          {state.message ? <p className="text-sm">{state.message}</p> : null}
+          {state.errors?.code?.[0] ? (
+            <p className="text-sm text-destructive">{state.errors.code[0]}</p>
+          ) : null}
+          {state.message ? (
+            <p className={`text-sm ${state.ok ? "text-primary" : "text-destructive"}`}>{state.message}</p>
+          ) : null}
           <SubmitButton>Confirmer l&apos;activation</SubmitButton>
         </form>
       )}

@@ -36,12 +36,7 @@ export default function AboutPage() {
         </FadeIn>
       </div>
       <FadeIn className="mt-16">
-        <p className="text-xs uppercase tracking-[0.28em] text-accent">Nos fondements</p>
-        <h2 className="mt-3 font-display text-3xl text-primary">Mission, vision et valeurs</h2>
-        <p className="mt-3 max-w-2xl text-sm text-muted-foreground">
-          Chez PES-RH nous croyons que chaque talent mérite une opportunité et que chaque entreprise
-          mérite les meilleurs collaborateurs.
-        </p>
+        <h2 className="font-display text-3xl text-primary">Nos Valeurs</h2>
       </FadeIn>
       <Stagger className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {COMPANY_VALUES.map((item) => (
