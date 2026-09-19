@@ -95,7 +95,7 @@ async function RecentOffers() {
           <JobOfferCard
             key={offer.id}
             offer={offer}
-            href={`/offres/${offer.id}`}
+            href={`/offres/${offer.slug}`}
             compact
           />
         ))}

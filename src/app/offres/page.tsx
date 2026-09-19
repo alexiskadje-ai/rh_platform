@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { closeExpiredOffers, publicJobWhere } from "@/lib/jobs";
@@ -8,6 +9,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { PageHero } from "@/components/layout/page-hero";
 import { fieldClass } from "@/lib/ui";
+
+export const metadata: Metadata = {
+  title: "Offres d'emploi",
+  description:
+    "Filtrez par métier, ville ou type de contrat. La candidature se fait en un clic une fois le profil prêt.",
+};
 
 export default async function PublicJobsPage({
   searchParams,
@@ -63,7 +70,7 @@ export default async function PublicJobsPage({
             <JobOfferCard
               key={offer.id}
               offer={offer}
-              href={`/offres/${offer.id}`}
+              href={`/offres/${offer.slug}`}
             />
           ))
         )}

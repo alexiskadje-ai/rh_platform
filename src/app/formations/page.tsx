@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { GraduationCap } from "lucide-react";
 import { db } from "@/lib/db";
@@ -9,6 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageHero } from "@/components/layout/page-hero";
 import { fieldClass } from "@/lib/ui";
+
+export const metadata: Metadata = {
+  title: "Formations",
+  description:
+    "Parcours linéaires, quiz et certificat. Filtrez par catégorie puis inscrivez-vous depuis votre espace.",
+};
 
 export default async function PublicCoursesPage({
   searchParams,
@@ -62,7 +69,7 @@ export default async function PublicCoursesPage({
           <p className="text-sm text-muted-foreground">Aucune formation disponible.</p>
         ) : (
           courses.map((course) => (
-            <Link key={course.id} href={`/formations/${course.id}`} className="block">
+            <Link key={course.id} href={`/formations/${course.slug}`} className="block">
               <Card className="h-full">
                 <CardHeader>
                   <GraduationCap className="size-5 text-accent" />

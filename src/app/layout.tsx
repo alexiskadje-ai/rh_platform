@@ -4,6 +4,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { APP_NAME, APP_TAGLINE } from "@/lib/constants";
 import { COMPANY_SLOGAN } from "@/lib/company";
+import { siteOrigin } from "@/lib/site";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -22,11 +23,17 @@ const display = Fraunces({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteOrigin()),
   title: {
-    default: APP_NAME,
+    default: `${APP_NAME} — ${COMPANY_SLOGAN}`,
     template: `%s · ${APP_NAME}`,
   },
   description: `${COMPANY_SLOGAN}. ${APP_TAGLINE}`,
+  openGraph: {
+    type: "website",
+    locale: "fr_FR",
+    siteName: APP_NAME,
+  },
 };
 
 export default function RootLayout({

@@ -1,5 +1,6 @@
 import { PrismaClient, Role, UserStatus } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { allocateUniqueSlug, courseSlugBase } from "../src/lib/public-slug";
 import { PACK_IDS, PACK_PRICES } from "../src/lib/shop-packs";
 
 const db = new PrismaClient();
@@ -46,12 +47,18 @@ async function main() {
     create: { key: "max_carryover_days", value: "15" },
   });
 
+  const packCarriereTitle = "Pack Carrière — entretien et positionnement";
   const course = await db.course.upsert({
     where: { id: PACK_IDS.packCarriereCourse },
     update: { price: 0 },
     create: {
       id: PACK_IDS.packCarriereCourse,
-      title: "Pack Carrière — entretien et positionnement",
+      slug: await allocateUniqueSlug({
+        base: courseSlugBase(packCarriereTitle),
+        isTaken: async (slug) =>
+          Boolean(await db.course.findUnique({ where: { slug }, select: { id: true } })),
+      }),
+      title: packCarriereTitle,
       description:
         "Parcours premium offert avec le Pack Carrière : CV, pitch et préparation aux entretiens.",
       category: "Carrière",

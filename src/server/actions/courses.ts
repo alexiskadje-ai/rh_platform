@@ -23,6 +23,11 @@ import {
   quizAttemptSchema,
 } from "@/lib/validations/courses";
 import { canEnrollInPaidCourse } from "@/lib/entitlements";
+import {
+  allocateUniqueSlug,
+  courseSlugBase,
+  createWithUniqueSlug,
+} from "@/lib/public-slug";
 
 export type ActionState = {
   ok?: boolean;
@@ -63,22 +68,33 @@ export async function createCourse(
   await requireAdmin();
   const parsed = coursePayload(formData);
   if (!parsed.success) return { errors: fieldErrorsFromZod(parsed.error) };
-  const course = await db.course.create({
-    data: {
-      title: parsed.data.title,
-      description: parsed.data.description,
-      category: parsed.data.category,
-      price: parsed.data.price,
-      passingScore: parsed.data.passingScore,
-      accessMode: parsed.data.accessMode,
-      modules: parsed.data.modules,
-      quiz: parsed.data.quiz,
-      documents: parsed.data.documents,
-      videos: parsed.data.modules.map((item) => item.videoUrl),
-    },
-  });
+  const course = await createWithUniqueSlug(
+    () =>
+      allocateUniqueSlug({
+        base: courseSlugBase(parsed.data.title),
+        isTaken: async (slug) =>
+          Boolean(await db.course.findUnique({ where: { slug }, select: { id: true } })),
+      }),
+    (slug) =>
+      db.course.create({
+        data: {
+          slug,
+          title: parsed.data.title,
+          description: parsed.data.description,
+          category: parsed.data.category,
+          price: parsed.data.price,
+          passingScore: parsed.data.passingScore,
+          accessMode: parsed.data.accessMode,
+          modules: parsed.data.modules,
+          quiz: parsed.data.quiz,
+          documents: parsed.data.documents,
+          videos: parsed.data.modules.map((item) => item.videoUrl),
+        },
+      }),
+  );
   revalidatePath("/admin/formations");
   revalidatePath("/formations");
+  revalidatePath(`/formations/${course.slug}`);
   redirect(`/admin/formations/${course.id}`);
 }
 
@@ -91,6 +107,11 @@ export async function updateCourse(
   if (!id) return { message: "Formation introuvable." };
   const parsed = coursePayload(formData);
   if (!parsed.success) return { errors: fieldErrorsFromZod(parsed.error) };
+  const existing = await db.course.findUnique({
+    where: { id },
+    select: { slug: true },
+  });
+  if (!existing) return { message: "Formation introuvable." };
   await db.course.update({
     where: { id },
     data: {
@@ -109,7 +130,7 @@ export async function updateCourse(
   revalidatePath("/admin/formations");
   revalidatePath(`/admin/formations/${id}`);
   revalidatePath("/formations");
-  revalidatePath(`/formations/${id}`);
+  revalidatePath(`/formations/${existing.slug}`);
   return { ok: true, message: "Formation enregistrée." };
 }
 

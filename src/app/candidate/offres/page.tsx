@@ -58,7 +58,7 @@ export default async function RecommendedJobsPage() {
           <p className="text-sm text-muted-foreground">Aucune offre ouverte pour le moment.</p>
         ) : (
           ranked.map((offer) => (
-            <JobOfferCard key={offer.id} offer={offer} href={`/offres/${offer.id}`} />
+            <JobOfferCard key={offer.id} offer={offer} href={`/offres/${offer.slug}`} />
           ))
         )}
       </div>

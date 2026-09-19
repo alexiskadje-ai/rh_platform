@@ -1,21 +1,50 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getSessionUser } from "@/lib/dal";
 import { db } from "@/lib/db";
 import { COURSE_ACCESS_LABELS } from "@/lib/constants";
 import { formatCoursePrice, parseModules, parseQuiz } from "@/lib/learning";
+import { getPublicCourse } from "@/lib/public-content";
+import { courseMetaTitle, metaDescription } from "@/lib/seo/meta";
+import { absoluteUrl } from "@/lib/site";
 import { enrollCourse } from "@/server/actions/courses";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const course = await getPublicCourse(slug);
+  if (!course) return { title: "Formation introuvable" };
+  const title = courseMetaTitle({ title: course.title, category: course.category });
+  const description = metaDescription(course.description);
+  const url = absoluteUrl(`/formations/${course.slug}`);
+  return {
+    title: { absolute: title },
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      title,
+      description,
+      url,
+      type: "website",
+      locale: "fr_FR",
+    },
+  };
+}
+
 export default async function PublicCourseDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 }) {
-  const { id } = await params;
-  const course = await db.course.findUnique({ where: { id } });
+  const { slug } = await params;
+  const course = await getPublicCourse(slug);
   if (!course) notFound();
   const user = await getSessionUser();
   const enrollment =

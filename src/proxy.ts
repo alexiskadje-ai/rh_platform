@@ -21,6 +21,8 @@ const PUBLIC_PATHS = [
   "/services",
   "/candidat",
   "/inscription",
+  "/sitemap.xml",
+  "/robots.txt",
 ];
 
 const ROLE_PREFIX: Record<string, Role> = {

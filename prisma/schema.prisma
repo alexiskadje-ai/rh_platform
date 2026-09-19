@@ -182,6 +182,7 @@ model JobOffer {
   id                 String         @id @default(cuid())
   company            Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
   companyId          String
+  slug               String         @unique
   title              String
   description        String
   requirements       String
@@ -366,6 +367,7 @@ model Absence {
 
 model Course {
   id           String       @id @default(cuid())
+  slug         String       @unique
   title        String
   description  String
   category     String

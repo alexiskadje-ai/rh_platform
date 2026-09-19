@@ -28,6 +28,11 @@ import {
   skillsSchema,
 } from "@/lib/validations/recruitment";
 import { refreshCandidateEmbedding, refreshJobOfferEmbedding } from "@/lib/ai/embeddings";
+import {
+  allocateUniqueSlug,
+  createWithUniqueSlug,
+  jobOfferSlugBase,
+} from "@/lib/public-slug";
 import { computeMatchScoresForOffer } from "@/server/actions/ai-matching";
 import {
   recordApplicationStatusChange,
@@ -345,14 +350,24 @@ async function upsertJobOffer(id: string | null, formData: FormData): Promise<Ac
     revalidatePath("/company/offres");
     revalidatePath(`/company/offres/${id}`);
     revalidatePath("/offres");
+    revalidatePath(`/offres/${existing.slug}`);
     return { ok: true, message: "Offre mise à jour." };
   }
 
-  const created = await db.jobOffer.create({ data });
+  const created = await createWithUniqueSlug(
+    () =>
+      allocateUniqueSlug({
+        base: jobOfferSlugBase(parsed.data.title, parsed.data.city),
+        isTaken: async (slug) =>
+          Boolean(await db.jobOffer.findUnique({ where: { slug }, select: { id: true } })),
+      }),
+    (slug) => db.jobOffer.create({ data: { ...data, slug } }),
+  );
   await refreshJobOfferEmbedding(created.id, user.id);
   void computeMatchScoresForOffer(created.id);
   revalidatePath("/company/offres");
   revalidatePath("/offres");
+  revalidatePath(`/offres/${created.slug}`);
   redirect(`/company/offres/${created.id}`);
 }
 
@@ -443,7 +458,7 @@ export async function applyToJob(
 
   void computeMatchScoresForOffer(offer.id);
   revalidatePath("/candidate/candidatures");
-  revalidatePath(`/offres/${offer.id}`);
+  revalidatePath(`/offres/${offer.slug}`);
   redirect("/candidate/candidatures");
 }
 

@@ -30,7 +30,11 @@ export default async function LearnCoursePage({
     include: { course: true },
   });
   if (!enrollment) {
-    redirect(`/formations/${courseId}`);
+    const course = await db.course.findUnique({
+      where: { id: courseId },
+      select: { slug: true },
+    });
+    redirect(course ? `/formations/${course.slug}` : "/formations");
   }
 
   const modules = parseModules(enrollment.course.modules);
