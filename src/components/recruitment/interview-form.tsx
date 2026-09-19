@@ -30,7 +30,6 @@ export function InterviewForm({
 
   return (
     <form action={action} className="space-y-4">
-      {/* TODO(notifications): branchement multicanal email + SMS + WhatsApp en Phase 8. */}
       <input type="hidden" name="applicationId" value={applicationId} />
       <div className="space-y-2">
         <Label htmlFor="scheduledAt">Date et heure</Label>

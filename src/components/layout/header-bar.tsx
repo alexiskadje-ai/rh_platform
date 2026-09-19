@@ -10,9 +10,11 @@ import { ROLE_HOME } from "@/lib/constants";
 import { COMPANY_SHORT } from "@/lib/company";
 import { logout } from "@/server/actions/auth";
 import { BrandLogo } from "@/components/layout/brand-logo";
+import { NotificationBell } from "@/components/layout/notification-bell";
 import { CartLink } from "@/components/shop/cart-link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import type { InboxPreview } from "@/lib/notifications/inbox";
 
 const NAV = [
   { href: "/", label: "Accueil" },
@@ -26,8 +28,10 @@ const NAV = [
 
 export function HeaderBar({
   user,
+  inbox,
 }: {
   user: { role: Role; firstName: string } | null;
+  inbox?: InboxPreview | null;
 }) {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
@@ -76,6 +80,7 @@ export function HeaderBar({
           })}
         </nav>
         <div className="flex items-center gap-1 sm:gap-2">
+          {user && inbox ? <NotificationBell inbox={inbox} light={overlay} /> : null}
           <CartLink light={overlay} />
           {user ? (
             <>

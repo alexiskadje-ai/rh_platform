@@ -3,6 +3,7 @@
 import { LeaveStatus, LeaveType, Role } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { requireEmployee, requireRecruiter, requireUser } from "@/lib/dal";
+import { notify } from "@/lib/notifications";
 import { sendEmail } from "@/lib/notify";
 import { db } from "@/lib/db";
 import { fieldErrorsFromZod } from "@/lib/users";
@@ -205,21 +206,22 @@ export async function decideLeave(
     },
   });
 
-  const message =
-    outcome.status === LeaveStatus.PENDING
-      ? "Votre supérieur a validé la demande. Elle est transmise au RH."
-      : outcome.status === LeaveStatus.APPROVED
-        ? "Votre demande de congé a été acceptée."
-        : "Votre demande de congé a été refusée.";
-
-  await db.notification.create({
-    data: {
-      userId: leave.employee.userId,
-      channel: "in-app",
-      message,
-    },
-  });
-  // TODO(notifications): email employé validation/refus (Phase 8).
+  if (outcome.status === LeaveStatus.PENDING) {
+    await db.notification.create({
+      data: {
+        userId: leave.employee.userId,
+        channel: "in-app",
+        message: "Votre supérieur a validé la demande. Elle est transmise au RH.",
+      },
+    });
+  } else {
+    await notify(leave.employee.userId, "LEAVE_DECISION", {
+      firstName: leave.employee.user.firstName,
+      approved: outcome.status === LeaveStatus.APPROVED,
+      startDate: leave.startDate.toLocaleDateString("fr-FR"),
+      endDate: leave.endDate.toLocaleDateString("fr-FR"),
+    });
+  }
   revalidatePath("/employee/conges");
   revalidatePath("/employee/validations");
   revalidatePath("/company/conges");

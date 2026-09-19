@@ -8,6 +8,8 @@ const nextConfig: NextConfig = {
     "@mistralai/mistralai",
     "@react-pdf/renderer",
     "stripe",
+    "bullmq",
+    "ioredis",
   ],
 };
 

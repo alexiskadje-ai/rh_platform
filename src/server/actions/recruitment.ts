@@ -4,12 +4,16 @@ import {
   ApplicationStatus,
   JobStatus,
   Prisma,
+  Role,
+  UserStatus,
 } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireCandidate, requireRecruiter } from "@/lib/dal";
 import { db } from "@/lib/db";
+import { INTERVIEW_FORMAT_LABELS, TZ_DOUALA } from "@/lib/constants";
+import { notify } from "@/lib/notifications";
 import { closeExpiredOffers } from "@/lib/jobs";
 import { computeMatchScore, formatLocation } from "@/lib/matching";
 import { profileCompletion } from "@/lib/profile";
@@ -445,7 +449,6 @@ export async function applyToJob(
         },
       },
     });
-    // TODO(notifications): nouvelle candidature → recruteur (email + in-app, Phase 8).
   } catch (error) {
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -455,6 +458,25 @@ export async function applyToJob(
     }
     throw error;
   }
+
+  const recruiters = await db.user.findMany({
+    where: {
+      companyId: offer.companyId,
+      role: Role.RECRUITER,
+      status: UserStatus.ACTIVE,
+    },
+    select: { id: true },
+  });
+  const candidateName = `${candidate.firstName} ${candidate.lastName}`.trim();
+  await Promise.all(
+    recruiters.map((recruiter) =>
+      notify(recruiter.id, "NEW_APPLICATION", {
+        jobTitle: offer.title,
+        candidateName,
+        companyName: offer.company.name,
+      }),
+    ),
+  );
 
   void computeMatchScoresForOffer(offer.id);
   revalidatePath("/candidate/candidatures");
@@ -488,6 +510,10 @@ export async function inviteToInterview(
 
   const application = await db.application.findFirst({
     where: { id: parsed.data.applicationId, jobOffer: { companyId } },
+    include: {
+      candidate: { include: { user: true } },
+      jobOffer: true,
+    },
   });
   if (!application) return { message: "Candidature introuvable." };
   if (
@@ -518,7 +544,21 @@ export async function inviteToInterview(
     await recordApplicationStatusChange(application.id, ApplicationStatus.INTERVIEW);
   }
 
-  // TODO(notifications): convocation entretien → candidat (email + SMS + WhatsApp, Phase 8).
+  const scheduledAt = new Intl.DateTimeFormat("fr-FR", {
+    timeZone: TZ_DOUALA,
+    dateStyle: "full",
+    timeStyle: "short",
+  }).format(new Date(parsed.data.scheduledAt));
+  if (application.candidate.userId) {
+    await notify(application.candidate.userId, "INTERVIEW_INVITE", {
+      firstName:
+        application.candidate.user?.firstName || application.candidate.firstName,
+      jobTitle: application.jobOffer.title,
+      scheduledAt,
+      formatLabel: INTERVIEW_FORMAT_LABELS[parsed.data.format],
+      locationOrLink: parsed.data.locationOrLink,
+    });
+  }
 
   revalidatePath(`/company/candidatures/${application.id}`);
   revalidatePath("/candidate/candidatures");

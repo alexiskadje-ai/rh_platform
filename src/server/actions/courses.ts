@@ -1,9 +1,11 @@
 "use server";
 
+import { Role, UserStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin, requireLearner } from "@/lib/dal";
 import { db } from "@/lib/db";
+import { notify } from "@/lib/notifications";
 import { fieldErrorsFromZod } from "@/lib/users";
 import { saveBuffer } from "@/lib/storage";
 import { TZ_DOUALA } from "@/lib/constants";
@@ -91,6 +93,21 @@ export async function createCourse(
           videos: parsed.data.modules.map((item) => item.videoUrl),
         },
       }),
+  );
+  const learners = await db.user.findMany({
+    where: {
+      role: { in: [Role.CANDIDATE, Role.EMPLOYEE] },
+      status: UserStatus.ACTIVE,
+    },
+    select: { id: true, firstName: true },
+  });
+  await Promise.all(
+    learners.map((learner) =>
+      notify(learner.id, "COURSE_AVAILABLE", {
+        firstName: learner.firstName,
+        courseTitle: course.title,
+      }),
+    ),
   );
   revalidatePath("/admin/formations");
   revalidatePath("/formations");

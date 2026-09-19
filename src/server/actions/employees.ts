@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireEmployee, requireRecruiter, requireUser } from "@/lib/dal";
 import { ROLE_HOME } from "@/lib/constants";
+import { notify } from "@/lib/notifications";
 import { db } from "@/lib/db";
 import { hashPassword, generateToken } from "@/lib/crypto";
 import { fieldErrorsFromZod } from "@/lib/users";
@@ -82,7 +83,7 @@ export async function createEmployee(
 
   const password = generateToken(6);
   const matricule = await nextMatricule();
-  await db.user.create({
+  const created = await db.user.create({
     data: {
       email,
       firstName: parsed.data.firstName,
@@ -114,6 +115,8 @@ export async function createEmployee(
       },
     },
   });
+
+  await notify(created.id, "ACCOUNT_CREATED", { firstName: created.firstName });
 
   revalidatePath("/company/employes");
   return {

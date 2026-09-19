@@ -29,7 +29,6 @@ export async function recordApplicationStatusChange(
       data: { applicationId, status },
     }),
   ]);
-  // TODO(notifications): notifier le candidat du changement de statut (Phase 8).
 }
 
 export async function updateApplicationStatus(

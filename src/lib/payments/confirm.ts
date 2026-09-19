@@ -1,8 +1,7 @@
 import { PaymentProvider } from "@prisma/client";
 import { db } from "@/lib/db";
 import { saveBuffer } from "@/lib/storage";
-import { sendEmail, sendSms } from "@/lib/notify";
-import { APP_NAME } from "@/lib/constants";
+import { notify } from "@/lib/notifications";
 import { formatFcfa } from "@/lib/shop";
 import { grantPaidOrderEntitlements } from "@/lib/entitlements";
 import { renderInvoicePdf } from "@/lib/payments/invoice";
@@ -74,14 +73,6 @@ export async function confirmPaidPayment(paymentId: string) {
       where: { id: order.id },
       data: { status: PAYMENT_STATUS.paid },
     });
-    await tx.notification.create({
-      data: {
-        userId: order.userId,
-        channel: "email",
-        message: `Paiement confirmé ${payment.reference} — ${formatFcfa(order.total)}`,
-        sentAt: new Date(),
-      },
-    });
     return next;
   });
 
@@ -90,18 +81,12 @@ export async function confirmPaidPayment(paymentId: string) {
     items: order.items,
   });
 
-  const text = `Bonjour ${order.user.firstName},\n\nVotre paiement ${payment.reference} de ${formatFcfa(order.total)} a été confirmé.\nVotre facture ${number} est disponible dans vos achats.\n\n${APP_NAME}`;
-  await sendEmail({
-    to: order.user.email,
-    subject: `Paiement confirmé — ${number}`,
-    text,
+  await notify(order.userId, "PAYMENT_CONFIRMED", {
+    firstName: order.user.firstName,
+    amountLabel: formatFcfa(order.total),
+    reference: payment.reference,
+    invoiceNumber: number,
   });
-  if (order.user.phone) {
-    await sendSms(
-      order.user.phone,
-      `${APP_NAME}: paiement confirmé ${formatFcfa(order.total)}. Facture ${number}.`,
-    );
-  }
 
   return updated;
 }

@@ -468,6 +468,7 @@ model Notification {
   channel   String
   message   String
   sentAt    DateTime?
+  readAt    DateTime?
   createdAt DateTime  @default(now())
 }
 

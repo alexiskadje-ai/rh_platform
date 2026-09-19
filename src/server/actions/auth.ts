@@ -17,6 +17,7 @@ import {
   sendVerificationEmail,
   sendVerificationSms,
 } from "@/lib/notify";
+import { notify } from "@/lib/notifications";
 import { consumeToken, issueToken, peekToken } from "@/lib/tokens";
 import { verifyTotp } from "@/lib/two-factor";
 import {
@@ -218,6 +219,8 @@ export async function registerCandidate(
     throw error;
   }
 
+  await notify(user.id, "ACCOUNT_CREATED", { firstName: user.firstName });
+
   const emailToken = await issueToken(user.id, TokenType.EMAIL);
   const smsCode = await issueToken(user.id, TokenType.SMS);
   await sendVerificationEmail(user.email, emailToken);
@@ -280,6 +283,8 @@ export async function registerCompany(
       },
     },
   });
+
+  await notify(user.id, "ACCOUNT_CREATED", { firstName: user.firstName });
 
   const emailToken = await issueToken(user.id, TokenType.EMAIL);
   const smsCode = await issueToken(user.id, TokenType.SMS);
