@@ -10,6 +10,7 @@ import { WhyAccompany } from "@/components/home/why-accompany";
 import { Testimonials } from "@/components/home/testimonials";
 import { CtaBand } from "@/components/home/cta-band";
 import { FadeIn } from "@/components/motion/reveal";
+import { loadPublishedTestimonials } from "@/server/actions/content";
 
 export default async function HomePage() {
   let cvCount = 0;
@@ -47,10 +48,15 @@ export default async function HomePage() {
       <WhyAccompany />
       <HowItWorks />
       <RecentOffers />
-      <Testimonials />
+      <TestimonialsSection />
       <CtaBand />
     </main>
   );
+}
+
+async function TestimonialsSection() {
+  const published = await loadPublishedTestimonials();
+  return <Testimonials published={published} />;
 }
 
 async function loadRecentOffers() {

@@ -12,8 +12,6 @@ import { PageHero } from "@/components/layout/page-hero";
 import { SocialLinks } from "@/components/layout/social-links";
 import { FadeIn } from "@/components/motion/reveal";
 import { ContactForm } from "@/components/content/contact-form";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 export default function ContactPage() {
   const office = COMPANY_OFFICES[0];
@@ -64,20 +62,12 @@ export default function ContactPage() {
         </a>
         <SocialLinks className="mt-3" />
       </FadeIn>
-      <FadeIn className="mt-10 rounded-3xl border border-border/80 bg-card p-6 md:p-8">
+      <FadeIn id="nous-ecrire" className="mt-10 scroll-mt-28 rounded-3xl border border-border/80 bg-card p-6 md:p-8">
         <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Nous écrire</p>
         <h2 className="mt-2 font-display text-2xl text-primary">Mini-formulaire</h2>
         <div className="mt-6 max-w-xl">
           <ContactForm />
         </div>
-      </FadeIn>
-      <FadeIn className="mt-8 flex flex-wrap gap-3">
-        <a href={telHref(office.phone)} className={cn(buttonVariants({ size: "lg" }))}>
-          Appeler {office.phone}
-        </a>
-        <a href={mailHref(COMPANY_EMAIL)} className={cn(buttonVariants({ variant: "outline", size: "lg" }))}>
-          Envoyer un e-mail
-        </a>
       </FadeIn>
     </main>
   );

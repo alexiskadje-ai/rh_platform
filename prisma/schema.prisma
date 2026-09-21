@@ -98,6 +98,24 @@ enum FaqStatus {
   REJECTED
 }
 
+enum TestimonialStatus {
+  PENDING
+  PUBLISHED
+  REJECTED
+}
+
+enum Gender {
+  FEMALE
+  MALE
+  OTHER
+}
+
+enum MaritalStatus {
+  SINGLE
+  MARRIED
+  ENGAGED
+}
+
 model User {
   id              String    @id @default(cuid())
   email           String    @unique
@@ -162,6 +180,11 @@ model Candidate {
   bio            String?
   cvUrl          String?
   skills         String[]
+  yearsOfExperience Int?
+  lastHiredAt    DateTime?
+  maritalStatus  MaritalStatus?
+  age            Int?
+  gender         Gender?
   availability   String?
   availableFrom  DateTime?
   city           String?
@@ -521,6 +544,17 @@ model FaqItem {
   status     FaqStatus @default(PENDING)
   createdAt  DateTime  @default(now())
   answeredAt DateTime?
+}
+
+model Testimonial {
+  id          String             @id @default(cuid())
+  name        String
+  role        String             @default("")
+  email       String
+  quote       String
+  status      TestimonialStatus  @default(PENDING)
+  createdAt   DateTime           @default(now())
+  publishedAt DateTime?
 }
 
 model NewsletterSubscriber {

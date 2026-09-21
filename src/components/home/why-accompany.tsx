@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Compass, FileText, MessageSquare, Target } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { FadeIn, Stagger, StaggerItem } from "@/components/motion/reveal";
@@ -31,17 +32,33 @@ export function WhyAccompany() {
   return (
     <section className="bg-muted/40 py-20">
       <div className="mx-auto max-w-6xl px-4">
-        <FadeIn className="max-w-2xl">
-          <p className="text-xs uppercase tracking-[0.28em] text-accent">Candidats</p>
-          <h2 className="mt-3 font-display text-3xl font-medium text-primary md:text-4xl">
-            Pourquoi se faire accompagner ?
-          </h2>
-          <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-            Chercher un emploi seul prend du temps et décourage. Un accompagnement structuré
-            valorise votre parcours et accélère le retour à l’emploi.
-          </p>
-        </FadeIn>
-        <Stagger className="mt-10 grid gap-4 md:grid-cols-2">
+        <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
+          <FadeIn>
+            <div className="relative aspect-[4/3] overflow-hidden rounded-[1.75rem] border border-border/80 shadow-[0_18px_50px_rgba(20,33,28,0.08)]">
+              <Image
+                src="/home/why-us.jpg"
+                alt="Poignée de main entre un recruteur et un candidat"
+                fill
+                className="object-cover"
+                sizes="(min-width: 1024px) 40vw, 100vw"
+              />
+            </div>
+          </FadeIn>
+          <FadeIn delay={0.08}>
+            <p className="text-xs uppercase tracking-[0.28em] text-accent">Candidats</p>
+            <h2 className="mt-3 font-display text-3xl font-medium text-primary md:text-4xl">
+              Pourquoi se faire accompagner ?
+            </h2>
+            <p className="mt-4 text-base leading-relaxed text-muted-foreground">
+              Chercher un emploi seul prend du temps et décourage. Un accompagnement structuré
+              valorise votre parcours et accélère le retour à l&apos;emploi.
+            </p>
+            <Link href="/candidat/depot-libre" className={cn(buttonVariants({ size: "lg" }), "mt-6")}>
+              Déposer son CV gratuitement
+            </Link>
+          </FadeIn>
+        </div>
+        <Stagger className="mt-12 grid gap-4 md:grid-cols-2">
           {REASONS.map((reason) => {
             const Icon = reason.icon;
             return (
@@ -55,11 +72,6 @@ export function WhyAccompany() {
             );
           })}
         </Stagger>
-        <FadeIn className="mt-10">
-          <Link href="/candidat/depot-libre" className={cn(buttonVariants({ size: "lg" }))}>
-            Déposer son CV gratuitement
-          </Link>
-        </FadeIn>
       </div>
     </section>
   );

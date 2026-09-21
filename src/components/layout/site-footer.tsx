@@ -12,7 +12,8 @@ import {
 } from "@/lib/company";
 import { BrandLogo } from "@/components/layout/brand-logo";
 import { SocialLinks } from "@/components/layout/social-links";
-import { ContactForm } from "@/components/content/contact-form";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export function SiteFooter() {
   const office = COMPANY_OFFICES[0];
@@ -88,12 +89,12 @@ export function SiteFooter() {
             {COMPANY_EMAIL}
           </a>
           <p className="mt-2 text-primary-foreground/60">{COMPANY_HOURS}</p>
-          <div className="mt-6">
-            <p className="text-xs uppercase tracking-[0.2em] text-highlight">Écrire</p>
-            <div className="mt-3">
-              <ContactForm compact inverted />
-            </div>
-          </div>
+          <Link
+            href="/contact#nous-ecrire"
+            className={cn(buttonVariants({ variant: "accent", size: "sm" }), "mt-6 inline-flex")}
+          >
+            Nous écrire
+          </Link>
         </div>
       </div>
       <div className="border-t border-primary-foreground/10">

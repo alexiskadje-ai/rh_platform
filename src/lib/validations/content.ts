@@ -21,6 +21,17 @@ export const askFaqSchema = z.object({
     .max(600, "La question est trop longue."),
 });
 
+export const submitTestimonialSchema = z.object({
+  name: z.string().trim().min(1, "Le nom est obligatoire.").max(80),
+  role: z.string().trim().max(80).optional(),
+  email: z.email("Adresse e-mail invalide."),
+  quote: z
+    .string()
+    .trim()
+    .min(20, "Écrivez au moins 20 caractères.")
+    .max(500, "L'avis est trop long (500 caractères)."),
+});
+
 export const newsletterSchema = z.object({
   email: z.email("Adresse e-mail invalide."),
   alerts: z.array(z.enum(alertIds)).min(1, "Choisissez au moins un type d'alerte."),

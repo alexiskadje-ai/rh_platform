@@ -39,7 +39,7 @@ export default async function FreeCvDepositPage({
             className="mx-auto text-center"
             eyebrow="Candidats"
             title="Déposer son CV gratuitement"
-            description="Sans créer de compte. Nom, contact, CV — nous vous recontactons. Un espace candidat reste optionnel pour suivre vos candidatures."
+            description="Sans créer de compte. Nom, contact, métier, CV — nous vous recontactons. Un espace candidat reste optionnel pour suivre vos candidatures."
           />
           <div className="mt-10">
             <FreeCvForm />

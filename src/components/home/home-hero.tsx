@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowRight, Search } from "lucide-react";
 import { COMPANY_SLOGAN } from "@/lib/company";
@@ -16,14 +17,22 @@ export function HomeHero({
 }) {
   return (
     <section className="relative -mt-[4.25rem] overflow-hidden bg-primary text-primary-foreground">
+      <Image
+        src="/home/hero.jpg"
+        alt=""
+        fill
+        priority
+        className="object-cover object-[center_20%] opacity-35"
+        sizes="100vw"
+      />
+      <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/88 to-primary/70" />
       <div
         aria-hidden
         className="pointer-events-none absolute -bottom-[8%] right-[-6%] select-none font-display text-[8rem] leading-[0.75] text-primary-foreground/[0.08] sm:text-[12rem] md:right-[-2%] md:text-[16rem] lg:right-8 lg:text-[18rem]"
       >
         RH
       </div>
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(242,98,0,0.28),transparent_42%),radial-gradient(circle_at_80%_80%,rgba(244,169,0,0.18),transparent_46%)]" />
-      <div className="relative mx-auto max-w-6xl px-4 pb-0 pt-24 md:pt-28">
+      <div className="relative mx-auto max-w-6xl px-4 pb-10 pt-24 md:pb-12 md:pt-28">
         <div className="grid gap-8 md:grid-cols-2 md:items-center">
           <motion.div
             initial={{ opacity: 0, y: 28 }}
@@ -57,6 +66,7 @@ export function HomeHero({
                 Recruteur : publiez vos offres
               </Link>
             </div>
+            <StatsRow stats={stats} className="pt-3" />
           </motion.div>
           <motion.form
             action="/offres"
@@ -80,7 +90,6 @@ export function HomeHero({
           </motion.form>
         </div>
       </div>
-      <StatsRow stats={stats} />
     </section>
   );
 }

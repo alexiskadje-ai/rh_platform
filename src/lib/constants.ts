@@ -52,6 +52,18 @@ export const CONTRACT_LABELS: Record<"CDI" | "CDD" | "STAGE" | "PRESTATION", str
   PRESTATION: "Prestation",
 };
 
+export const GENDER_LABELS = {
+  FEMALE: "Femme",
+  MALE: "Homme",
+  OTHER: "Autre",
+} as const;
+
+export const MARITAL_STATUS_LABELS = {
+  SINGLE: "Célibataire",
+  MARRIED: "Marié",
+  ENGAGED: "Fiancé",
+} as const;
+
 export const APPLICATION_STATUS_LABELS = {
   RECEIVED: "Reçue",
   SHORTLISTED: "Présélectionnée",

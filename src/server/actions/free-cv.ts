@@ -35,6 +35,14 @@ export async function submitFreeCv(
     lastName: formData.get("lastName"),
     email: formData.get("email"),
     phone: formData.get("phone"),
+    trade: formData.get("trade"),
+    skills: formData.getAll("skills").map(String).filter((skill) => skill.trim()),
+    yearsOfExperience: formData.get("yearsOfExperience") || undefined,
+    lastHiredAt: formData.get("lastHiredAt"),
+    city: formData.get("city"),
+    maritalStatus: formData.get("maritalStatus"),
+    age: formData.get("age") || undefined,
+    gender: formData.get("gender"),
   });
   if (!parsed.success) return { errors: fieldErrorsFromZod(parsed.error) };
 
@@ -66,6 +74,14 @@ export async function submitFreeCv(
         phone,
         firstName: parsed.data.firstName,
         lastName: parsed.data.lastName,
+        headline: parsed.data.trade,
+        skills: parsed.data.skills,
+        yearsOfExperience: parsed.data.yearsOfExperience,
+        lastHiredAt: new Date(`${parsed.data.lastHiredAt}T00:00:00`),
+        city: parsed.data.city,
+        maritalStatus: parsed.data.maritalStatus,
+        age: parsed.data.age,
+        gender: parsed.data.gender,
         cvUrl,
       },
     });

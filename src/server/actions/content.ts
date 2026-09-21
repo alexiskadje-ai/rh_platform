@@ -1,6 +1,6 @@
 "use server";
 
-import { FaqStatus, Role } from "@prisma/client";
+import { FaqStatus, Role, TestimonialStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/dal";
@@ -12,6 +12,7 @@ import {
   answerFaqSchema,
   askFaqSchema,
   newsletterSchema,
+  submitTestimonialSchema,
 } from "@/lib/validations/content";
 import { contactSchema } from "@/lib/validations/platform";
 
@@ -55,6 +56,96 @@ export async function askFaqQuestion(
     ok: true,
     message: "Question envoyée. Nous la publierons dès qu'une réponse sera prête.",
   };
+}
+
+export async function submitTestimonial(
+  _prev: ContentActionState,
+  formData: FormData,
+): Promise<ContentActionState> {
+  if (await recaptchaFailed(formData)) {
+    return { message: RECAPTCHA_REQUIRED_MESSAGE };
+  }
+  if (honeypotBlocked(formData)) return { message: "Soumission invalide." };
+
+  const parsed = submitTestimonialSchema.safeParse({
+    name: formData.get("name"),
+    role: formData.get("role") || undefined,
+    email: formData.get("email"),
+    quote: formData.get("quote"),
+  });
+  if (!parsed.success) return { errors: fieldErrorsFromZod(parsed.error) };
+
+  await db.testimonial.create({
+    data: {
+      name: parsed.data.name,
+      role: parsed.data.role ?? "",
+      email: parsed.data.email.toLowerCase(),
+      quote: parsed.data.quote,
+      status: TestimonialStatus.PENDING,
+    },
+  });
+
+  const admins = await db.user.findMany({
+    where: { role: Role.ADMIN, status: "ACTIVE" },
+    select: { id: true },
+  });
+  if (admins.length > 0) {
+    await db.notification.createMany({
+      data: admins.map((admin) => ({
+        userId: admin.id,
+        channel: "in-app",
+        message: `Nouvel avis à relire — ${parsed.data.name}`,
+      })),
+    });
+  }
+
+  const inbox = supportEmail();
+  if (inbox) {
+    await sendEmail({
+      to: inbox,
+      subject: `Avis accueil — ${parsed.data.name}`,
+      replyTo: parsed.data.email,
+      text: `Nom : ${parsed.data.name}\nFonction : ${parsed.data.role || "—"}\nE-mail : ${parsed.data.email}\n\n${parsed.data.quote}`,
+    });
+  }
+
+  revalidatePath("/admin/messages");
+  return {
+    ok: true,
+    message: "Merci. Votre avis sera publié après relecture par l'équipe PES-RH.",
+  };
+}
+
+export async function loadPublishedTestimonials() {
+  try {
+    return await db.testimonial.findMany({
+      where: { status: TestimonialStatus.PUBLISHED },
+      orderBy: { publishedAt: "desc" },
+      select: { id: true, name: true, role: true, quote: true },
+      take: 8,
+    });
+  } catch {
+    return [];
+  }
+}
+
+export async function publishTestimonial(id: string) {
+  await requireRole([Role.ADMIN]);
+  await db.testimonial.update({
+    where: { id },
+    data: { status: TestimonialStatus.PUBLISHED, publishedAt: new Date() },
+  });
+  revalidatePath("/");
+  revalidatePath("/admin/messages");
+}
+
+export async function rejectTestimonial(id: string) {
+  await requireRole([Role.ADMIN]);
+  await db.testimonial.update({
+    where: { id },
+    data: { status: TestimonialStatus.REJECTED },
+  });
+  revalidatePath("/admin/messages");
 }
 
 export async function subscribeNewsletter(

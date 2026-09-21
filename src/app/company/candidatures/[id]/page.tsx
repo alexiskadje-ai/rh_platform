@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { candidateDisplayName } from "@/lib/users";
 import { isPremiumCandidate } from "@/lib/subscriptions";
 import { PremiumBadge } from "@/components/recruitment/premium-badge";
+import { GENDER_LABELS, MARITAL_STATUS_LABELS } from "@/lib/constants";
 
 export default async function RecruiterApplicationPage({
   params,
@@ -61,6 +62,20 @@ export default async function RecruiterApplicationPage({
             <p>{candidate.headline}</p>
             <p className="whitespace-pre-wrap text-muted-foreground">{candidate.bio}</p>
             <p>Compétences : {candidate.skills.join(", ") || "—"}</p>
+            {candidate.yearsOfExperience != null ? (
+              <p>Expérience : {candidate.yearsOfExperience} an(s)</p>
+            ) : null}
+            {candidate.lastHiredAt ? (
+              <p>
+                Dernière embauche : {candidate.lastHiredAt.toLocaleDateString("fr-FR")}
+              </p>
+            ) : null}
+            {candidate.city ? <p>Ville : {candidate.city}</p> : null}
+            {candidate.maritalStatus ? (
+              <p>Statut matrimonial : {MARITAL_STATUS_LABELS[candidate.maritalStatus]}</p>
+            ) : null}
+            {candidate.age != null ? <p>Âge : {candidate.age} ans</p> : null}
+            {candidate.gender ? <p>Genre : {GENDER_LABELS[candidate.gender]}</p> : null}
             {application.cvUrl ? (
               <a href={application.cvUrl} className="text-primary underline" target="_blank">
                 Voir le CV
