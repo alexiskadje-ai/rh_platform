@@ -57,7 +57,7 @@ export function SortableCandidateCard({
             <div>
               <button
                 type="button"
-                className="inline-flex size-7 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
+                className="inline-flex size-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent/15 hover:text-accent"
                 aria-label="Changer le statut"
                 aria-expanded={menuOpen}
                 onPointerDown={(event) => event.stopPropagation()}
@@ -78,7 +78,7 @@ export function SortableCandidateCard({
                     <button
                       key={status}
                       type="button"
-                      className="block w-full px-3 py-1.5 text-left text-sm hover:bg-muted"
+                      className="block w-full px-3 py-1.5 text-left text-sm transition-colors hover:bg-accent/15 hover:text-accent"
                       onClick={() => {
                         setMenuOpen(false);
                         onMove(application.id, status);

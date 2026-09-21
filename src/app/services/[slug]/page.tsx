@@ -44,7 +44,7 @@ export default async function ServiceDetailPage({
             href="/services"
             className={cn(
               buttonVariants({ variant: "ghost" }),
-              "mb-8 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground",
+              "mb-8 text-primary-foreground hover:bg-accent hover:text-accent-foreground",
             )}
           >
             <ArrowLeft className="size-4" />
@@ -76,7 +76,7 @@ export default async function ServiceDetailPage({
                 href="/contact"
                 className={cn(
                   buttonVariants({ variant: "outline", size: "lg" }),
-                  "border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10",
+                  "border-primary-foreground/40 text-primary-foreground",
                 )}
               >
                 Nous joindre

@@ -105,7 +105,7 @@ export default async function LearnCoursePage({
                 href={`/learn/${courseId}?module=${item.id}`}
                 className={cn(
                   "block rounded-2xl border p-3 text-sm transition-colors",
-                  item.id === selected.id ? "border-primary bg-primary text-primary-foreground" : "border-border/80 bg-card hover:bg-muted",
+                  item.id === selected.id ? "border-primary bg-primary text-primary-foreground" : "border-border/80 bg-card hover:border-accent hover:bg-accent/10",
                 )}
               >
                 {index + 1}. {item.title}

@@ -53,8 +53,8 @@ export function SocialLinks({
             className={cn(
               "inline-flex size-10 items-center justify-center rounded-full border transition-colors",
               inverted
-                ? "border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10"
-                : "border-border text-primary hover:bg-muted",
+                ? "border-primary-foreground/20 text-primary-foreground hover:border-accent hover:bg-accent hover:text-accent-foreground"
+                : "border-border text-primary hover:border-accent hover:bg-accent hover:text-accent-foreground",
             )}
           >
             <Icon className="size-4" />

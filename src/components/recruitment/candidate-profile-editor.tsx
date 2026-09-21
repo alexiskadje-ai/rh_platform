@@ -239,7 +239,7 @@ function SkillsSection({ skills }: { skills: string[] }) {
               <button
                 key={tag}
                 type="button"
-                className="rounded-full bg-muted px-3 py-1 text-sm"
+                className="rounded-full bg-muted px-3 py-1 text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
                 onClick={() => {
                   setTags(tags.filter((item) => item !== tag));
                   setTimeout(schedule, 0);

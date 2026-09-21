@@ -60,7 +60,7 @@ export function HomeHero({
                 href="/register/company"
                 className={cn(
                   buttonVariants({ variant: "outline", size: "lg" }),
-                  "border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10",
+                  "border-primary-foreground/40 text-primary-foreground",
                 )}
               >
                 Recruteur : publiez vos offres

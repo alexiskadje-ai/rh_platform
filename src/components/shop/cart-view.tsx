@@ -103,7 +103,7 @@ export function CartView() {
                 <div className="inline-flex items-center rounded-full border border-border bg-muted/40">
                   <button
                     type="button"
-                    className="inline-flex size-9 items-center justify-center text-muted-foreground hover:text-foreground"
+                    className="inline-flex size-9 items-center justify-center text-muted-foreground transition-colors hover:bg-accent/15 hover:text-accent"
                     aria-label={`Diminuer ${item.title}`}
                     onClick={() => setQuantity(item.productId, item.quantity - 1)}
                   >
@@ -114,7 +114,7 @@ export function CartView() {
                   </span>
                   <button
                     type="button"
-                    className="inline-flex size-9 items-center justify-center text-muted-foreground hover:text-foreground"
+                    className="inline-flex size-9 items-center justify-center text-muted-foreground transition-colors hover:bg-accent/15 hover:text-accent"
                     aria-label={`Augmenter ${item.title}`}
                     onClick={() => setQuantity(item.productId, item.quantity + 1)}
                   >

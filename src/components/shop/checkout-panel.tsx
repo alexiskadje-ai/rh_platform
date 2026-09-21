@@ -237,7 +237,7 @@ export function CheckoutPanel({
                     "min-w-0 overflow-hidden rounded-2xl border p-4 text-left transition-all",
                     selected
                       ? "border-primary bg-primary/5 shadow-sm"
-                      : "border-border/80 hover:border-primary/40",
+                      : "border-border/80 hover:border-accent hover:bg-accent/10",
                   )}
                 >
                   <span

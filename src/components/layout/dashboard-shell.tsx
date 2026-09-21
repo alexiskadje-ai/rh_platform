@@ -117,7 +117,7 @@ export function DashboardShell({
                     "flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm transition-colors",
                     active
                       ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                      : "text-muted-foreground hover:bg-accent/15 hover:text-accent",
                   )}
                 >
                   <Icon className="size-4 shrink-0" />

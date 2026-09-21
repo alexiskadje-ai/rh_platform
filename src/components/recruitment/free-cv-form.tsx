@@ -127,7 +127,7 @@ export function FreeCvForm() {
                   <button
                     key={skill}
                     type="button"
-                    className="rounded-full bg-muted px-3 py-1 text-sm"
+                    className="rounded-full bg-muted px-3 py-1 text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
                     onClick={() => setSkills(skills.filter((item) => item !== skill))}
                   >
                     {skill} ×

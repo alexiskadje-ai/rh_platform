@@ -23,8 +23,8 @@ export function NotificationBell({
         className={cn(
           "relative inline-flex size-10 items-center justify-center rounded-full transition-colors",
           light
-            ? "text-primary-foreground hover:bg-primary-foreground/10"
-            : "text-foreground hover:bg-muted",
+            ? "text-primary-foreground hover:bg-accent hover:text-accent-foreground"
+            : "text-foreground hover:bg-accent/15 hover:text-accent",
         )}
         aria-label="Notifications"
         aria-expanded={open}
@@ -54,7 +54,7 @@ export function NotificationBell({
                   {!item.read ? (
                     <form action={markNotificationRead} className="mt-2">
                       <input type="hidden" name="notificationId" value={item.id} />
-                      <button type="submit" className="text-xs text-primary underline-offset-2 hover:underline">
+                      <button type="submit" className="text-xs text-primary underline-offset-2 hover:text-accent hover:underline">
                         Marquer comme lue
                       </button>
                     </form>

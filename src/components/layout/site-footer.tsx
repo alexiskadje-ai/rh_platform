@@ -30,25 +30,25 @@ export function SiteFooter() {
         <div className="text-sm">
           <p className="text-xs uppercase tracking-[0.2em] text-highlight">Explorer</p>
           <div className="mt-4 flex flex-col gap-2 text-primary-foreground/75">
-            <Link href="/a-propos" className="hover:text-primary-foreground">
+            <Link href="/a-propos" className="hover:text-highlight">
               Qui sommes-nous
             </Link>
-            <Link href="/offres" className="hover:text-primary-foreground">
+            <Link href="/offres" className="hover:text-highlight">
               Offres d&apos;emploi
             </Link>
-            <Link href="/formations" className="hover:text-primary-foreground">
+            <Link href="/formations" className="hover:text-highlight">
               Formations
             </Link>
-            <Link href="/boutique" className="hover:text-primary-foreground">
+            <Link href="/boutique" className="hover:text-highlight">
               Boutique
             </Link>
-            <Link href="/faq" className="hover:text-primary-foreground">
+            <Link href="/faq" className="hover:text-highlight">
               FAQ
             </Link>
-            <Link href="/contact" className="hover:text-primary-foreground">
+            <Link href="/contact" className="hover:text-highlight">
               Contact
             </Link>
-            <Link href="/register/company" className="hover:text-primary-foreground">
+            <Link href="/register/company" className="hover:text-highlight">
               Espace recruteur
             </Link>
           </div>
@@ -60,7 +60,7 @@ export function SiteFooter() {
               <Link
                 key={service.slug}
                 href={`/services/${service.slug}`}
-                className="hover:text-primary-foreground"
+                className="hover:text-highlight"
               >
                 {service.title}
               </Link>

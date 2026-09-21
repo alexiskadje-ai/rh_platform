@@ -150,7 +150,7 @@ export function Testimonials({ published = [] }: { published?: PublishedTestimon
               onClick={() => setIndex(i)}
               className={cn(
                 "size-2.5 rounded-full transition",
-                i === index ? "bg-primary" : "bg-muted-foreground/30 hover:bg-muted-foreground/60",
+                i === index ? "bg-primary" : "bg-muted-foreground/30 hover:bg-accent",
               )}
             />
           ))}
@@ -161,7 +161,7 @@ export function Testimonials({ published = [] }: { published?: PublishedTestimon
             onClick={() => setIndex(lastIndex)}
             className={cn(
               "size-2.5 rounded-full transition",
-              onCta ? "bg-accent" : "bg-muted-foreground/30 hover:bg-muted-foreground/60",
+              onCta ? "bg-accent" : "bg-muted-foreground/30 hover:bg-accent",
             )}
           />
         </div>

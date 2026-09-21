@@ -67,7 +67,7 @@ export function HeaderBar({
                 href={item.href}
                 className={cn(
                   "relative transition-colors",
-                  overlay ? "hover:text-highlight" : "text-muted-foreground hover:text-foreground",
+                  overlay ? "hover:text-highlight" : "text-muted-foreground hover:text-accent",
                   active && (overlay ? "text-highlight" : "text-primary"),
                 )}
               >
@@ -88,7 +88,7 @@ export function HeaderBar({
                 href={ROLE_HOME[user.role]}
                 className={cn(
                   buttonVariants({ variant: overlay ? "outline" : "ghost", size: "sm" }),
-                  overlay && "border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10",
+                  overlay && "border-primary-foreground/40 text-primary-foreground",
                   "hidden sm:inline-flex",
                 )}
               >
@@ -99,7 +99,7 @@ export function HeaderBar({
                   type="submit"
                   className={cn(
                     buttonVariants({ variant: overlay ? "ghost" : "outline", size: "sm" }),
-                    overlay && "text-primary-foreground hover:bg-primary-foreground/10",
+                    overlay && "text-primary-foreground",
                   )}
                 >
                   Déconnexion
@@ -112,7 +112,7 @@ export function HeaderBar({
                 href="/login"
                 className={cn(
                   buttonVariants({ variant: "ghost", size: "sm" }),
-                  overlay && "text-primary-foreground hover:bg-primary-foreground/10",
+                  overlay && "text-primary-foreground",
                   "hidden sm:inline-flex",
                 )}
               >
@@ -131,7 +131,12 @@ export function HeaderBar({
           )}
           <button
             type="button"
-            className="inline-flex size-10 items-center justify-center rounded-full lg:hidden"
+            className={cn(
+              "inline-flex size-10 items-center justify-center rounded-full transition-colors lg:hidden",
+              overlay
+                ? "text-primary-foreground hover:bg-accent hover:text-accent-foreground"
+                : "hover:bg-accent/15 hover:text-accent",
+            )}
             onClick={() => setOpen((value) => !value)}
             aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
           >
@@ -153,7 +158,7 @@ export function HeaderBar({
                   key={item.href}
                   href={item.href}
                   onClick={() => setOpen(false)}
-                  className="rounded-xl px-3 py-3 text-sm hover:bg-muted"
+                  className="rounded-xl px-3 py-3 text-sm transition-colors hover:bg-accent/15 hover:text-accent"
                 >
                   {item.label}
                 </Link>

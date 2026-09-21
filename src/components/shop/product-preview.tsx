@@ -83,7 +83,7 @@ export function ProductPreviewModal({
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex size-9 items-center justify-center rounded-full hover:bg-muted"
+            className="inline-flex size-9 items-center justify-center rounded-full transition-colors hover:bg-accent/15 hover:text-accent"
             aria-label="Fermer l'aperçu"
           >
             <X className="size-4" />

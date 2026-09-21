@@ -27,8 +27,8 @@ export function CartLink({ light = false }: { light?: boolean }) {
       className={cn(
         "relative inline-flex size-10 items-center justify-center rounded-full transition-colors",
         light
-          ? "text-primary-foreground hover:bg-primary-foreground/10"
-          : "text-foreground hover:bg-muted",
+          ? "text-primary-foreground hover:bg-accent hover:text-accent-foreground"
+          : "text-foreground hover:bg-accent/15 hover:text-accent",
       )}
     >
       <ShoppingCart className="size-5" strokeWidth={1.85} />

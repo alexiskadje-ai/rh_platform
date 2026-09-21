@@ -52,7 +52,7 @@ export function FaqAccordion({ items }: { items: FaqEntry[] }) {
                   type="button"
                   aria-expanded={open}
                   onClick={() => setOpenId(open ? null : item.id)}
-                  className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
+                  className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-accent/10"
                 >
                   <span className="font-display text-lg text-primary">{item.question}</span>
                   <ChevronDown
