@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Fraunces, Geist, Geist_Mono } from "next/font/google";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
+import { ChatWidget } from "@/components/chat/chat-widget";
 import { APP_NAME, APP_TAGLINE } from "@/lib/constants";
 import { COMPANY_SLOGAN } from "@/lib/company";
 import { siteOrigin } from "@/lib/site";
@@ -51,6 +52,7 @@ export default function RootLayout({
         <SiteHeader />
         <div className="flex flex-1 flex-col pt-[4.25rem]">{children}</div>
         <SiteFooter />
+        <ChatWidget />
       </body>
     </html>
   );

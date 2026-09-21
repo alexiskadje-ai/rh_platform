@@ -606,3 +606,24 @@ model CareerDocument {
 
   @@index([userId, kind, createdAt])
 }
+
+model KnowledgeChunk {
+  id        String                       @id @default(cuid())
+  content   String
+  embedding Unsupported("vector(1024)")?
+  source    String
+  createdAt DateTime                     @default(now())
+
+  @@index([source])
+}
+
+model SupportTicket {
+  id                  String   @id @default(cuid())
+  reason              String
+  userEmail           String?
+  conversationSummary String?
+  status              String   @default("open")
+  createdAt           DateTime @default(now())
+
+  @@index([status, createdAt])
+}

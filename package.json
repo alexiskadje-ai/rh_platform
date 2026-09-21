@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "jobs:notifications": "tsx src/jobs/run-worker.ts",
+    "kb:seed": "tsx --env-file=.env scripts/seed-knowledge-base.ts",
     "db:migrate": "prisma migrate dev",
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
