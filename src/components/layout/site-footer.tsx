@@ -1,22 +1,14 @@
 import Link from "next/link";
 import { Mail, MapPin, Phone } from "lucide-react";
-import {
-  COMPANY_EMAIL,
-  COMPANY_HOURS,
-  COMPANY_NAME,
-  COMPANY_OFFICES,
-  COMPANY_SERVICES,
-  COMPANY_SLOGAN,
-  mailHref,
-  telHref,
-} from "@/lib/company";
+import { COMPANY_HOURS, COMPANY_NAME, COMPANY_SLOGAN, mailHref, telHref } from "@/lib/company";
+import { loadPublicServices, loadSiteSettings } from "@/lib/site-content";
 import { BrandLogo } from "@/components/layout/brand-logo";
 import { SocialLinks } from "@/components/layout/social-links";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export function SiteFooter() {
-  const office = COMPANY_OFFICES[0];
+export async function SiteFooter() {
+  const [settings, services] = await Promise.all([loadSiteSettings(), loadPublicServices()]);
   return (
     <footer className="mt-auto bg-primary text-primary-foreground">
       <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-16 md:grid-cols-4">
@@ -25,7 +17,7 @@ export function SiteFooter() {
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-primary-foreground/70">
             {COMPANY_SLOGAN}
           </p>
-          <SocialLinks inverted className="mt-5" />
+          <SocialLinks links={settings.socialLinks} inverted className="mt-5" />
         </div>
         <div className="text-sm">
           <p className="text-xs uppercase tracking-[0.2em] text-highlight">Explorer</p>
@@ -56,7 +48,7 @@ export function SiteFooter() {
         <div className="text-sm">
           <p className="text-xs uppercase tracking-[0.2em] text-highlight">Nos services</p>
           <div className="mt-4 flex flex-col gap-2 text-primary-foreground/75">
-            {COMPANY_SERVICES.map((service) => (
+            {services.map((service) => (
               <Link
                 key={service.slug}
                 href={`/services/${service.slug}`}
@@ -69,24 +61,24 @@ export function SiteFooter() {
         </div>
         <div className="text-sm text-primary-foreground/75">
           <p className="text-xs uppercase tracking-[0.2em] text-highlight">Nous joindre</p>
-          <p className="mt-4 font-medium text-primary-foreground">{office.country}</p>
+          <p className="mt-4 font-medium text-primary-foreground">Cameroun</p>
           <p className="mt-2 flex items-start gap-2">
             <MapPin className="mt-0.5 size-4 shrink-0 text-highlight" />
-            {office.address}
+            {settings.address}
           </p>
           <a
-            href={telHref(office.phone)}
+            href={telHref(settings.phone)}
             className="mt-2 flex items-start gap-2 hover:text-primary-foreground"
           >
             <Phone className="mt-0.5 size-4 shrink-0 text-highlight" />
-            {office.phone}
+            {settings.phone}
           </a>
           <a
-            href={mailHref(COMPANY_EMAIL)}
+            href={mailHref(settings.email)}
             className="mt-2 flex items-start gap-2 hover:text-primary-foreground"
           >
             <Mail className="mt-0.5 size-4 shrink-0 text-highlight" />
-            {COMPANY_EMAIL}
+            {settings.email}
           </a>
           <p className="mt-2 text-primary-foreground/60">{COMPANY_HOURS}</p>
           <Link

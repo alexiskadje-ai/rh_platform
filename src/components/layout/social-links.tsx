@@ -1,4 +1,5 @@
 import { COMPANY_SOCIALS } from "@/lib/company";
+import type { SocialLinks as SocialLinkMap } from "@/lib/site-content";
 import { cn } from "@/lib/utils";
 
 function FacebookIcon({ className }: { className?: string }) {
@@ -25,23 +26,56 @@ function InstagramIcon({ className }: { className?: string }) {
   );
 }
 
+function TwitterIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden className={className} fill="currentColor">
+      <path d="M14.7 10.3 21.4 3h-1.6l-5.8 6.4L9.3 3H3.2l7 9.7L3.2 21h1.6l6.2-6.8L14.7 21h6.1l-6.1-10.7zm-2.2 2.4-.7-1-5.6-7.6h2.4l4.5 6.2.7 1 5.9 8h-2.4l-4.8-6.6z" />
+    </svg>
+  );
+}
+
+function WhatsAppIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden className={className} fill="currentColor">
+      <path d="M12.04 3C7.3 3 3.46 6.84 3.46 11.58c0 1.5.39 2.96 1.14 4.25L3 21l5.31-1.55a8.55 8.55 0 0 0 3.73.86h.01c4.74 0 8.58-3.84 8.58-8.58C20.63 6.84 16.78 3 12.04 3zm0 15.7h-.01a7.1 7.1 0 0 1-3.62-.99l-.26-.15-3.15.92.94-3.07-.17-.27a7.08 7.08 0 0 1-1.08-3.56c0-3.92 3.19-7.11 7.12-7.11 1.9 0 3.68.74 5.02 2.08a7.06 7.06 0 0 1 2.08 5.03c0 3.92-3.19 7.12-7.12 7.12zm3.9-5.32c-.21-.11-1.26-.62-1.45-.69-.2-.07-.34-.11-.48.11-.14.21-.55.69-.67.83-.12.14-.25.16-.46.05-.21-.11-.89-.33-1.7-1.05-.63-.56-1.05-1.25-1.17-1.46-.12-.21-.01-.32.1-.43.1-.1.21-.25.32-.37.11-.12.14-.21.21-.35.07-.14.04-.26-.02-.37-.05-.11-.48-1.16-.66-1.59-.17-.42-.35-.36-.48-.37h-.41c-.14 0-.37.05-.56.26-.2.21-.74.72-.74 1.76s.76 2.04.86 2.18c.11.14 1.49 2.28 3.61 3.2.5.22.9.35 1.2.45.51.16.97.14 1.33.08.41-.06 1.26-.51 1.44-.99.18-.48.18-.89.12-.99-.05-.1-.19-.16-.4-.27z" />
+    </svg>
+  );
+}
+
 const ICONS = {
   Facebook: FacebookIcon,
   LinkedIn: LinkedInIcon,
   Instagram: InstagramIcon,
+  Twitter: TwitterIcon,
+  WhatsApp: WhatsAppIcon,
 } as const;
+
+const NETWORKS = [
+  ["facebook", "Facebook"],
+  ["linkedin", "LinkedIn"],
+  ["instagram", "Instagram"],
+  ["twitter", "Twitter"],
+  ["whatsapp", "WhatsApp"],
+] as const;
 
 export function SocialLinks({
   className,
   inverted = false,
+  links,
 }: {
   className?: string;
   inverted?: boolean;
+  links?: SocialLinkMap;
 }) {
-  if (COMPANY_SOCIALS.length === 0) return null;
+  const items = links
+    ? NETWORKS.flatMap(([key, label]) =>
+        links[key] ? [{ label, href: links[key] as string }] : [],
+      )
+    : COMPANY_SOCIALS;
+  if (items.length === 0) return null;
   return (
     <div className={cn("flex items-center gap-2", className)}>
-      {COMPANY_SOCIALS.map((item) => {
+      {items.map((item) => {
         const Icon = ICONS[item.label];
         return (
           <a

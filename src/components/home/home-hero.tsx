@@ -12,8 +12,12 @@ import { fieldClass } from "@/lib/ui";
 
 export function HomeHero({
   stats,
+  heroTitle = "Faites la différence en boostant votre carrière",
+  heroSubtitle = "Nous mettons à votre disposition les talents et les opportunités dont vous avez besoin. Le recrutement peut être long, coûteux et complexe — comme la recherche d'un emploi. Confiez-nous cette mission et concentrez-vous sur le développement de votre activité et de votre carrière.",
 }: {
   stats: { label: string; value: number; suffix?: string; plus?: boolean }[];
+  heroTitle?: string;
+  heroSubtitle?: string;
 }) {
   return (
     <section className="relative -mt-[4.25rem] overflow-hidden bg-primary text-primary-foreground">
@@ -44,13 +48,10 @@ export function HomeHero({
               {COMPANY_SLOGAN}
             </p>
             <h1 className="w-full text-justify font-display text-3xl font-medium leading-[1.12] md:text-5xl">
-              Faites la différence en boostant votre carrière
+              {heroTitle}
             </h1>
             <p className="w-full text-justify text-sm leading-relaxed text-primary-foreground/75 md:text-base">
-              Nous mettons à votre disposition les talents et les opportunités dont vous avez besoin.
-              Le recrutement peut être long, coûteux et complexe — comme la recherche d&apos;un emploi.
-              Confiez-nous cette mission et concentrez-vous sur le développement de votre activité et
-              de votre carrière.
+              {heroSubtitle}
             </p>
             <div className="flex flex-col gap-3 sm:flex-row">
               <Link href="/register/candidate" className={cn(buttonVariants({ variant: "accent", size: "lg" }))}>

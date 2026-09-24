@@ -627,3 +627,30 @@ model SupportTicket {
 
   @@index([status, createdAt])
 }
+
+model Service {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  description String
+  icon        String
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+  isFeatured  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive, order])
+}
+
+model SiteSettings {
+  id           String   @id @default("site")
+  heroTitle    String
+  heroSubtitle String
+  aboutText    String?
+  address      String?
+  phone        String?
+  email        String?
+  socialLinks  Json?
+  updatedAt    DateTime @updatedAt
+}

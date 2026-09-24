@@ -32,7 +32,7 @@ import { FadeIn } from "@/components/motion/reveal";
 import { cn } from "@/lib/utils";
 import type { Role } from "@prisma/client";
 
-const LINKS: Record<Role, { href: string; label: string; icon: LucideIcon }[]> = {
+const LINKS: Record<Role, { href: string; label: string; icon: LucideIcon; section?: string }[]> = {
   ADMIN: [
     { href: "/admin", label: "Vue d'ensemble", icon: LayoutDashboard },
     { href: "/admin/utilisateurs", label: "Utilisateurs", icon: Users },
@@ -44,6 +44,8 @@ const LINKS: Record<Role, { href: string; label: string; icon: LucideIcon }[]> =
     { href: "/admin/boutique", label: "Boutique", icon: Store },
     { href: "/admin/paiements", label: "Paiements", icon: Wallet },
     { href: "/admin/faq", label: "FAQ / Newsletter", icon: HelpCircle },
+    { href: "/admin/contenu-site/services", label: "Services", icon: Briefcase, section: "Contenu du site" },
+    { href: "/admin/contenu-site/parametres", label: "Textes et coordonnées", icon: FileText, section: "Contenu du site" },
     { href: "/settings/security", label: "Sécurité / 2FA", icon: Shield },
   ],
   RECRUITER: [
@@ -106,12 +108,18 @@ export function DashboardShell({
           <p className="text-[11px] uppercase tracking-[0.22em] text-accent">Espace</p>
           <p className="mt-1 font-display text-xl text-primary">{title}</p>
           <nav className="mt-5 flex flex-col gap-1">
-            {LINKS[role].map((link) => {
+            {LINKS[role].map((link, index, links) => {
               const Icon = link.icon;
               const active = isActive(link.href, pathname, home);
+              const showSection = Boolean(link.section && links[index - 1]?.section !== link.section);
               return (
+                <div key={link.href} className="contents">
+                {showSection ? (
+                  <p className="px-3 pb-1 pt-4 text-[11px] uppercase tracking-[0.18em] text-accent">
+                    {link.section}
+                  </p>
+                ) : null}
                 <Link
-                  key={link.href}
                   href={link.href}
                   className={cn(
                     "flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm transition-colors",
@@ -123,6 +131,7 @@ export function DashboardShell({
                   <Icon className="size-4 shrink-0" />
                   {link.label}
                 </Link>
+                </div>
               );
             })}
             <form action={logout} className="mt-3">

@@ -1,18 +1,23 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import type { CompanyService } from "@/lib/company";
-import { SERVICE_ICONS } from "@/lib/service-icons";
+import { siteIcon } from "@/lib/site-content";
 import { cn } from "@/lib/utils";
 
 export function ServiceCard({
   service,
   compact = false,
 }: {
-  service: CompanyService;
+  service: {
+    slug: string;
+    title: string;
+    excerpt: string;
+    featured?: boolean;
+    icon?: string;
+  };
   compact?: boolean;
 }) {
-  const Icon = SERVICE_ICONS[service.slug];
-  const featured = service.featured;
+  const Icon = siteIcon(service.icon ?? service.slug);
+  const featured = Boolean(service.featured);
 
   return (
     <Link

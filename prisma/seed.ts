@@ -126,6 +126,90 @@ async function main() {
   });
 
   console.log("Packs Boutique prêts : Booster CV, Pack Carrière, Premium Candidat");
+
+  const services = [
+    {
+      slug: "gestion-administrative-du-personnel",
+      title: "Gestion administrative du personnel",
+      description:
+        "Optimisez la gestion de vos collaborateurs grâce à un suivi RH rigoureux : contrats, dossiers, présences, congés et administration du personnel.",
+      icon: "ClipboardList",
+      order: 0,
+      isFeatured: false,
+    },
+    {
+      slug: "audit-et-accompagnement-rh",
+      title: "Audit et accompagnement RH",
+      description:
+        "Analysez vos pratiques RH, identifiez les axes d'amélioration et bénéficiez d'un accompagnement personnalisé pour renforcer la performance de votre entreprise.",
+      icon: "Handshake",
+      order: 1,
+      isFeatured: false,
+    },
+    {
+      slug: "mise-a-disposition-du-personnel",
+      title: "Mise à disposition du personnel",
+      description:
+        "Accédez rapidement à des collaborateurs qualifiés et opérationnels pour répondre à vos besoins temporaires ou permanents, en toute sérénité.",
+      icon: "Users",
+      order: 2,
+      isFeatured: false,
+    },
+    {
+      slug: "accompagnement-des-chercheurs-d-emploi",
+      title: "Accompagnement des chercheurs d'emploi",
+      description:
+        "Valorisez votre profil avec un accompagnement personnalisé : CV, préparation aux entretiens et conseils pour accélérer votre retour à l'emploi.",
+      icon: "Search",
+      order: 3,
+      isFeatured: false,
+    },
+    {
+      slug: "externalisation-du-recrutement-rpo",
+      title: "Externalisation du recrutement (RPO)",
+      description:
+        "Confiez vos recrutements à nos experts et bénéficiez d'un processus complet, rapide et efficace pour attirer les meilleurs talents.",
+      icon: "Briefcase",
+      order: 4,
+      isFeatured: false,
+    },
+    {
+      slug: "formation-professionnelle-en-ligne",
+      title: "Formation professionnelle en ligne",
+      description:
+        "Développez les compétences de vos équipes et des chercheurs d'emploi avec des parcours e-learning conçus pour le terrain.",
+      icon: "GraduationCap",
+      order: 5,
+      isFeatured: true,
+    },
+  ];
+
+  for (const service of services) {
+    await db.service.upsert({
+      where: { slug: service.slug },
+      update: {},
+      create: service,
+    });
+  }
+
+  await db.siteSettings.upsert({
+    where: { id: "site" },
+    update: {},
+    create: {
+      id: "site",
+      heroTitle: "Faites la différence en boostant votre carrière",
+      heroSubtitle:
+        "Nous mettons à votre disposition les talents et les opportunités dont vous avez besoin. Le recrutement peut être long, coûteux et complexe — comme la recherche d'un emploi. Confiez-nous cette mission et concentrez-vous sur le développement de votre activité et de votre carrière.",
+      aboutText:
+        "PES-RH (Pôle Emploi Services RH) est une plateforme innovante dédiée à l'emploi et aux ressources humaines. Notre mission est de rapprocher les talents des opportunités et d'accompagner les entreprises dans la gestion, le recrutement et le développement de leur capital humain. Nous mettons notre expertise au service des chercheurs d'emploi, des entreprises, des PME, des grandes organisations et des institutions en proposant des solutions RH modernes, efficaces et adaptées aux réalités du marché.",
+      address: "Logpom Andem, Douala",
+      phone: "+237 675 599 830",
+      email: "contact@pes-rh.com",
+      socialLinks: {},
+    },
+  });
+
+  console.log("Contenu du site prêt : 6 services et paramètres.");
 }
 
 main()

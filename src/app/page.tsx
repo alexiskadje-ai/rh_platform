@@ -11,6 +11,7 @@ import { Testimonials } from "@/components/home/testimonials";
 import { CtaBand } from "@/components/home/cta-band";
 import { FadeIn } from "@/components/motion/reveal";
 import { loadPublishedTestimonials } from "@/server/actions/content";
+import { loadSiteSettings } from "@/lib/site-content";
 
 export default async function HomePage() {
   let cvCount = 0;
@@ -40,10 +41,11 @@ export default async function HomePage() {
     { label: "Entreprises suivies", value: companyCount },
     { label: "Recruteurs actifs", value: recruiterCount },
   ];
+  const site = await loadSiteSettings();
 
   return (
     <main>
-      <HomeHero stats={stats} />
+      <HomeHero stats={stats} heroTitle={site.heroTitle} heroSubtitle={site.heroSubtitle} />
       <ServicesGrid />
       <WhyAccompany />
       <HowItWorks />

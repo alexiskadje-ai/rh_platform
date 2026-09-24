@@ -1,9 +1,11 @@
 import Link from "next/link";
-import { COMPANY_SERVICES, COMPANY_SHORT } from "@/lib/company";
+import { COMPANY_SHORT } from "@/lib/company";
+import { loadPublicServices } from "@/lib/site-content";
 import { ServiceCard } from "@/components/home/service-card";
 import { FadeIn, Stagger, StaggerItem } from "@/components/motion/reveal";
 
-export function ServicesGrid({ hideHeading = false }: { hideHeading?: boolean }) {
+export async function ServicesGrid({ hideHeading = false }: { hideHeading?: boolean }) {
+  const services = await loadPublicServices();
   return (
     <section id="services" className="mx-auto w-full max-w-6xl px-4 py-20">
       {hideHeading ? null : (
@@ -24,7 +26,7 @@ export function ServicesGrid({ hideHeading = false }: { hideHeading?: boolean })
         </FadeIn>
       )}
       <Stagger className={hideHeading ? "grid gap-5 md:grid-cols-2 lg:grid-cols-3" : "mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3"}>
-        {COMPANY_SERVICES.map((service) => (
+        {services.map((service) => (
           <StaggerItem key={service.slug}>
             <ServiceCard service={service} />
           </StaggerItem>

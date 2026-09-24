@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Check } from "lucide-react";
 import { COMPANY_SERVICES, getServiceBySlug } from "@/lib/company";
+import { db } from "@/lib/db";
 import { SERVICE_ICONS } from "@/lib/service-icons";
 import { ServiceCard } from "@/components/home/service-card";
 import { buttonVariants } from "@/components/ui/button";
@@ -30,7 +31,16 @@ export default async function ServiceDetailPage({
 }) {
   const { slug } = await params;
   const service = getServiceBySlug(slug);
-  if (!service) notFound();
+  if (!service) {
+    const row = await db.service.findUnique({ where: { slug } });
+    if (!row?.isActive) notFound();
+    return (
+      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-16">
+        <h1 className="font-display text-4xl text-primary">{row.title}</h1>
+        <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{row.description}</p>
+      </main>
+    );
+  }
   const Icon = SERVICE_ICONS[service.slug];
   const related = COMPANY_SERVICES.filter((item) => item.slug !== service.slug).slice(0, 3);
   const featured = service.featured;
