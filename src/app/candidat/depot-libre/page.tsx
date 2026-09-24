@@ -14,7 +14,7 @@ export default async function FreeCvDepositPage({
   const success = ok === "1";
 
   return (
-    <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-16">
+    <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-10 md:py-12">
       {success ? (
         <div className="mx-auto max-w-lg rounded-[1.75rem] border border-border/80 bg-card p-8 text-center shadow-[0_18px_50px_rgba(20,33,28,0.06)]">
           <CheckCircle2 className="mx-auto size-12 text-accent" />
@@ -36,12 +36,12 @@ export default async function FreeCvDepositPage({
       ) : (
         <>
           <PageHero
-            className="mx-auto text-center"
+            className="mx-auto max-w-xl text-center [&_h1]:text-3xl [&_h1]:md:text-4xl [&_p]:mt-3 [&_p]:text-sm [&_p]:md:text-base"
             eyebrow="Candidats"
             title="Déposer son CV gratuitement"
             description="Sans créer de compte. Nom, contact, métier, CV — nous vous recontactons. Un espace candidat reste optionnel pour suivre vos candidatures."
           />
-          <div className="mt-10">
+          <div className="mt-6">
             <FreeCvForm />
           </div>
         </>
