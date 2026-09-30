@@ -9,8 +9,10 @@ import type { Role } from "@prisma/client";
 import { COMPANY_SHORT } from "@/lib/company";
 import { logout } from "@/server/actions/auth";
 import { BrandLogo } from "@/components/layout/brand-logo";
+import { CandidateSearchForm } from "@/components/layout/candidate-search-form";
 import { Navbar } from "@/components/layout/navbar";
 import { NotificationBell } from "@/components/layout/notification-bell";
+import { SpaceMenu } from "@/components/layout/space-menu";
 import { CartLink } from "@/components/shop/cart-link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -23,12 +25,14 @@ export function HeaderBar({
   items,
   logoHref,
   space,
+  candidateSearch = false,
 }: {
   user: { role: Role; firstName: string } | null;
   inbox?: InboxPreview | null;
   items: readonly NavLink[];
   logoHref: string;
-  space: { href: string; label: string; prominent: boolean } | null;
+  space: { href: string; label: string; prominent: boolean; items: readonly NavLink[] } | null;
+  candidateSearch?: boolean;
 }) {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
@@ -59,21 +63,30 @@ export function HeaderBar({
         <div className="flex items-center gap-1 sm:gap-2">
           {user && inbox ? <NotificationBell inbox={inbox} light={overlay} /> : null}
           <CartLink light={overlay} />
+          {candidateSearch ? (
+            <CandidateSearchForm id="cv-search" compact className="hidden md:block" />
+          ) : null}
           {space ? (
             <>
-              <Link
-                href={space.href}
-                className={cn(
-                  buttonVariants({
-                    variant: space.prominent ? "default" : overlay ? "outline" : "ghost",
-                    size: "sm",
-                  }),
-                  overlay && !space.prominent && "border-primary-foreground/40 text-primary-foreground",
-                  "hidden sm:inline-flex",
-                )}
-              >
-                {space.label}
-              </Link>
+              {space.items.length > 0 ? (
+                <div className="hidden sm:block">
+                  <SpaceMenu label={space.label} items={space.items} placement="overlay" />
+                </div>
+              ) : (
+                <Link
+                  href={space.href}
+                  className={cn(
+                    buttonVariants({
+                      variant: space.prominent ? "default" : overlay ? "outline" : "ghost",
+                      size: "sm",
+                    }),
+                    overlay && !space.prominent && "border-primary-foreground/40 text-primary-foreground",
+                    "hidden sm:inline-flex",
+                  )}
+                >
+                  {space.label}
+                </Link>
+              )}
               <form action={logout} className="hidden sm:block">
                 <button
                   type="submit"
@@ -141,11 +154,21 @@ export function HeaderBar({
                 onNavigate={() => setOpen(false)}
               />
               <div className="mt-3 flex flex-col gap-2 border-t border-border pt-4">
+                {candidateSearch ? <CandidateSearchForm id="cv-search-menu" compact /> : null}
                 {space ? (
                   <>
-                    <Link href={space.href} className={cn(buttonVariants(), "w-full")}>
-                      {space.label}
-                    </Link>
+                    {space.items.length > 0 ? (
+                      <SpaceMenu
+                        label={space.label}
+                        items={space.items}
+                        placement="inline"
+                        onNavigate={() => setOpen(false)}
+                      />
+                    ) : (
+                      <Link href={space.href} className={cn(buttonVariants(), "w-full")}>
+                        {space.label}
+                      </Link>
+                    )}
                     <form action={logout}>
                       <button
                         type="submit"

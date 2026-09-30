@@ -7,7 +7,9 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
+import { getSessionUser } from "@/lib/dal";
 import { db } from "@/lib/db";
+import { audiencesForNavVariant, navVariantForRole, type ServiceAudienceName } from "@/lib/nav";
 import {
   COMPANY_ABOUT,
   COMPANY_EMAIL,
@@ -105,14 +107,16 @@ export function parseSocialLinks(value: unknown): SocialLinks {
 }
 
 export async function loadPublicServices(): Promise<PublicService[]> {
+  const user = await getSessionUser();
+  const allowed = audiencesForNavVariant(navVariantForRole(user?.role));
   try {
     const rows = await db.service.findMany({
-      where: { isActive: true },
+      where: { isActive: true, audience: { in: allowed } },
       orderBy: [{ order: "asc" }, { title: "asc" }],
     });
     if (rows.length === 0) {
       const total = await db.service.count();
-      if (total === 0) return FALLBACK_SERVICES;
+      if (total === 0 && allowed.includes("PUBLIC")) return FALLBACK_SERVICES;
     }
     return rows.map((row) => ({
       slug: row.slug,
@@ -122,8 +126,19 @@ export async function loadPublicServices(): Promise<PublicService[]> {
       featured: row.isFeatured,
     }));
   } catch {
-    return FALLBACK_SERVICES;
+    return allowed.includes("PUBLIC") ? FALLBACK_SERVICES : [];
   }
+}
+
+export async function serviceIsVisible(slug: string) {
+  const user = await getSessionUser();
+  const allowed = audiencesForNavVariant(navVariantForRole(user?.role));
+  const row = await db.service.findUnique({
+    where: { slug },
+    select: { isActive: true, audience: true },
+  });
+  if (!row) return allowed.includes("PUBLIC");
+  return row.isActive && allowed.includes(row.audience as ServiceAudienceName);
 }
 
 export async function loadSiteSettings(): Promise<PublicSiteSettings> {

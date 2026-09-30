@@ -51,6 +51,7 @@ export async function createSiteService(formData: FormData) {
     title: formData.get("title"),
     description: formData.get("description"),
     icon: formData.get("icon"),
+    audience: formData.get("audience"),
     isActive: checked(formData, "isActive"),
     isFeatured: checked(formData, "isFeatured"),
   });
@@ -75,6 +76,7 @@ export async function updateSiteService(formData: FormData) {
     title: formData.get("title"),
     description: formData.get("description"),
     icon: formData.get("icon"),
+    audience: formData.get("audience"),
     isActive: checked(formData, "isActive"),
     isFeatured: checked(formData, "isFeatured"),
   });

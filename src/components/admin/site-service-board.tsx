@@ -6,6 +6,7 @@ import { GripVertical } from "lucide-react";
 import { closestCenter, DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { SERVICE_AUDIENCE_LABELS, type ServiceAudienceName } from "@/lib/nav";
 import { deleteSiteService, reorderSiteServices, setSiteServiceActive } from "@/server/actions/site-content";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -14,6 +15,7 @@ type ServiceRow = {
   id: string;
   title: string;
   icon: string;
+  audience: ServiceAudienceName;
   isActive: boolean;
   isFeatured: boolean;
 };
@@ -46,7 +48,7 @@ function SortableService({ service }: { service: ServiceRow }) {
         <div>
           <p className="font-medium">{service.title}</p>
           <p className="text-xs text-muted-foreground">
-            {service.icon}
+            {service.icon} · {SERVICE_AUDIENCE_LABELS[service.audience]}
             {service.isFeatured ? " · Mis en avant" : ""}
             {service.isActive ? "" : " · Masqué"}
           </p>

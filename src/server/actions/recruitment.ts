@@ -64,8 +64,10 @@ export async function saveIdentitySection(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
+  const title = formData.get("professionalTitle") || undefined;
   const parsed = identitySchema.safeParse({
-    headline: formData.get("headline") || undefined,
+    headline: title,
+    professionalTitle: title,
     bio: formData.get("bio") || undefined,
   });
   if (!parsed.success) return { errors: fieldErrorsFromZod(parsed.error) };

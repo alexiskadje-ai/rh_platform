@@ -6,6 +6,28 @@ export type NavVariant = "vitrine" | "candidate" | "recruiter";
 
 export type NavLink = { href: string; label: string };
 
+export const SERVICE_AUDIENCES = ["PUBLIC", "CANDIDATE", "RECRUITER", "ALL"] as const;
+export type ServiceAudienceName = (typeof SERVICE_AUDIENCES)[number];
+
+export const SERVICE_AUDIENCE_LABELS: Record<ServiceAudienceName, string> = {
+  PUBLIC: "Vitrine",
+  CANDIDATE: "Candidats",
+  RECRUITER: "Recruteurs",
+  ALL: "Tous les espaces",
+};
+
+export function audiencesForNavVariant(variant: NavVariant): ServiceAudienceName[] {
+  if (variant === "candidate") return ["CANDIDATE", "ALL"];
+  if (variant === "recruiter") return ["RECRUITER", "ALL"];
+  return ["PUBLIC", "ALL"];
+}
+
+export function navLinksFor(variant: NavVariant, hasServices: boolean) {
+  const links = NAV_LINKS[variant];
+  if (hasServices) return links;
+  return links.filter((item) => item.href !== "/services");
+}
+
 const ACCUEIL = { href: "/", label: "Accueil" };
 const ABOUT = { href: "/a-propos", label: "Qui sommes-nous" };
 const SERVICES = { href: "/services", label: "Nos services" };
@@ -26,23 +48,57 @@ export function navVariantForRole(role: Role | null | undefined): NavVariant {
   return "vitrine";
 }
 
-export function spaceLink(user: { role: Role; status: UserStatus } | null): {
+export function candidateSpaceLinks(): NavLink[] {
+  return [
+    { href: "/candidate/profil", label: "Mon profil / CV" },
+    { href: "/candidate/candidatures", label: "Mes candidatures" },
+    { href: "/candidate/formations", label: "Mes formations" },
+    { href: "/candidate/achats", label: "Mes achats" },
+    { href: "/candidate/notifications", label: "Notifications" },
+    { href: "/settings/security", label: "Paramètres" },
+  ];
+}
+
+export function recruiterSpaceLinks(goldAssistant: boolean): NavLink[] {
+  const links: NavLink[] = [
+    { href: "/company/offres", label: "Offres publiées" },
+    { href: "/company/offres", label: "Candidatures reçues" },
+    { href: "/company/candidats", label: "Recherche de CV" },
+    { href: "/company/employes", label: "Employés" },
+    { href: "/company/conges", label: "Congés à valider" },
+    { href: "/company/rapports", label: "Rapports" },
+  ];
+  if (goldAssistant) links.push({ href: "/company/assistant", label: "Assistant RH" });
+  return links;
+}
+
+export function spaceLink(
+  user: { role: Role; status: UserStatus } | null,
+  goldAssistant = false,
+): {
   href: string;
   label: string;
   prominent: boolean;
+  items: NavLink[];
 } | null {
   if (!user) return null;
   if (user.role === "CANDIDATE") {
-    return { href: ROLE_HOME.CANDIDATE, label: "Espace Candidat", prominent: true };
+    return {
+      href: ROLE_HOME.CANDIDATE,
+      label: "Espace Candidat",
+      prominent: true,
+      items: candidateSpaceLinks(),
+    };
   }
   if (user.role === "RECRUITER") {
     return {
       href: user.status === "PENDING" ? RECRUITER_ONBOARDING_PACK_PATH : ROLE_HOME.RECRUITER,
       label: "Espace Recruteur",
       prominent: true,
+      items: recruiterSpaceLinks(goldAssistant),
     };
   }
-  return { href: ROLE_HOME[user.role], label: "Tableau de bord", prominent: false };
+  return { href: ROLE_HOME[user.role], label: "Tableau de bord", prominent: false, items: [] };
 }
 
 /** Pages retirées du menu : l'URL directe est refusée, pas seulement masquée. */

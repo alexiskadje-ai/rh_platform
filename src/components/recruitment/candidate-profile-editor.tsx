@@ -32,7 +32,10 @@ export function CandidateProfileEditor({ profile }: { profile: Profile }) {
   return (
     <div className="space-y-6">
       <PhotoSection photoUrl={profile.photoUrl} />
-      <IdentitySection headline={profile.headline} bio={profile.bio} />
+      <IdentitySection
+        professionalTitle={profile.professionalTitle ?? profile.headline}
+        bio={profile.bio}
+      />
       <PreferencesSection
         city={profile.city}
         region={profile.region}
@@ -102,10 +105,10 @@ function PhotoSection({ photoUrl }: { photoUrl: string | null }) {
 }
 
 function IdentitySection({
-  headline,
+  professionalTitle,
   bio,
 }: {
-  headline: string | null;
+  professionalTitle: string | null;
   bio: string | null;
 }) {
   const { formRef, schedule } = useDebouncedSubmit();
@@ -118,11 +121,11 @@ function IdentitySection({
       <CardContent>
         <form ref={formRef} action={action} onInput={schedule} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="headline">Titre professionnel</Label>
+            <Label htmlFor="professionalTitle">Titre professionnel</Label>
             <Input
-              id="headline"
-              name="headline"
-              defaultValue={headline ?? ""}
+              id="professionalTitle"
+              name="professionalTitle"
+              defaultValue={professionalTitle ?? ""}
               placeholder="Ex. Développeur full-stack"
             />
           </div>

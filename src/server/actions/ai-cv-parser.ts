@@ -147,6 +147,7 @@ export async function confirmParsedCv(
       where: { id: candidate.id },
       data: {
         headline: data.headline,
+        professionalTitle: data.headline,
         bio: data.bio,
         skills: data.skills,
         city: data.city,

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Check } from "lucide-react";
 import { COMPANY_SERVICES, getServiceBySlug } from "@/lib/company";
 import { db } from "@/lib/db";
+import { serviceIsVisible } from "@/lib/site-content";
 import { SERVICE_ICONS } from "@/lib/service-icons";
 import { ServiceCard } from "@/components/home/service-card";
 import { buttonVariants } from "@/components/ui/button";
@@ -19,6 +20,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  if (!(await serviceIsVisible(slug))) return { title: "Service" };
   const service = getServiceBySlug(slug);
   if (!service) return { title: "Service" };
   return { title: service.title, description: service.excerpt };
@@ -30,6 +32,7 @@ export default async function ServiceDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  if (!(await serviceIsVisible(slug))) notFound();
   const service = getServiceBySlug(slug);
   if (!service) {
     const row = await db.service.findUnique({ where: { slug } });

@@ -51,6 +51,7 @@ const LINKS: Record<Role, { href: string; label: string; icon: LucideIcon; secti
   RECRUITER: [
     { href: "/company", label: "Tableau de bord", icon: LayoutDashboard },
     { href: "/company/offres", label: "Offres publiées", icon: Briefcase },
+    { href: "/company/candidats", label: "Recherche de CV", icon: UserRound },
     { href: "/company/employes", label: "Employés", icon: Users },
     { href: "/company/conges", label: "Congés à valider", icon: CalendarDays },
     { href: "/company/absences", label: "Absences", icon: Bell },

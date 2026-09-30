@@ -1,3 +1,4 @@
+import { SERVICE_AUDIENCE_LABELS, SERVICE_AUDIENCES } from "@/lib/nav";
 import { SITE_ICON_NAMES } from "@/lib/site-content";
 import { fieldClass } from "@/lib/ui";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,6 +14,7 @@ export function SiteServiceForm({
     title: string;
     description: string;
     icon: string;
+    audience: "PUBLIC" | "CANDIDATE" | "RECRUITER" | "ALL";
     isActive: boolean;
     isFeatured: boolean;
   };
@@ -38,9 +40,19 @@ export function SiteServiceForm({
           ))}
         </select>
       </label>
+      <label className="text-sm font-medium">
+        Audience
+        <select name="audience" defaultValue={service?.audience ?? "PUBLIC"} className={`${fieldClass} mt-1`}>
+          {SERVICE_AUDIENCES.map((audience) => (
+            <option key={audience} value={audience}>
+              {SERVICE_AUDIENCE_LABELS[audience]}
+            </option>
+          ))}
+        </select>
+      </label>
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" name="isActive" defaultChecked={service?.isActive ?? true} />
-        Visible sur la landing
+        Visible
       </label>
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" name="isFeatured" defaultChecked={service?.isFeatured ?? false} />

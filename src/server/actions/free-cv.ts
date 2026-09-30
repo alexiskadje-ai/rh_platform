@@ -75,6 +75,7 @@ export async function submitFreeCv(
         firstName: parsed.data.firstName,
         lastName: parsed.data.lastName,
         headline: parsed.data.trade,
+        professionalTitle: parsed.data.trade,
         skills: parsed.data.skills,
         yearsOfExperience: parsed.data.yearsOfExperience,
         lastHiredAt: new Date(`${parsed.data.lastHiredAt}T00:00:00`),

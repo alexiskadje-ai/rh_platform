@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const identitySchema = z.object({
   headline: z.string().trim().max(120).optional(),
+  professionalTitle: z.string().trim().max(120).optional(),
   bio: z.string().trim().max(500, "Le résumé ne peut pas dépasser 500 caractères.").optional(),
 });
 

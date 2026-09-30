@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { NAV_LINKS, blockedPublicRedirect, navVariantForRole } from "@/lib/nav";
+import {
+  NAV_LINKS,
+  audiencesForNavVariant,
+  blockedPublicRedirect,
+  candidateSpaceLinks,
+  navLinksFor,
+  navVariantForRole,
+  recruiterSpaceLinks,
+} from "@/lib/nav";
 
 describe("nav variants", () => {
   it("keeps the public menu, including FAQ", () => {
@@ -27,6 +35,29 @@ describe("nav variants", () => {
     expect(labels).toEqual(["Boutique", "FAQ", "Nos services"]);
     expect(navVariantForRole("RECRUITER")).toBe("recruiter");
     expect(navVariantForRole("EMPLOYEE")).toBe("vitrine");
+  });
+
+  it("lists the space shortcuts and keeps Assistant RH on the Gold pack", () => {
+    expect(candidateSpaceLinks().map((item) => item.label)).toEqual([
+      "Mon profil / CV",
+      "Mes candidatures",
+      "Mes formations",
+      "Mes achats",
+      "Notifications",
+      "Paramètres",
+    ]);
+    const recruiter = recruiterSpaceLinks(false).map((item) => item.label);
+    expect(recruiter).toContain("Recherche de CV");
+    expect(recruiter).not.toContain("Assistant RH");
+    expect(recruiterSpaceLinks(true).map((item) => item.label)).toContain("Assistant RH");
+  });
+
+  it("keeps Nos services only when that audience has at least one service", () => {
+    expect(navLinksFor("vitrine", true).some((item) => item.href === "/services")).toBe(true);
+    expect(navLinksFor("recruiter", false).map((item) => item.label)).toEqual(["Boutique", "FAQ"]);
+    expect(audiencesForNavVariant("vitrine")).toEqual(["PUBLIC", "ALL"]);
+    expect(audiencesForNavVariant("candidate")).toEqual(["CANDIDATE", "ALL"]);
+    expect(audiencesForNavVariant("recruiter")).toEqual(["RECRUITER", "ALL"]);
   });
 });
 

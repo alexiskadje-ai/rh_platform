@@ -77,6 +77,13 @@ enum ConversationKind {
   ADVISOR
 }
 
+enum ServiceAudience {
+  PUBLIC
+  CANDIDATE
+  RECRUITER
+  ALL
+}
+
 enum InterviewFormat {
   ONSITE
   VIDEO
@@ -206,9 +213,10 @@ model Candidate {
   phone          String   @unique
   firstName      String   @default("")
   lastName       String   @default("")
-  photoUrl       String?
-  headline       String?
-  bio            String?
+  photoUrl          String?
+  headline          String?
+  professionalTitle String?
+  bio               String?
   cvUrl          String?
   skills         String[]
   yearsOfExperience Int?
@@ -671,8 +679,9 @@ model Service {
   description String
   icon        String
   order       Int      @default(0)
-  isActive    Boolean  @default(true)
-  isFeatured  Boolean  @default(false)
+  isActive    Boolean         @default(true)
+  isFeatured  Boolean         @default(false)
+  audience    ServiceAudience @default(PUBLIC)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { SERVICE_AUDIENCES } from "@/lib/nav";
 import { SITE_ICON_NAMES } from "@/lib/site-content";
 
 const optionalUrl = z
@@ -11,6 +12,7 @@ export const siteServiceSchema = z.object({
   title: z.string().trim().min(3, "Le titre est trop court.").max(120),
   description: z.string().trim().min(12, "Décrivez le service.").max(600),
   icon: z.enum(SITE_ICON_NAMES),
+  audience: z.enum(SERVICE_AUDIENCES),
   isActive: z.boolean(),
   isFeatured: z.boolean(),
 });
