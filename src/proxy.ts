@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
 import { RECRUITER_ONBOARDING_PACK_PATH } from "@/lib/config/recruiter-packs";
 import { ROLE_HOME } from "@/lib/constants";
+import { blockedPublicRedirect } from "@/lib/nav";
 import type { Role } from "@prisma/client";
 
 const PUBLIC_PATHS = [
@@ -55,6 +56,13 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(new URL(destination, request.url));
     }
     return NextResponse.next();
+  }
+
+  if (user) {
+    const blocked = blockedPublicRedirect(user, pathname);
+    if (blocked) {
+      return NextResponse.redirect(new URL(blocked, request.url));
+    }
   }
 
   if (isPublic(pathname) && pathname !== "/pending-approval" && pathname !== "/verify") {

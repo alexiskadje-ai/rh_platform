@@ -6,32 +6,29 @@ import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import type { Role } from "@prisma/client";
-import { ROLE_HOME } from "@/lib/constants";
 import { COMPANY_SHORT } from "@/lib/company";
 import { logout } from "@/server/actions/auth";
 import { BrandLogo } from "@/components/layout/brand-logo";
+import { Navbar } from "@/components/layout/navbar";
 import { NotificationBell } from "@/components/layout/notification-bell";
 import { CartLink } from "@/components/shop/cart-link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { InboxPreview } from "@/lib/notifications/inbox";
-
-const NAV = [
-  { href: "/", label: "Accueil" },
-  { href: "/a-propos", label: "Qui sommes-nous" },
-  { href: "/services", label: "Nos services" },
-  { href: "/offres", label: "Offres d'emploi" },
-  { href: "/formations", label: "Formations" },
-  { href: "/boutique", label: "Boutique" },
-  { href: "/faq", label: "FAQ" },
-];
+import type { NavLink } from "@/lib/nav";
 
 export function HeaderBar({
   user,
   inbox,
+  items,
+  logoHref,
+  space,
 }: {
   user: { role: Role; firstName: string } | null;
   inbox?: InboxPreview | null;
+  items: readonly NavLink[];
+  logoHref: string;
+  space: { href: string; label: string; prominent: boolean } | null;
 }) {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
@@ -55,44 +52,27 @@ export function HeaderBar({
       )}
     >
       <div className="mx-auto flex h-[4.25rem] w-full max-w-6xl items-center justify-between gap-4 px-4">
-        <Link href="/" className="shrink-0" aria-label={COMPANY_SHORT}>
+        <Link href={logoHref} className="shrink-0" aria-label={COMPANY_SHORT}>
           <BrandLogo variant={overlay ? "white" : "color"} priority />
         </Link>
-        <nav className="hidden items-center gap-6 text-[13px] lg:flex">
-          {NAV.map((item) => {
-            const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "relative transition-colors",
-                  overlay ? "hover:text-highlight" : "text-muted-foreground hover:text-accent",
-                  active && (overlay ? "text-highlight" : "text-primary"),
-                )}
-              >
-                {item.label}
-                {active ? (
-                  <span className={cn("absolute -bottom-1 left-0 h-px w-full", overlay ? "bg-highlight" : "bg-accent")} />
-                ) : null}
-              </Link>
-            );
-          })}
-        </nav>
+        <Navbar items={items} pathname={pathname} overlay={overlay} layout="row" />
         <div className="flex items-center gap-1 sm:gap-2">
           {user && inbox ? <NotificationBell inbox={inbox} light={overlay} /> : null}
           <CartLink light={overlay} />
-          {user ? (
+          {space ? (
             <>
               <Link
-                href={ROLE_HOME[user.role]}
+                href={space.href}
                 className={cn(
-                  buttonVariants({ variant: overlay ? "outline" : "ghost", size: "sm" }),
-                  overlay && "border-primary-foreground/40 text-primary-foreground",
+                  buttonVariants({
+                    variant: space.prominent ? "default" : overlay ? "outline" : "ghost",
+                    size: "sm",
+                  }),
+                  overlay && !space.prominent && "border-primary-foreground/40 text-primary-foreground",
                   "hidden sm:inline-flex",
                 )}
               >
-                Tableau de bord
+                {space.label}
               </Link>
               <form action={logout} className="hidden sm:block">
                 <button
@@ -153,21 +133,18 @@ export function HeaderBar({
             className="overflow-hidden border-t border-border/40 bg-background text-foreground lg:hidden"
           >
             <div className="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-4">
-              {NAV.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setOpen(false)}
-                  className="rounded-xl px-3 py-3 text-sm transition-colors hover:bg-accent/15 hover:text-accent"
-                >
-                  {item.label}
-                </Link>
-              ))}
+              <Navbar
+                items={items}
+                pathname={pathname}
+                overlay={false}
+                layout="stack"
+                onNavigate={() => setOpen(false)}
+              />
               <div className="mt-3 flex flex-col gap-2 border-t border-border pt-4">
-                {user ? (
+                {space ? (
                   <>
-                    <Link href={ROLE_HOME[user.role]} className={cn(buttonVariants(), "w-full")}>
-                      Tableau de bord
+                    <Link href={space.href} className={cn(buttonVariants(), "w-full")}>
+                      {space.label}
                     </Link>
                     <form action={logout}>
                       <button
