@@ -1,3 +1,5 @@
+"use server";
+
 import { ApplicationStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -11,7 +13,7 @@ export type ApplicationStatusActionState = {
   message?: string;
 };
 
-export const updateApplicationStatusSchema = z.object({
+const updateApplicationStatusSchema = z.object({
   applicationId: z.string().trim().min(1, "Candidature introuvable."),
   status: z.enum(["RECEIVED", "SHORTLISTED", "INTERVIEW", "ACCEPTED", "REJECTED"]),
 });
@@ -35,8 +37,6 @@ export async function updateApplicationStatus(
   applicationId: string,
   newStatus: string,
 ): Promise<ApplicationStatusActionState> {
-  "use server";
-
   const parsed = updateApplicationStatusSchema.safeParse({
     applicationId,
     status: newStatus,
