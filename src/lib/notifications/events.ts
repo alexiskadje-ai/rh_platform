@@ -5,6 +5,7 @@ export const NOTIFICATION_EVENTS = [
   "LEAVE_DECISION",
   "COURSE_AVAILABLE",
   "PAYMENT_CONFIRMED",
+  "RECRUITER_PACK_SUBMITTED",
 ] as const;
 
 export type NotificationEvent = (typeof NOTIFICATION_EVENTS)[number];
@@ -21,6 +22,7 @@ export const DEFAULT_CHANNELS: Record<NotificationEvent, readonly NotificationCh
   LEAVE_DECISION: ["email", "in-app"],
   COURSE_AVAILABLE: ["email"],
   PAYMENT_CONFIRMED: ["email", "sms"],
+  RECRUITER_PACK_SUBMITTED: ["email"],
 };
 
 export type NotificationPayloads = {
@@ -54,6 +56,13 @@ export type NotificationPayloads = {
     amountLabel: string;
     reference: string;
     invoiceNumber?: string;
+  };
+  RECRUITER_PACK_SUBMITTED: {
+    firstName: string;
+    companyName: string;
+    packLabel: string;
+    cycleLabel: string;
+    amountLabel: string;
   };
 };
 

@@ -5,6 +5,8 @@ import { notify } from "@/lib/notifications";
 import { formatFcfa } from "@/lib/shop";
 import { grantPaidOrderEntitlements } from "@/lib/entitlements";
 import { renderInvoicePdf } from "@/lib/payments/invoice";
+import { activateRecruiterPackPayment } from "@/lib/payments/recruiter-pack";
+import { parseRecruiterPackReference } from "@/lib/recruiter-pack-reference";
 
 export const PAYMENT_STATUS = {
   pending: "pending",
@@ -28,7 +30,11 @@ export async function confirmPaidPayment(paymentId: string) {
       },
     },
   });
-  if (!payment?.order) return null;
+  if (!payment) return null;
+  if (parseRecruiterPackReference(payment.reference)) {
+    return activateRecruiterPackPayment(payment.id);
+  }
+  if (!payment.order) return null;
   if (payment.status === PAYMENT_STATUS.paid && payment.invoiceUrl) {
     return payment;
   }
@@ -96,14 +102,25 @@ export async function markPaymentFailed(paymentId: string, reason?: string) {
     where: { id: paymentId },
     include: { order: true },
   });
-  if (!payment?.order || payment.status === PAYMENT_STATUS.paid) return payment;
+  if (!payment || payment.status === PAYMENT_STATUS.paid) return payment;
+
+  const failureReason = reason?.slice(0, 240) || "Paiement refusé par l'opérateur.";
+  if (!payment.order) {
+    return db.payment.update({
+      where: { id: payment.id },
+      data: {
+        status: PAYMENT_STATUS.failed,
+        failureReason,
+      },
+    });
+  }
 
   const [updated] = await db.$transaction([
     db.payment.update({
       where: { id: payment.id },
       data: {
         status: PAYMENT_STATUS.failed,
-        failureReason: reason?.slice(0, 240) || "Paiement refusé par l'opérateur.",
+        failureReason,
       },
     }),
     db.order.update({

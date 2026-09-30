@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { Prisma, Role, TokenType, UserStatus } from "@prisma/client";
 import { signIn, signOut } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { RECRUITER_ONBOARDING_PACK_PATH } from "@/lib/config/recruiter-packs";
 import { ROLE_HOME } from "@/lib/constants";
 import {
   generateToken,
@@ -292,7 +293,7 @@ export async function registerCompany(
   await sendVerificationSms(data.phone, smsCode);
   await setDevVerificationHints(emailToken, smsCode);
 
-  await createSession(user.id, "/pending-approval");
+  await createSession(user.id, RECRUITER_ONBOARDING_PACK_PATH);
   return { ok: true };
 }
 
@@ -352,7 +353,7 @@ export async function login(
     user.role === Role.CANDIDATE && !user.isVerified
       ? "/verify"
       : user.role === Role.RECRUITER && user.status === UserStatus.PENDING
-        ? "/pending-approval"
+        ? RECRUITER_ONBOARDING_PACK_PATH
         : (callback ?? ROLE_HOME[user.role]);
 
   await createSession(user.id, destination);
@@ -389,7 +390,12 @@ export async function verifyTwoFactor(
     await setTrustedDevice(user.id);
   }
 
-  await createSession(user.id, ROLE_HOME[user.role]);
+  await createSession(
+    user.id,
+    user.role === Role.RECRUITER && user.status === UserStatus.PENDING
+      ? RECRUITER_ONBOARDING_PACK_PATH
+      : ROLE_HOME[user.role],
+  );
   return { ok: true };
 }
 

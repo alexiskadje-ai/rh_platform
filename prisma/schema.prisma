@@ -51,6 +51,32 @@ enum JobStatus {
   CLOSED
 }
 
+enum RecruiterPackTier {
+  STANDARD
+  PREMIUM
+  GOLD
+}
+
+enum BillingCycle {
+  MONTHLY
+  QUARTERLY
+  SEMESTRIAL
+  ANNUAL
+}
+
+enum SubscriptionStatus {
+  PENDING_PAYMENT
+  PENDING_REVIEW
+  ACTIVE
+  REJECTED
+  CANCELLED
+}
+
+enum ConversationKind {
+  APPLICATION
+  ADVISOR
+}
+
 enum InterviewFormat {
   ONSITE
   VIDEO
@@ -129,9 +155,10 @@ model User {
   isVerified      Boolean   @default(false)
   emailVerifiedAt DateTime?
   phoneVerifiedAt DateTime?
-  termsAcceptedAt DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  termsAcceptedAt    DateTime?
+  mustChangePassword Boolean   @default(false)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   company   Company? @relation(fields: [companyId], references: [id])
   companyId String?
@@ -145,8 +172,10 @@ model User {
   trustedDevices   TrustedDevice[]
   aiCallLogs       AiCallLog[]
   subscription     Subscription?
-  activityLogs     ActivityLog[]
-  careerDocuments  CareerDocument[]
+  activityLogs          ActivityLog[]
+  careerDocuments       CareerDocument[]
+  sentMessages          Message[]
+  reviewedSubscriptions RecruiterSubscription[] @relation("RecruiterSubscriptionReview")
 }
 
 model Company {
@@ -161,10 +190,12 @@ model Company {
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
 
-  users       User[]
-  jobOffers   JobOffer[]
-  employees   Employee[]
-  subscription Subscription?
+  users                 User[]
+  jobOffers             JobOffer[]
+  employees             Employee[]
+  subscription          Subscription?
+  recruiterSubscription RecruiterSubscription?
+  advisorConversations  Conversation[]
 }
 
 model Candidate {
@@ -194,6 +225,7 @@ model Candidate {
   cvEmbedding    Unsupported("vector(1024)")?
   embeddingInputHash String?
   featuredUntil  DateTime?
+  isVetted       Boolean  @default(false)
   educations     Education[]
   experiences    Experience[]
   certifications Certification[]
@@ -220,6 +252,8 @@ model JobOffer {
   hideSalary         Boolean        @default(false)
   coverLetterRequired Boolean       @default(false)
   deadline           DateTime
+  startDate          DateTime?
+  isClosedManually   Boolean        @default(false)
   positionsCount     Int            @default(1)
   visibility         JobVisibility  @default(PUBLIC)
   status             JobStatus      @default(OPEN)
@@ -250,6 +284,7 @@ model Application {
   createdAt         DateTime          @default(now())
   history           ApplicationStatusEvent[]
   interview         Interview?
+  conversation      Conversation?
 
   @@unique([candidateId, jobOfferId])
 }
@@ -467,9 +502,10 @@ model Payment {
   phone         String?
   invoiceUrl    String?
   failureReason String?
-  paidAt        DateTime?
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  paidAt                 DateTime?
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+  recruiterSubscription  RecruiterSubscription?
 }
 
 model Subscription {
@@ -641,6 +677,51 @@ model Service {
   updatedAt   DateTime @updatedAt
 
   @@index([isActive, order])
+}
+
+model RecruiterSubscription {
+  id                String             @id @default(cuid())
+  company           Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId         String             @unique
+  tier              RecruiterPackTier
+  billingCycle      BillingCycle
+  priceAtSignup     Int
+  status            SubscriptionStatus @default(PENDING_PAYMENT)
+  commitmentEndsAt  DateTime?
+  cvDownloadsUsed   Int                @default(0)
+  reviewedBy        User?              @relation("RecruiterSubscriptionReview", fields: [reviewedByAdminId], references: [id])
+  reviewedByAdminId String?
+  reviewedAt        DateTime?
+  rejectionReason   String?
+  payment           Payment?           @relation(fields: [paymentId], references: [id])
+  paymentId         String?            @unique
+  createdAt         DateTime           @default(now())
+}
+
+model Conversation {
+  id            String           @id @default(cuid())
+  kind          ConversationKind @default(APPLICATION)
+  application   Application?     @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  applicationId String?          @unique
+  company       Company?         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId     String?
+  isClosed      Boolean          @default(false)
+  messages      Message[]
+  createdAt     DateTime         @default(now())
+
+  @@index([companyId, kind])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  conversationId String
+  sender         User         @relation(fields: [senderId], references: [id])
+  senderId       String
+  content        String
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId, createdAt])
 }
 
 model SiteSettings {

@@ -192,7 +192,8 @@ export function CompanyRegisterForm({ sectors }: { sectors: readonly string[] })
       <CardHeader>
         <CardTitle>Inscription entreprise</CardTitle>
         <CardDescription>
-          Le compte est validé par un administrateur avant publication d&apos;offres.
+          Après ce formulaire, vous choisissez un pack. Le compte reste en attente de validation
+          administrateur.
         </CardDescription>
       </CardHeader>
       <CardContent>

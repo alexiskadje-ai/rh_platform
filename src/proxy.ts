@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
+import { RECRUITER_ONBOARDING_PACK_PATH } from "@/lib/config/recruiter-packs";
 import { ROLE_HOME } from "@/lib/constants";
 import type { Role } from "@prisma/client";
 
@@ -49,7 +50,7 @@ export async function proxy(request: NextRequest) {
         user.role === "CANDIDATE" && !user.isVerified
           ? "/verify"
           : user.role === "RECRUITER" && user.status === "PENDING"
-            ? "/pending-approval"
+            ? RECRUITER_ONBOARDING_PACK_PATH
             : ROLE_HOME[user.role];
       return NextResponse.redirect(new URL(destination, request.url));
     }
@@ -85,7 +86,10 @@ export async function proxy(request: NextRequest) {
   }
 
   if (user.role === "RECRUITER" && user.status === "PENDING") {
-    return NextResponse.redirect(new URL("/pending-approval", request.url));
+    if (pathname.startsWith("/company/onboarding") || pathname.startsWith("/pending-approval")) {
+      return NextResponse.next();
+    }
+    return NextResponse.redirect(new URL(RECRUITER_ONBOARDING_PACK_PATH, request.url));
   }
 
   const matched = Object.entries(ROLE_PREFIX).find(([prefix]) =>

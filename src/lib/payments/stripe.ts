@@ -35,6 +35,8 @@ export async function createCheckoutSession(input: {
   amount: number;
   customerEmail: string;
   description: string;
+  successUrl?: string;
+  cancelUrl?: string;
 }) {
   const stripe = getStripe();
   const currency = stripeCurrency();
@@ -42,8 +44,12 @@ export async function createCheckoutSession(input: {
 
   return stripe.checkout.sessions.create({
     mode: "payment",
-    success_url: `${origin}/boutique/commande/${input.orderId}/paiement?stripe=success&session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${origin}/boutique/commande/${input.orderId}/paiement?stripe=cancel`,
+    success_url:
+      input.successUrl ??
+      `${origin}/boutique/commande/${input.orderId}/paiement?stripe=success&session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url:
+      input.cancelUrl ??
+      `${origin}/boutique/commande/${input.orderId}/paiement?stripe=cancel`,
     client_reference_id: input.orderId,
     customer_email: input.customerEmail,
     locale: "fr",

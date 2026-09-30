@@ -13,6 +13,7 @@ describe("notification channels §5.3", () => {
       "LEAVE_DECISION",
       "COURSE_AVAILABLE",
       "PAYMENT_CONFIRMED",
+      "RECRUITER_PACK_SUBMITTED",
     ]);
     expect(DEFAULT_CHANNELS.ACCOUNT_CREATED).toEqual(["email"]);
     expect(DEFAULT_CHANNELS.NEW_APPLICATION).toEqual(["email", "in-app"]);
@@ -20,6 +21,7 @@ describe("notification channels §5.3", () => {
     expect(DEFAULT_CHANNELS.LEAVE_DECISION).toEqual(["email", "in-app"]);
     expect(DEFAULT_CHANNELS.COURSE_AVAILABLE).toEqual(["email"]);
     expect(DEFAULT_CHANNELS.PAYMENT_CONFIRMED).toEqual(["email", "sms"]);
+    expect(DEFAULT_CHANNELS.RECRUITER_PACK_SUBMITTED).toEqual(["email"]);
   });
 });
 

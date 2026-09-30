@@ -5,6 +5,7 @@ import { interviewInviteEmail } from "@/lib/notifications/templates/interview-in
 import { leaveDecisionEmail } from "@/lib/notifications/templates/leave-decision";
 import { newApplicationEmail } from "@/lib/notifications/templates/new-application";
 import { paymentConfirmedEmail } from "@/lib/notifications/templates/payment-confirmed";
+import { recruiterPackSubmittedEmail } from "@/lib/notifications/templates/recruiter-pack-submitted";
 import type { EmailContent } from "@/lib/notifications/templates/layout";
 
 export function renderNotificationEmail<E extends NotificationEvent>(
@@ -24,6 +25,8 @@ export function renderNotificationEmail<E extends NotificationEvent>(
       return courseAvailableEmail(payload as NotificationPayloads["COURSE_AVAILABLE"]);
     case "PAYMENT_CONFIRMED":
       return paymentConfirmedEmail(payload as NotificationPayloads["PAYMENT_CONFIRMED"]);
+    case "RECRUITER_PACK_SUBMITTED":
+      return recruiterPackSubmittedEmail(payload as NotificationPayloads["RECRUITER_PACK_SUBMITTED"]);
     default: {
       const exhaustive: never = event;
       throw new Error(`Template email manquant pour ${exhaustive}`);

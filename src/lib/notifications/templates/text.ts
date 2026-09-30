@@ -37,6 +37,10 @@ export function renderInAppMessage<E extends NotificationEvent>(
       const data = payload as NotificationPayloads["PAYMENT_CONFIRMED"];
       return `Paiement confirmé ${data.reference} — ${data.amountLabel}.`;
     }
+    case "RECRUITER_PACK_SUBMITTED": {
+      const data = payload as NotificationPayloads["RECRUITER_PACK_SUBMITTED"];
+      return `Demande de pack ${data.packLabel} enregistrée pour ${data.companyName}.`;
+    }
     default: {
       const exhaustive: never = event;
       return String(exhaustive);
