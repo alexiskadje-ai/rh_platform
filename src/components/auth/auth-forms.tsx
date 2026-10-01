@@ -184,7 +184,6 @@ export function CandidateRegisterForm() {
 }
 
 export function CompanyRegisterForm({ sectors }: { sectors: readonly string[] }) {
-  const [password, setPassword] = useState("");
   const [state, action] = useActionState(registerCompany, {} as ActionState);
 
   return (
@@ -192,8 +191,7 @@ export function CompanyRegisterForm({ sectors }: { sectors: readonly string[] })
       <CardHeader>
         <CardTitle>Inscription entreprise</CardTitle>
         <CardDescription>
-          Après ce formulaire, vous choisissez un pack. Le compte reste en attente de validation
-          administrateur.
+          Renseignez l&apos;entreprise. Suivant ouvre directement le choix du pack.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -226,24 +224,6 @@ export function CompanyRegisterForm({ sectors }: { sectors: readonly string[] })
             name="commerceRegister"
             error={state.errors?.commerceRegister?.[0]}
           />
-          <div className="space-y-2">
-            <Label htmlFor="company-password">Mot de passe</Label>
-            <Input
-              id="company-password"
-              name="password"
-              type="password"
-              required
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-            />
-            <PasswordFieldHint password={password} error={state.errors?.password?.[0]} />
-          </div>
-          <Field
-            label="Confirmation mot de passe"
-            name="confirmPassword"
-            type="password"
-            error={state.errors?.confirmPassword?.[0]}
-          />
           <label className="flex items-start gap-2 text-sm">
             <input type="checkbox" name="acceptTerms" className="mt-1 size-4 accent-primary" />
             J&apos;accepte les{" "}
@@ -253,7 +233,7 @@ export function CompanyRegisterForm({ sectors }: { sectors: readonly string[] })
           </label>
           {state.message ? <p className="text-sm text-destructive">{state.message}</p> : null}
           <RecaptchaField />
-          <SubmitButton>Envoyer la demande</SubmitButton>
+          <SubmitButton>Suivant</SubmitButton>
         </form>
       </CardContent>
     </Card>

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { CompanyStatus, Role, UserStatus } from "@prisma/client";
+import { CompanyStatus, Role, SubscriptionStatus, UserStatus } from "@prisma/client";
+import { RECRUITER_ONBOARDING_PACK_PATH } from "@/lib/config/recruiter-packs";
 import { auditStore } from "@/lib/audit";
 import { auth } from "@/lib/auth";
 import { ROLE_HOME } from "@/lib/constants";
@@ -97,7 +98,7 @@ export async function requireRecruiter() {
   const user = await requireRole([Role.RECRUITER]);
   const dbUser = await db.user.findUnique({
     where: { id: user.id },
-    include: { company: true },
+    include: { company: { include: { recruiterSubscription: true } } },
   });
   if (
     !dbUser?.companyId ||
@@ -105,7 +106,11 @@ export async function requireRecruiter() {
     dbUser.status !== UserStatus.ACTIVE ||
     dbUser.company.status !== CompanyStatus.ACTIVE
   ) {
-    redirect("/pending-approval");
+    const subscription = dbUser?.company?.recruiterSubscription;
+    const waitingForReview =
+      subscription?.status === SubscriptionStatus.PENDING_REVIEW ||
+      subscription?.status === SubscriptionStatus.ACTIVE;
+    redirect(waitingForReview ? "/pending-approval" : RECRUITER_ONBOARDING_PACK_PATH);
   }
   return { user, companyId: dbUser.companyId, company: dbUser.company };
 }

@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 
 export function PackSelector() {
   const [cycle, setCycle] = useState<BillingCycle>("MONTHLY");
+  const [tier, setTier] = useState<(typeof RECRUITER_PACK_TIERS)[number]>("STANDARD");
 
   return (
     <div className="space-y-8">
@@ -41,17 +42,25 @@ export function PackSelector() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        {RECRUITER_PACK_TIERS.map((tier) => {
-          const quote = recruiterPackQuote(tier, cycle);
+        {RECRUITER_PACK_TIERS.map((option) => {
+          const quote = recruiterPackQuote(option, cycle);
+          const selected = tier === option;
           return (
-            <article
-              key={tier}
+            <button
+              key={option}
+              type="button"
+              aria-pressed={selected}
+              onClick={() => setTier(option)}
               className={cn(
-                "flex h-full flex-col rounded-3xl border bg-card p-6",
-                tier === "GOLD" ? "border-highlight ring-1 ring-highlight/40" : "border-border/80",
+                "flex h-full flex-col rounded-3xl border bg-card p-6 text-left",
+                selected
+                  ? "border-primary ring-2 ring-primary"
+                  : option === "GOLD"
+                    ? "border-highlight ring-1 ring-highlight/40"
+                    : "border-border/80",
               )}
             >
-              <h2 className="font-display text-2xl text-primary">{RECRUITER_PACK_LABELS[tier]}</h2>
+              <h2 className="font-display text-2xl text-primary">{RECRUITER_PACK_LABELS[option]}</h2>
               <p className="mt-4 font-display text-3xl text-primary">{formatFcfa(quote.price)}</p>
               <p className="text-sm text-muted-foreground">{BILLING_CYCLE_LABELS[cycle]}</p>
               <p className="mt-2 min-h-10 text-sm font-medium text-accent">
@@ -60,19 +69,21 @@ export function PackSelector() {
                   : ""}
               </p>
               <ul className="mt-4 flex-1 space-y-2 text-sm">
-                {RECRUITER_PACK_FEATURES[tier].map((feature) => (
+                {RECRUITER_PACK_FEATURES[option].map((feature) => (
                   <li key={feature}>{feature}</li>
                 ))}
               </ul>
-              <Link
-                href={`${RECRUITER_ONBOARDING_CONFIRM_PATH}?tier=${tier}&cycle=${cycle}`}
-                className={cn(buttonVariants(), "mt-6")}
-              >
-                Choisir {RECRUITER_PACK_LABELS[tier]}
-              </Link>
-            </article>
+            </button>
           );
         })}
+      </div>
+      <div className="flex justify-end">
+        <Link
+          href={`${RECRUITER_ONBOARDING_CONFIRM_PATH}?tier=${tier}&cycle=${cycle}`}
+          className={cn(buttonVariants(), "min-w-40")}
+        >
+          Suivant
+        </Link>
       </div>
     </div>
   );

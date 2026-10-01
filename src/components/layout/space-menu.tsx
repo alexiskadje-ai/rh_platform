@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
+import { ChevronDown } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import type { NavLink } from "@/lib/nav";
 import { cn } from "@/lib/utils";
@@ -14,11 +15,13 @@ export function SpaceMenu({
   label,
   items,
   placement,
+  tone = "primary",
   onNavigate,
 }: {
   label: string;
   items: readonly NavLink[];
   placement: "overlay" | "inline";
+  tone?: "primary" | "accent";
   onNavigate?: () => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -51,7 +54,11 @@ export function SpaceMenu({
       <button
         ref={buttonRef}
         type="button"
-        className={cn(buttonVariants({ size: "sm" }), placement === "inline" && "w-full")}
+        className={cn(
+          buttonVariants({ variant: tone === "accent" ? "accent" : "default", size: "sm" }),
+          "justify-between gap-2",
+          placement === "inline" && "w-full",
+        )}
         aria-expanded={open}
         aria-haspopup="menu"
         onClick={() => setOpen((value) => !value)}
@@ -68,6 +75,7 @@ export function SpaceMenu({
         }}
       >
         {label}
+        <ChevronDown className={cn("size-3.5 transition-transform", open && "rotate-180")} />
       </button>
       {open ? (
         <div

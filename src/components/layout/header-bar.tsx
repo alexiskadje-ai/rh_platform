@@ -70,7 +70,12 @@ export function HeaderBar({
             <>
               {space.items.length > 0 ? (
                 <div className="hidden sm:block">
-                  <SpaceMenu label={space.label} items={space.items} placement="overlay" />
+                  <SpaceMenu
+                    label={space.label}
+                    items={space.items}
+                    placement="overlay"
+                    tone={user?.role === "CANDIDATE" ? "accent" : "primary"}
+                  />
                 </div>
               ) : (
                 <Link
@@ -162,6 +167,7 @@ export function HeaderBar({
                         label={space.label}
                         items={space.items}
                         placement="inline"
+                        tone={user?.role === "CANDIDATE" ? "accent" : "primary"}
                         onNavigate={() => setOpen(false)}
                       />
                     ) : (

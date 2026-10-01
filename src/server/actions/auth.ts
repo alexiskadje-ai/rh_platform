@@ -246,8 +246,6 @@ export async function registerCompany(
     email: formData.get("email"),
     phone: formData.get("phone"),
     commerceRegister: formData.get("commerceRegister") || undefined,
-    password: formData.get("password"),
-    confirmPassword: formData.get("confirmPassword"),
     acceptTerms: booleanFromForm(formData.get("acceptTerms")),
   });
 
@@ -271,7 +269,8 @@ export async function registerCompany(
       lastName,
       email: data.email.toLowerCase(),
       phone: data.phone,
-      passwordHash: await hashPassword(data.password),
+      passwordHash: await hashPassword(generateToken()),
+      mustChangePassword: true,
       role: Role.RECRUITER,
       status: UserStatus.PENDING,
       termsAcceptedAt: new Date(),

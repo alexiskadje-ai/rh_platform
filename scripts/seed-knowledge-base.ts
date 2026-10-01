@@ -60,7 +60,7 @@ const FAQ_ENTRIES: FaqEntry[] = [
     source: "faq/compte",
     question: "Comment créer un compte sur la plateforme ?",
     answer:
-      "Allez sur la page Inscription et choisissez votre profil : candidat (recherche d'emploi, formations, boutique) ou entreprise (publication d'offres et gestion RH). Renseignez vos nom, e-mail, téléphone et mot de passe, acceptez les conditions générales, puis validez votre adresse e-mail avec le code reçu.",
+      "Allez sur la page Inscription. Le candidat renseigne nom, prénom, e-mail, téléphone et mot de passe, accepte les conditions, puis valide son e-mail. L'entreprise renseigne ses informations sans mot de passe : le bouton Suivant ouvre directement le choix du pack, puis le paiement. La revue administrateur a lieu après le paiement du pack.",
   },
   {
     source: "faq/compte",
@@ -72,7 +72,7 @@ const FAQ_ENTRIES: FaqEntry[] = [
     source: "faq/compte",
     question: "Mon compte entreprise n'est pas encore actif, pourquoi ?",
     answer:
-      "Chaque compte entreprise est vérifié par un administrateur avant activation, afin de garantir un réseau de recruteurs fiable. Tant que la validation n'est pas faite, vous voyez la page « En attente de validation » et vous ne pouvez pas publier d'offres. Vous recevez un e-mail dès que le compte est activé.",
+      "Après l'inscription, l'entreprise choisit un pack et paie. L'espace de publication d'offres s'ouvre une fois le pack validé par un administrateur. Avant ce paiement, le bouton Suivant mène au choix du pack, pas à une page d'attente.",
   },
   {
     source: "faq/compte",
@@ -180,7 +180,7 @@ const FAQ_ENTRIES: FaqEntry[] = [
     source: "faq/connexion",
     question: "Je n'arrive pas à me connecter à mon compte, que vérifier ?",
     answer:
-      "Vérifiez que l'adresse e-mail est celle utilisée à l'inscription et que les majuscules du mot de passe sont correctes. Un compte candidat non vérifié est redirigé vers la page de vérification, et un compte entreprise non encore validé vers la page d'attente. Si le problème persiste, réinitialisez le mot de passe puis contactez le support.",
+      "Vérifiez que l'adresse e-mail est celle utilisée à l'inscription et que les majuscules du mot de passe sont correctes. Un compte candidat non vérifié est redirigé vers la page de vérification. Une entreprise qui n'a pas encore choisi et payé son pack est renvoyée vers le choix du pack. Si le problème persiste, réinitialisez le mot de passe puis contactez le support.",
   },
   {
     source: "faq/connexion",

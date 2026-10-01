@@ -33,24 +33,17 @@ export const registerCandidateSchema = z
     path: ["confirmPassword"],
   });
 
-export const registerCompanySchema = z
-  .object({
-    companyName: z.string().trim().min(1, "Le nom de l'entreprise est obligatoire."),
-    sector: z.string().trim().min(1, "Le secteur d'activité est obligatoire."),
-    contactName: z.string().trim().min(1, "Le nom du contact RH est obligatoire."),
-    email: z.email("Adresse e-mail professionnelle invalide."),
-    phone: phoneSchema,
-    commerceRegister: z.string().trim().optional(),
-    password: passwordSchema,
-    confirmPassword: z.string(),
-    acceptTerms: z.literal(true, {
-      error: "Vous devez accepter les conditions d'utilisation.",
-    }),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Les mots de passe ne correspondent pas.",
-    path: ["confirmPassword"],
-  });
+export const registerCompanySchema = z.object({
+  companyName: z.string().trim().min(1, "Le nom de l'entreprise est obligatoire."),
+  sector: z.string().trim().min(1, "Le secteur d'activité est obligatoire."),
+  contactName: z.string().trim().min(1, "Le nom du contact RH est obligatoire."),
+  email: z.email("Adresse e-mail professionnelle invalide."),
+  phone: phoneSchema,
+  commerceRegister: z.string().trim().optional(),
+  acceptTerms: z.literal(true, {
+    error: "Vous devez accepter les conditions d'utilisation.",
+  }),
+});
 
 export const loginSchema = z.object({
   identifier: z.string().trim().min(1, "E-mail ou téléphone obligatoire."),

@@ -19,8 +19,7 @@ export default async function RecruiterPackPage() {
       <p className="text-xs uppercase tracking-[0.22em] text-accent">Souscription recruteur</p>
       <h1 className="mt-2 font-display text-4xl text-primary">Choisissez votre pack</h1>
       <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-        Le compte entreprise reste en attente de validation tant que le pack n&apos;est pas activé par
-        un administrateur.
+        Sélectionnez un pack et un cycle, puis passez au paiement.
       </p>
       <div className="mt-8">
         <PackSelector />

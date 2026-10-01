@@ -56,16 +56,30 @@ export default async function AdminDashboardPage() {
 
   return (
     <DashboardShell role={Role.ADMIN} title="Administration">
-      <h1 className="font-display text-3xl font-medium text-primary">Bonjour {user.firstName}</h1>
+      <div className="flex flex-col gap-5 rounded-3xl border border-primary bg-primary p-6 text-primary-foreground sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.22em] text-highlight">Console</p>
+          <h1 className="mt-1 font-display text-3xl font-medium">Bonjour {user.firstName}</h1>
+          <p className="mt-2 text-sm text-primary-foreground/75">
+            Utilisateurs, recrutement, boutique et contenu du site.
+          </p>
+        </div>
+        <Link
+          href="/admin/recrutement"
+          className={cn(buttonVariants({ variant: "accent" }), "shrink-0 self-start sm:self-auto")}
+        >
+          Superviser le recrutement
+        </Link>
+      </div>
       {!adminRow?.twoFactorSecret ? (
-        <p className="mt-4 rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm">
+        <p className="mt-4 rounded-2xl border border-highlight/40 bg-highlight/15 px-4 py-3 text-sm text-primary">
           Activez l&apos;authentification à deux facteurs pour le compte admin.{" "}
-          <Link href="/settings/security" className="font-medium text-primary underline-offset-4 hover:underline">
+          <Link href="/settings/security" className="font-medium underline-offset-4 hover:underline">
             Configurer le 2FA
           </Link>
         </p>
       ) : null}
-      <div className="mt-8 grid gap-4 md:grid-cols-4">
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {[
           ["Candidats", candidates],
           ["Entreprises", companies],
@@ -77,7 +91,7 @@ export default async function AdminDashboardPage() {
           ["Taux de recrutement", `${recruitment} %`],
           ["Taux de rétention", `${retention} %`],
         ].map(([label, value]) => (
-          <Card key={String(label)}>
+          <Card key={String(label)} className="hover:translate-y-0">
             <CardHeader>
               <CardTitle className="text-base">{label}</CardTitle>
             </CardHeader>
@@ -86,8 +100,10 @@ export default async function AdminDashboardPage() {
         ))}
       </div>
 
-      <section className="mt-10">
-        <h2 className="text-lg font-semibold">Comptes entreprise à valider</h2>
+      <section className="mt-8">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <h2 className="text-lg font-semibold text-primary">Comptes entreprise à valider</h2>
+        </div>
         <div className="mt-4 space-y-3">
           {pendingCompanies.length === 0 ? (
             <p className="text-sm text-muted-foreground">Aucune demande en attente.</p>
@@ -110,7 +126,9 @@ export default async function AdminDashboardPage() {
                       {contact ? ` · ${contact.email}` : ""}
                     </p>
                   </div>
-                  <Button type="submit">Valider</Button>
+                  <Button type="submit" className="shrink-0 self-start sm:self-center">
+                    Valider
+                  </Button>
                 </form>
               );
             })
@@ -118,11 +136,6 @@ export default async function AdminDashboardPage() {
         </div>
       </section>
 
-      <p className="mt-8">
-        <Link href="/admin/recrutement" className={cn(buttonVariants({ variant: "outline" }))}>
-          Superviser offres et candidatures
-        </Link>
-      </p>
     </DashboardShell>
   );
 }

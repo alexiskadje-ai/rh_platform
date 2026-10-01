@@ -13,6 +13,7 @@ import {
   CHATBOT_TOOLS,
   MAX_TOOL_ROUNDS,
 } from "@/lib/chatbot/config";
+import { loadCurrentPlatformBrief } from "@/lib/chatbot/live-facts";
 import { searchKnowledgeBase } from "@/lib/chatbot/knowledge";
 import {
   escalateToHumanArgsSchema,
@@ -61,17 +62,24 @@ async function runSearchKnowledgeBase(args: unknown) {
   if (!parsed.success) {
     return "Requête invalide : fournis une question en texte clair dans le champ query.";
   }
-  const matches = await searchKnowledgeBase(parsed.data.query);
-  if (matches.length === 0) {
-    return "Aucun extrait pertinent dans la base de connaissances pour cette question.";
-  }
-  return JSON.stringify(
-    matches.map((match) => ({
+  const current = await loadCurrentPlatformBrief();
+  let excerpts: { source: string; content: string; score: number }[] = [];
+  try {
+    const matches = await searchKnowledgeBase(parsed.data.query);
+    excerpts = matches.map((match) => ({
       source: match.source,
       content: match.content,
       score: Number(match.score.toFixed(3)),
-    })),
-  );
+    }));
+  } catch (error) {
+    console.error("[chatbot] knowledge search failed", error);
+  }
+  return JSON.stringify({
+    current,
+    excerpts,
+    instruction:
+      "Réponds avec les informations à jour. Si un extrait les contredit, ignore l'extrait.",
+  });
 }
 
 async function runEscalateToHuman(args: unknown, history: ChatMessage[]) {

@@ -30,33 +30,34 @@ export default async function CompanyDashboardPage() {
 
   return (
     <DashboardShell role={Role.RECRUITER} title="Espace entreprise">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="font-display text-3xl font-medium text-primary">Bonjour {user.firstName}</h1>
-          <p className="mt-1 text-muted-foreground">
-            Pilotage recrutement et RH de votre entreprise.
+      <div className="flex flex-col gap-5 rounded-3xl border border-primary/15 bg-gradient-to-br from-primary/[0.06] via-card to-card p-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="min-w-0">
+          <p className="text-[11px] uppercase tracking-[0.22em] text-primary/70">Pilotage</p>
+          <h1 className="mt-1 font-display text-3xl font-medium text-primary">Bonjour {user.firstName}</h1>
+          <p className="mt-2 text-muted-foreground">
+            Recrutement, équipe et rapports de votre entreprise.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex shrink-0 flex-wrap gap-2">
           <Link href="/company/offres/nouvelle" className={cn(buttonVariants())}>
             Publier une offre
           </Link>
-          <Link
-            href="/company/rapports"
-            className={cn(buttonVariants({ variant: "outline" }))}
-          >
+          <Link href="/company/candidats" className={cn(buttonVariants({ variant: "outline" }))}>
+            Rechercher un CV
+          </Link>
+          <Link href="/company/rapports" className={cn(buttonVariants({ variant: "outline" }))}>
             Rapports PDF
           </Link>
         </div>
       </div>
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {kpis.map(([label, value, href]) => (
-          <Link key={label} href={href}>
-            <Card>
+          <Link key={label} href={href} className="block h-full">
+            <Card className="flex h-full flex-col">
               <CardHeader>
                 <CardTitle className="text-base">{label}</CardTitle>
               </CardHeader>
-          <CardContent className="font-display text-4xl text-primary">{value}</CardContent>
+              <CardContent className="mt-auto font-display text-4xl text-primary">{value}</CardContent>
             </Card>
           </Link>
         ))}
@@ -95,7 +96,7 @@ export default async function CompanyDashboardPage() {
             )}
             <Link
               href="/company/conges"
-              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "mt-1")}
             >
               Ouvrir les validations
             </Link>

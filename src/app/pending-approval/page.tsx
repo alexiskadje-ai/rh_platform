@@ -1,6 +1,8 @@
-import { Role, UserStatus } from "@prisma/client";
+import { redirect } from "next/navigation";
+import { Role, SubscriptionStatus, UserStatus } from "@prisma/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { RECRUITER_ONBOARDING_PACK_PATH } from "@/lib/config/recruiter-packs";
 import { getSessionUser } from "@/lib/dal";
 import { db } from "@/lib/db";
 import { resumeApprovedRecruiter } from "@/server/actions/auth";
@@ -11,9 +13,16 @@ export default async function PendingApprovalPage() {
     sessionUser?.role === Role.RECRUITER
       ? await db.user.findUnique({
           where: { id: sessionUser.id },
-          include: { company: true },
+          include: { company: { include: { recruiterSubscription: true } } },
         })
       : null;
+  const subscription = user?.company?.recruiterSubscription;
+  const waitingForReview =
+    subscription?.status === SubscriptionStatus.PENDING_REVIEW ||
+    subscription?.status === SubscriptionStatus.ACTIVE;
+  if (user?.company && !waitingForReview && user.status !== UserStatus.ACTIVE) {
+    redirect(RECRUITER_ONBOARDING_PACK_PATH);
+  }
   const approved =
     user?.status === UserStatus.ACTIVE && user.company?.status === "ACTIVE";
 
