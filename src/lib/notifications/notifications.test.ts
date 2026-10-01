@@ -14,6 +14,8 @@ describe("notification channels §5.3", () => {
       "COURSE_AVAILABLE",
       "PAYMENT_CONFIRMED",
       "RECRUITER_PACK_SUBMITTED",
+      "RECRUITER_PACK_APPROVED",
+      "RECRUITER_PACK_REJECTED",
     ]);
     expect(DEFAULT_CHANNELS.ACCOUNT_CREATED).toEqual(["email"]);
     expect(DEFAULT_CHANNELS.NEW_APPLICATION).toEqual(["email", "in-app"]);
@@ -22,6 +24,8 @@ describe("notification channels §5.3", () => {
     expect(DEFAULT_CHANNELS.COURSE_AVAILABLE).toEqual(["email"]);
     expect(DEFAULT_CHANNELS.PAYMENT_CONFIRMED).toEqual(["email", "sms"]);
     expect(DEFAULT_CHANNELS.RECRUITER_PACK_SUBMITTED).toEqual(["email"]);
+    expect(DEFAULT_CHANNELS.RECRUITER_PACK_APPROVED).toEqual(["email"]);
+    expect(DEFAULT_CHANNELS.RECRUITER_PACK_REJECTED).toEqual(["email"]);
   });
 });
 

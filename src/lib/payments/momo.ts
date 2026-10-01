@@ -156,6 +156,39 @@ export async function requestToPayment(input: MomoRequestInput): Promise<MomoReq
   }
 }
 
+export async function refundCollectionPayment(input: {
+  referenceId: string;
+  amount: number;
+  externalId: string;
+}) {
+  const { baseUrl, currency } = momoEnv();
+  const accessToken = await getCollectionToken();
+  const refundId = randomUUID();
+  try {
+    await axios.post(
+      `${baseUrl}/collection/v2_0/refund`,
+      {
+        amount: String(input.amount),
+        currency,
+        externalId: input.externalId,
+        payerMessage: "Remboursement pack recruteur",
+        payeeNote: "Remboursement PES-RH",
+        referenceIdToRefund: input.referenceId,
+      },
+      {
+        headers: {
+          ...collectionHeaders(accessToken),
+          "X-Reference-Id": refundId,
+          "Content-Type": "application/json",
+        },
+        timeout: 20_000,
+      },
+    );
+  } catch (error) {
+    throw momoError(error, "Le remboursement MoMo a échoué");
+  }
+}
+
 export async function checkPaymentStatus(referenceId: string): Promise<MomoStatusResult> {
   const { baseUrl } = momoEnv();
   const accessToken = await getCollectionToken();

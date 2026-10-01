@@ -142,7 +142,7 @@ const FAQ_ENTRIES: FaqEntry[] = [
     source: "faq/boutique",
     question: "Quels moyens de paiement sont acceptés dans la boutique ?",
     answer:
-      "Quatre moyens de paiement sont disponibles au checkout : carte bancaire Visa/Mastercard via Stripe, MTN Mobile Money (validation par push USSD sur votre ligne), Orange Money (paiement marchand via #150#) et virement bancaire avec une référence unique à rappeler.",
+      "Trois moyens de paiement sont disponibles au checkout : carte bancaire Visa/Mastercard via Stripe, MTN Mobile Money (validation par push USSD sur votre ligne) et Orange Money (paiement marchand via #150#).",
   },
   {
     source: "faq/boutique",
@@ -154,7 +154,7 @@ const FAQ_ENTRIES: FaqEntry[] = [
     source: "faq/boutique",
     question: "J'ai payé mais ma commande est toujours en attente, que faire ?",
     answer:
-      "La commande passe à « payée » à la réception de la confirmation de l'opérateur de paiement, ce qui peut prendre quelques minutes pour Mobile Money et jusqu'à plusieurs heures ouvrées pour un virement. Rechargez la page Mes commandes ; si le statut n'a pas changé après ce délai, contactez le support avec la référence de la commande.",
+      "La commande passe à « payée » à la réception de la confirmation de l'opérateur de paiement, ce qui peut prendre quelques minutes pour Mobile Money. Rechargez la page Mes commandes ; si le statut n'a pas changé après ce délai, contactez le support avec la référence de la commande.",
   },
   {
     source: "faq/boutique",

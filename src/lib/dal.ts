@@ -107,10 +107,11 @@ export async function requireRecruiter() {
     dbUser.company.status !== CompanyStatus.ACTIVE
   ) {
     const subscription = dbUser?.company?.recruiterSubscription;
-    const waitingForReview =
+    const decided =
       subscription?.status === SubscriptionStatus.PENDING_REVIEW ||
-      subscription?.status === SubscriptionStatus.ACTIVE;
-    redirect(waitingForReview ? "/pending-approval" : RECRUITER_ONBOARDING_PACK_PATH);
+      subscription?.status === SubscriptionStatus.ACTIVE ||
+      subscription?.status === SubscriptionStatus.REJECTED;
+    redirect(decided ? "/pending-approval" : RECRUITER_ONBOARDING_PACK_PATH);
   }
   return { user, companyId: dbUser.companyId, company: dbUser.company };
 }

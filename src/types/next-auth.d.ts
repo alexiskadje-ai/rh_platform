@@ -6,6 +6,7 @@ declare module "next-auth" {
     role: Role;
     status: UserStatus;
     isVerified: boolean;
+    mustChangePassword: boolean;
     firstName: string;
     lastName: string;
   }
@@ -16,6 +17,7 @@ declare module "next-auth" {
       role: Role;
       status: UserStatus;
       isVerified: boolean;
+      mustChangePassword: boolean;
       firstName: string;
       lastName: string;
     } & DefaultSession["user"];
@@ -27,6 +29,7 @@ declare module "next-auth/jwt" {
     role: Role;
     status: UserStatus;
     isVerified: boolean;
+    mustChangePassword: boolean;
     firstName: string;
     lastName: string;
   }
@@ -37,6 +40,7 @@ declare module "@auth/core/jwt" {
     role: Role;
     status: UserStatus;
     isVerified: boolean;
+    mustChangePassword: boolean;
     firstName: string;
     lastName: string;
   }

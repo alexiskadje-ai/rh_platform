@@ -5,7 +5,6 @@ import {
   CheckCircle2,
   Clock3,
   CreditCard,
-  Landmark,
   LoaderCircle,
   Lock,
   RefreshCw,
@@ -14,10 +13,8 @@ import {
 import { PAYMENT_METHOD_LABELS } from "@/lib/constants";
 import { formatFcfa, paymentMethodLabel, productTypeLabel } from "@/lib/shop";
 import { productIncludes } from "@/lib/shop-preview";
-import type { BankTransferDetails } from "@/lib/payments/bank";
 import {
   refreshPayment,
-  startBankTransfer,
   startMomoPayment,
   startOrangePayment,
   startStripePayment,
@@ -48,11 +45,6 @@ const METHODS: {
     hint: "Paiement marchand Orange Money (#150#)",
     tone: "bg-[#ff7900] text-white",
   },
-  {
-    id: "BANK_TRANSFER",
-    hint: "Virement avec référence unique à confirmer",
-    tone: "bg-muted text-foreground",
-  },
 ];
 
 type RecapItem = {
@@ -72,7 +64,6 @@ type Props = {
   momoConfigured: boolean;
   stripeConfigured: boolean;
   orangeHint: string;
-  bank: BankTransferDetails;
   initialStatus: string;
   initialProvider?: string | null;
   initialReference?: string | null;
@@ -80,10 +71,6 @@ type Props = {
   invoiceHref?: string | null;
   returnedFromStripe?: "success" | "cancel" | null;
 };
-
-function isMethod(value: string | null | undefined): value is MethodId {
-  return Boolean(value && value in PAYMENT_METHOD_LABELS);
-}
 
 export function CheckoutPanel({
   orderId,
@@ -93,7 +80,6 @@ export function CheckoutPanel({
   momoConfigured,
   stripeConfigured,
   orangeHint,
-  bank,
   initialStatus,
   initialProvider,
   initialReference,
@@ -101,14 +87,15 @@ export function CheckoutPanel({
   invoiceHref,
   returnedFromStripe,
 }: Props) {
-  const [method, setMethod] = useState<MethodId>(
-    isMethod(initialProvider)
+  const offeredProvider =
+    initialProvider === "MTN_MOMO" ||
+    initialProvider === "ORANGE_MONEY" ||
+    initialProvider === "CARD"
       ? initialProvider
-      : momoConfigured
-        ? "MTN_MOMO"
-        : stripeConfigured
-          ? "CARD"
-          : "ORANGE_MONEY",
+      : null;
+  const [method, setMethod] = useState<MethodId>(
+    offeredProvider ??
+      (momoConfigured ? "MTN_MOMO" : stripeConfigured ? "CARD" : "ORANGE_MONEY"),
   );
   const [poll, setPoll] = useState<{
     status?: string;
@@ -118,11 +105,9 @@ export function CheckoutPanel({
   const [momoState, momoAction, momoPending] = useActionState(startMomoPayment, {});
   const [stripeState, stripeAction, stripePending] = useActionState(startStripePayment, {});
   const [orangeState, orangeAction, orangePending] = useActionState(startOrangePayment, {});
-  const [bankState, bankAction, bankPending] = useActionState(startBankTransfer, {});
   const [refreshing, startRefresh] = useTransition();
 
-  const actionStatus =
-    stripeState.status ?? momoState.status ?? orangeState.status ?? bankState.status;
+  const actionStatus = stripeState.status ?? momoState.status ?? orangeState.status;
   const status =
     poll.status === "paid" ? "paid" : (actionStatus ?? poll.status ?? initialStatus);
   const invoice =
@@ -130,7 +115,6 @@ export function CheckoutPanel({
     stripeState.invoiceUrl ??
     momoState.invoiceUrl ??
     orangeState.invoiceUrl ??
-    bankState.invoiceUrl ??
     invoiceHref ??
     null;
   const provider = stripeState.ok
@@ -139,15 +123,12 @@ export function CheckoutPanel({
       ? "MTN_MOMO"
       : orangeState.ok
         ? "ORANGE_MONEY"
-        : bankState.ok
-          ? "BANK_TRANSFER"
           : (initialProvider ?? null);
   const reference =
     poll.reference ??
     stripeState.reference ??
     momoState.reference ??
     orangeState.reference ??
-    bankState.reference ??
     initialReference ??
     null;
   const waiting = status === "pending" && (!provider || provider === method);
@@ -155,7 +136,6 @@ export function CheckoutPanel({
   const paid = status === "paid";
   const cardFlow = method === "CARD" || provider === "CARD";
   const orangeFlow = method === "ORANGE_MONEY" || provider === "ORANGE_MONEY";
-  const bankFlow = method === "BANK_TRANSFER" || provider === "BANK_TRANSFER";
 
   useEffect(() => {
     if (stripeState.checkoutUrl) {
@@ -165,7 +145,7 @@ export function CheckoutPanel({
 
   useEffect(() => {
     if (!waiting || paid || failed) return;
-    if (bankFlow || orangeFlow) return;
+    if (orangeFlow) return;
     const timer = window.setInterval(() => {
       startRefresh(async () => {
         const next = await refreshPayment(orderId);
@@ -177,24 +157,22 @@ export function CheckoutPanel({
       });
     }, 4000);
     return () => window.clearInterval(timer);
-  }, [waiting, paid, failed, orderId, bankFlow, orangeFlow]);
+  }, [waiting, paid, failed, orderId, orangeFlow]);
 
   const headline = useMemo(() => {
     if (paid) return "Paiement confirmé";
     if (returnedFromStripe === "cancel") return "Paiement carte annulé";
     if (failed) return "Paiement échoué";
     if (waiting && cardFlow) return "Paiement carte en cours";
-    if (waiting && bankFlow) return "Virement en attente";
     if (waiting && orangeFlow) return "Orange Money en attente";
     if (waiting) return "En attente de validation";
     return "Réglez en toute sécurité";
-  }, [paid, failed, waiting, cardFlow, bankFlow, orangeFlow, returnedFromStripe]);
+  }, [paid, failed, waiting, cardFlow, orangeFlow, returnedFromStripe]);
 
   const errorMessage =
     (method === "CARD" && stripeState.message && !stripeState.ok && stripeState.message) ||
     (method === "MTN_MOMO" && momoState.message && !momoState.ok && momoState.message) ||
     (method === "ORANGE_MONEY" && orangeState.message && !orangeState.ok && orangeState.message) ||
-    (method === "BANK_TRANSFER" && bankState.message && !bankState.ok && bankState.message) ||
     (failed && initialMessage) ||
     null;
 
@@ -205,7 +183,7 @@ export function CheckoutPanel({
           <Lock className="size-4 text-highlight" />
           PES-RH Checkout
         </div>
-        <p className="text-xs text-primary-foreground/70">MoMo · Orange · Carte · Virement</p>
+        <p className="text-xs text-primary-foreground/70">MoMo · Orange · Carte</p>
       </div>
 
       <div className="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
@@ -224,7 +202,7 @@ export function CheckoutPanel({
             </p>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-3">
             {METHODS.map((item) => {
               const selected = method === item.id;
               return (
@@ -256,10 +234,8 @@ export function CheckoutPanel({
                       <span className="block w-full min-w-0 overflow-hidden">
                         <PaymentBrandLogo brand="ORANGE_MONEY" className="h-8 w-full max-w-full" />
                       </span>
-                    ) : item.id === "CARD" ? (
-                      <CreditCard className="mr-1 size-3" />
                     ) : (
-                      <Landmark className="mr-1 size-3" />
+                      <CreditCard className="mr-1 size-3" />
                     )}
                     {item.id === "MTN_MOMO" || item.id === "ORANGE_MONEY" ? null : paymentMethodLabel(item.id)}
                   </span>
@@ -301,9 +277,7 @@ export function CheckoutPanel({
                   ? "border-primary/20 bg-primary/5"
                   : orangeFlow
                     ? "border-[#ff7900]/40 bg-[#fff4eb]"
-                    : bankFlow
-                      ? "border-primary/15 bg-muted/50"
-                      : "border-[#ffcc00]/40 bg-[#fff8d6] text-[#1a1a1a]",
+                    : "border-[#ffcc00]/40 bg-[#fff8d6] text-[#1a1a1a]",
               )}
             >
               <div className="flex items-start gap-3">
@@ -319,18 +293,14 @@ export function CheckoutPanel({
                       ? "Confirmation Stripe en cours"
                       : orangeFlow
                         ? "Paiement Orange Money"
-                        : bankFlow
-                          ? "En attente du virement"
-                          : "Validez sur votre téléphone MTN"}
+                        : "Validez sur votre téléphone MTN"}
                   </p>
                   <p className="text-sm text-muted-foreground">
                     {cardFlow
                       ? "Si vous revenez de Stripe, le webhook finalise la facture en quelques secondes."
                       : orangeFlow
                         ? orangeHint
-                        : bankFlow
-                          ? `Virez ${formatFcfa(amount)} vers ${bank.accountName} (${bank.bankName})${bank.accountNumber ? ` · ${bank.accountNumber}` : ""}${bank.swift ? ` · SWIFT ${bank.swift}` : ""}. Mentionnez ${reference ?? "la référence"} dans le motif.`
-                          : "Composez *126# en production. En sandbox, le statut est vérifié auprès de MoMo."}
+                        : "Composez *126# en production. En sandbox, le statut est vérifié auprès de MoMo."}
                   </p>
                   {reference ? (
                     <p className="text-sm font-medium">Référence : {reference}</p>
@@ -380,30 +350,6 @@ export function CheckoutPanel({
               {errorMessage ? <p className="text-sm text-destructive">{errorMessage}</p> : null}
               <Button type="submit" className="w-full" disabled={stripePending || !stripeConfigured}>
                 {stripePending ? "Ouverture de Stripe…" : `Payer ${formatFcfa(amount)} par carte`}
-              </Button>
-            </form>
-          ) : method === "BANK_TRANSFER" ? (
-            <form action={bankAction} className="space-y-4 rounded-2xl border border-border/80 p-5">
-              <input type="hidden" name="orderId" value={orderId} />
-              <div className="flex items-center gap-2 text-sm">
-                <span className="inline-flex size-8 items-center justify-center rounded-full bg-muted">
-                  <Landmark className="size-4" />
-                </span>
-                <div>
-                  <p className="font-medium">Virement bancaire</p>
-                  <p className="text-xs text-muted-foreground">Référence unique · confirmation PES-RH</p>
-                </div>
-              </div>
-              <ul className="space-y-1 text-sm text-muted-foreground">
-                <li>Bénéficiaire : {bank.accountName}</li>
-                <li>Banque : {bank.bankName}</li>
-                {bank.accountNumber ? <li>Compte : {bank.accountNumber}</li> : null}
-                {bank.swift ? <li>SWIFT : {bank.swift}</li> : null}
-                <li>Montant : {formatFcfa(amount)}</li>
-              </ul>
-              {errorMessage ? <p className="text-sm text-destructive">{errorMessage}</p> : null}
-              <Button type="submit" className="w-full" disabled={bankPending}>
-                {bankPending ? "Génération de la référence…" : "Obtenir ma référence de virement"}
               </Button>
             </form>
           ) : method === "ORANGE_MONEY" ? (
@@ -522,7 +468,7 @@ export function CheckoutPanel({
             <p className="flex gap-2">
               <ShieldCheck className="mt-0.5 size-4 shrink-0 text-accent" />
               Le montant est recalculé côté serveur. Stripe et MoMo confirment par webhook ;
-              Orange Money et le virement par PES-RH.
+              Orange Money est confirmé par PES-RH.
             </p>
             <p className="flex gap-2">
               <Clock3 className="mt-0.5 size-4 shrink-0 text-accent" />

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
-import { RECRUITER_ONBOARDING_PACK_PATH } from "@/lib/config/recruiter-packs";
+import { FIRST_LOGIN_PATH, RECRUITER_ONBOARDING_PACK_PATH } from "@/lib/config/recruiter-packs";
 import { ROLE_HOME } from "@/lib/constants";
 import { blockedPublicRedirect } from "@/lib/nav";
 import type { Role } from "@prisma/client";
@@ -47,8 +47,9 @@ export async function proxy(request: NextRequest) {
 
   if (pathname.startsWith("/login") || pathname.startsWith("/register")) {
     if (user) {
-      const destination =
-        user.role === "CANDIDATE" && !user.isVerified
+      const destination = user.mustChangePassword && user.status === "ACTIVE"
+        ? FIRST_LOGIN_PATH
+        : user.role === "CANDIDATE" && !user.isVerified
           ? "/verify"
           : user.role === "RECRUITER" && user.status === "PENDING"
             ? RECRUITER_ONBOARDING_PACK_PATH
@@ -63,6 +64,14 @@ export async function proxy(request: NextRequest) {
     if (blocked) {
       return NextResponse.redirect(new URL(blocked, request.url));
     }
+  }
+
+  if (
+    user?.mustChangePassword &&
+    user.status === "ACTIVE" &&
+    pathname !== FIRST_LOGIN_PATH
+  ) {
+    return NextResponse.redirect(new URL(FIRST_LOGIN_PATH, request.url));
   }
 
   if (isPublic(pathname) && pathname !== "/pending-approval" && pathname !== "/verify") {

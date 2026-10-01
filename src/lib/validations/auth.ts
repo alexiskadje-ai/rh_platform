@@ -70,6 +70,16 @@ export const verifySmsSchema = z.object({
     .regex(/^\d{6}$/, "Le code doit contenir 6 chiffres."),
 });
 
+export const setInitialPasswordSchema = z
+  .object({
+    password: passwordSchema,
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Les mots de passe ne correspondent pas.",
+    path: ["confirmPassword"],
+  });
+
 export const requestPasswordResetSchema = z.object({
   email: z.email("Adresse e-mail invalide."),
 });

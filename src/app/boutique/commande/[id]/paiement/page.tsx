@@ -5,7 +5,6 @@ import { formatFcfa, ORDER_STATUS_LABELS, productTypeLabel } from "@/lib/shop";
 import { productApercu, productIncludes } from "@/lib/shop-preview";
 import { isMomoConfigured } from "@/lib/payments/momo";
 import { isStripeConfigured } from "@/lib/payments/stripe";
-import { getBankTransferDetails } from "@/lib/payments/bank";
 import { orangePayHint } from "@/lib/payments/orange";
 import { applyStripeStatus } from "@/lib/payments/sync";
 import { PAYMENT_STATUS } from "@/lib/payments/confirm";
@@ -129,7 +128,6 @@ export default async function OrderPaymentPage({
           momoConfigured={isMomoConfigured()}
           stripeConfigured={isStripeConfigured()}
           orangeHint={orangePayHint()}
-          bank={getBankTransferDetails()}
           initialStatus={payment?.status ?? "new"}
           initialProvider={payment?.provider}
           initialReference={payment?.reference}

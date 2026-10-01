@@ -4,9 +4,13 @@ import { requireRole } from "@/lib/dal";
 import { db } from "@/lib/db";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { approveCompany } from "@/server/actions/admin";
+import { PackReviewActions } from "@/components/admin/pack-review-actions";
+import {
+  BILLING_CYCLE_LABELS,
+  RECRUITER_PACK_LABELS,
+} from "@/lib/config/recruiter-packs";
 import { formatFcfa } from "@/lib/shop";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export default async function AdminDashboardPage() {
@@ -27,8 +31,11 @@ export default async function AdminDashboardPage() {
     db.user.count({ where: { role: Role.CANDIDATE } }),
     db.company.count(),
     db.company.findMany({
-      where: { status: "PENDING" },
-      include: { users: { where: { role: Role.RECRUITER }, take: 1 } },
+      where: { recruiterSubscription: { status: "PENDING_REVIEW" } },
+      include: {
+        users: { where: { role: Role.RECRUITER }, take: 1 },
+        recruiterSubscription: true,
+      },
       orderBy: { createdAt: "desc" },
     }),
     db.employee.count(),
@@ -102,7 +109,7 @@ export default async function AdminDashboardPage() {
 
       <section className="mt-8">
         <div className="flex flex-wrap items-end justify-between gap-3">
-          <h2 className="text-lg font-semibold text-primary">Comptes entreprise à valider</h2>
+          <h2 className="text-lg font-semibold text-primary">Packs payés à valider</h2>
         </div>
         <div className="mt-4 space-y-3">
           {pendingCompanies.length === 0 ? (
@@ -110,13 +117,10 @@ export default async function AdminDashboardPage() {
           ) : (
             pendingCompanies.map((company) => {
               const contact = company.users[0];
+              const pack = company.recruiterSubscription;
               return (
-                <form
+                <div
                   key={company.id}
-                  action={async () => {
-                    "use server";
-                    await approveCompany(company.id);
-                  }}
                   className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div>
@@ -125,11 +129,15 @@ export default async function AdminDashboardPage() {
                       {company.sector}
                       {contact ? ` · ${contact.email}` : ""}
                     </p>
+                    {pack ? (
+                      <p className="text-sm text-muted-foreground">
+                        {RECRUITER_PACK_LABELS[pack.tier]} · {BILLING_CYCLE_LABELS[pack.billingCycle]} ·{" "}
+                        {formatFcfa(pack.priceAtSignup)}
+                      </p>
+                    ) : null}
                   </div>
-                  <Button type="submit" className="shrink-0 self-start sm:self-center">
-                    Valider
-                  </Button>
-                </form>
+                  <PackReviewActions companyId={company.id} />
+                </div>
               );
             })
           )}

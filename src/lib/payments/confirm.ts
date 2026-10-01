@@ -12,6 +12,7 @@ export const PAYMENT_STATUS = {
   pending: "pending",
   paid: "paid",
   failed: "failed",
+  refunded: "refunded",
 } as const;
 
 function invoiceNumber(reference: string, date = new Date()) {

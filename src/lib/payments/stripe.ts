@@ -83,6 +83,17 @@ export async function retrieveCheckoutSession(sessionId: string) {
   return getStripe().checkout.sessions.retrieve(sessionId);
 }
 
+export async function refundCheckoutSession(sessionId: string) {
+  const stripe = getStripe();
+  const session = await stripe.checkout.sessions.retrieve(sessionId);
+  const paymentIntent = session.payment_intent;
+  const paymentIntentId = typeof paymentIntent === "string" ? paymentIntent : paymentIntent?.id;
+  if (!paymentIntentId) {
+    throw new Error("Paiement Stripe introuvable pour ce remboursement.");
+  }
+  await stripe.refunds.create({ payment_intent: paymentIntentId });
+}
+
 export function verifyStripeWebhook(rawBody: string, signature: string | null) {
   const secret = process.env.STRIPE_WEBHOOK_SECRET?.trim();
   if (!secret) {

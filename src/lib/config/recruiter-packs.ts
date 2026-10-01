@@ -61,7 +61,12 @@ export const MONTHLY_PAYMENT_NOTICE =
 export const PREPAID_PERIOD_NOTICE = "Paiement unique pour la période choisie.";
 
 export const RECRUITER_PACK_REVIEW_NOTICE =
-  "Un administrateur a pris en compte votre demande. Elle sera analysée et vous recevrez une réponse sous 72h.";
+  "Un administrateur a pris en compte votre demande. Elle sera analysée et vous recevrez une réponse d'ici 72 h. Veuillez consulter votre e-mail : un e-mail de confirmation vous sera envoyé.";
+
+export const RECRUITER_PACK_REFUND_NOTICE =
+  "Votre demande a été refusée. Le montant payé est remboursé par le système.";
+
+export const FIRST_LOGIN_PATH = "/premiere-connexion";
 
 export const RECRUITER_ONBOARDING_PACK_PATH = "/company/onboarding/pack";
 export const RECRUITER_ONBOARDING_CONFIRM_PATH = "/company/onboarding/confirmation";

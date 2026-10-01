@@ -1,9 +1,20 @@
 "use server";
 
-import { CompanyStatus, Role, UserStatus } from "@prisma/client";
+import { CompanyStatus, Role, SubscriptionStatus, UserStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+import {
+  BILLING_CYCLE_LABELS,
+  FIRST_LOGIN_PATH,
+  RECRUITER_PACK_LABELS,
+} from "@/lib/config/recruiter-packs";
+import { generateTemporaryPassword, hashPassword } from "@/lib/crypto";
 import { requireAdmin, requireRole } from "@/lib/dal";
 import { db } from "@/lib/db";
+import { notify } from "@/lib/notifications";
+import { issueRecruiterPackInvoice } from "@/lib/payments/recruiter-pack";
+import { refundPaidPayment } from "@/lib/payments/refund";
+import { absoluteUrl } from "@/lib/site";
+import { formatFcfa } from "@/lib/shop";
 import { fieldErrorsFromZod } from "@/lib/users";
 import {
   LEAVE_ACCRUAL_SETTING,
@@ -23,22 +34,132 @@ export type AdminActionState = {
   errors?: Record<string, string[] | undefined>;
 };
 
-export async function approveCompany(companyId: string) {
-  await requireRole([Role.ADMIN]);
+async function loadPackReview(companyId: string) {
+  return db.company.findUnique({
+    where: { id: companyId },
+    include: {
+      recruiterSubscription: { include: { payment: true } },
+      users: { where: { role: Role.RECRUITER }, take: 1 },
+    },
+  });
+}
+
+export async function approveRecruiterPack(
+  _prev: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  const admin = await requireRole([Role.ADMIN]);
+  const companyId = String(formData.get("companyId") ?? "");
+  const company = await loadPackReview(companyId);
+  const subscription = company?.recruiterSubscription;
+  const owner = company?.users[0];
+  const payment = subscription?.payment;
+  if (
+    !company ||
+    !owner ||
+    !subscription ||
+    !payment ||
+    subscription.status !== SubscriptionStatus.PENDING_REVIEW ||
+    payment.status !== "paid"
+  ) {
+    return { message: "Cette demande n'est plus en attente de validation." };
+  }
+
+  const invoice = await issueRecruiterPackInvoice({
+    payment,
+    buyerName: company.name,
+    buyerEmail: owner.email,
+    packLabel: RECRUITER_PACK_LABELS[subscription.tier],
+    cycleLabel: BILLING_CYCLE_LABELS[subscription.billingCycle],
+  });
+  const temporaryPassword = generateTemporaryPassword();
+  const passwordHash = await hashPassword(temporaryPassword);
+  const reviewedAt = new Date();
 
   await db.$transaction([
     db.company.update({
-      where: { id: companyId },
-      data: { status: CompanyStatus.ACTIVE, validatedAt: new Date() },
+      where: { id: company.id },
+      data: { status: CompanyStatus.ACTIVE, validatedAt: reviewedAt },
     }),
-    db.user.updateMany({
-      where: { companyId, role: Role.RECRUITER },
-      data: { status: UserStatus.ACTIVE },
+    db.user.update({
+      where: { id: owner.id },
+      data: {
+        status: UserStatus.ACTIVE,
+        isVerified: true,
+        emailVerifiedAt: owner.emailVerifiedAt ?? reviewedAt,
+        passwordHash,
+        mustChangePassword: true,
+      },
+    }),
+    db.recruiterSubscription.update({
+      where: { id: subscription.id },
+      data: {
+        status: SubscriptionStatus.ACTIVE,
+        reviewedAt,
+        reviewedByAdminId: admin.id,
+        rejectionReason: null,
+      },
     }),
   ]);
 
+  await notify(owner.id, "RECRUITER_PACK_APPROVED", {
+    firstName: owner.firstName,
+    companyName: company.name,
+    packLabel: RECRUITER_PACK_LABELS[subscription.tier],
+    loginUrl: absoluteUrl(`/login?callbackUrl=${encodeURIComponent(FIRST_LOGIN_PATH)}`),
+    temporaryPassword,
+    invoiceNumber: invoice.invoiceNumber,
+  });
+
   revalidatePath("/admin");
   revalidatePath("/admin/utilisateurs");
+  revalidatePath("/pending-approval");
+  return { ok: true, message: "Entreprise validée. Facture émise et e-mail de première connexion envoyé." };
+}
+
+export async function rejectRecruiterPack(
+  _prev: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  const admin = await requireRole([Role.ADMIN]);
+  const companyId = String(formData.get("companyId") ?? "");
+  const company = await loadPackReview(companyId);
+  const subscription = company?.recruiterSubscription;
+  const owner = company?.users[0];
+  const payment = subscription?.payment;
+  if (
+    !company ||
+    !owner ||
+    !subscription ||
+    !payment ||
+    subscription.status !== SubscriptionStatus.PENDING_REVIEW ||
+    payment.status !== "paid"
+  ) {
+    return { message: "Cette demande n'est plus en attente de validation." };
+  }
+
+  const refund = await refundPaidPayment(payment.id);
+  if (!refund.ok) return { message: refund.message };
+
+  await db.recruiterSubscription.update({
+    where: { id: subscription.id },
+    data: {
+      status: SubscriptionStatus.REJECTED,
+      reviewedAt: new Date(),
+      reviewedByAdminId: admin.id,
+      rejectionReason: "Demande refusée. Montant remboursé.",
+    },
+  });
+
+  await notify(owner.id, "RECRUITER_PACK_REJECTED", {
+    firstName: owner.firstName,
+    companyName: company.name,
+    amountLabel: formatFcfa(payment.amount),
+  });
+
+  revalidatePath("/admin");
+  revalidatePath("/pending-approval");
+  return { ok: true, message: "Demande refusée. Le montant payé est remboursé." };
 }
 
 export async function setUserStatus(formData: FormData) {

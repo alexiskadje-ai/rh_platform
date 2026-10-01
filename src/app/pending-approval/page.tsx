@@ -2,10 +2,14 @@ import { redirect } from "next/navigation";
 import { Role, SubscriptionStatus, UserStatus } from "@prisma/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RECRUITER_ONBOARDING_PACK_PATH } from "@/lib/config/recruiter-packs";
+import {
+  RECRUITER_ONBOARDING_PACK_PATH,
+  RECRUITER_PACK_REFUND_NOTICE,
+  RECRUITER_PACK_REVIEW_NOTICE,
+} from "@/lib/config/recruiter-packs";
 import { getSessionUser } from "@/lib/dal";
 import { db } from "@/lib/db";
-import { resumeApprovedRecruiter } from "@/server/actions/auth";
+import { logout, resumeApprovedRecruiter } from "@/server/actions/auth";
 
 export default async function PendingApprovalPage() {
   const sessionUser = await getSessionUser();
@@ -17,38 +21,50 @@ export default async function PendingApprovalPage() {
         })
       : null;
   const subscription = user?.company?.recruiterSubscription;
-  const waitingForReview =
-    subscription?.status === SubscriptionStatus.PENDING_REVIEW ||
-    subscription?.status === SubscriptionStatus.ACTIVE;
-  if (user?.company && !waitingForReview && user.status !== UserStatus.ACTIVE) {
-    redirect(RECRUITER_ONBOARDING_PACK_PATH);
-  }
+  const rejected = subscription?.status === SubscriptionStatus.REJECTED;
+  const inReview = subscription?.status === SubscriptionStatus.PENDING_REVIEW;
   const approved =
     user?.status === UserStatus.ACTIVE && user.company?.status === "ACTIVE";
+
+  if (user?.company && !rejected && !inReview && !approved) {
+    redirect(RECRUITER_ONBOARDING_PACK_PATH);
+  }
+
+  const title = rejected
+    ? "Demande refusée"
+    : approved && user?.mustChangePassword
+      ? "Première connexion"
+      : approved
+        ? "Compte validé"
+        : "Demande prise en compte";
 
   return (
     <main className="mx-auto flex w-full max-w-lg flex-1 items-center px-4 py-12">
       <Card>
         <CardHeader>
-          <CardTitle>
-            {approved ? "Compte validé" : "Compte en attente de validation"}
-          </CardTitle>
+          <CardTitle>{title}</CardTitle>
           <CardDescription>
-            {approved
-              ? "Un administrateur a activé votre entreprise. Ouvrez votre espace recruteur."
-              : "Un administrateur vérifie votre entreprise. Rechargez cette page après validation, ou reconnectez-vous pour accéder à l'espace recruteur."}
+            {rejected
+              ? RECRUITER_PACK_REFUND_NOTICE
+              : approved && user?.mustChangePassword
+                ? "Un e-mail vous a été envoyé avec le lien de connexion et un mot de passe temporaire. Utilisez-le pour choisir votre mot de passe, puis ouvrez votre tableau de bord."
+                : approved
+                  ? "Un administrateur a activé votre entreprise. Ouvrez votre espace recruteur."
+                  : RECRUITER_PACK_REVIEW_NOTICE}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {approved ? (
+          {approved && user?.mustChangePassword ? (
+            <form action={logout}>
+              <Button type="submit" variant="outline">
+                Se déconnecter pour utiliser le lien
+              </Button>
+            </form>
+          ) : approved ? (
             <form action={resumeApprovedRecruiter}>
               <Button type="submit">Accéder à l&apos;espace recruteur</Button>
             </form>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              Le registre de commerce / N° contribuable pourra être exigé avant validation.
-            </p>
-          )}
+          ) : null}
         </CardContent>
       </Card>
     </main>

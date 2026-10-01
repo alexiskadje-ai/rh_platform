@@ -41,6 +41,14 @@ export function renderInAppMessage<E extends NotificationEvent>(
       const data = payload as NotificationPayloads["RECRUITER_PACK_SUBMITTED"];
       return `Demande de pack ${data.packLabel} enregistrée pour ${data.companyName}.`;
     }
+    case "RECRUITER_PACK_APPROVED": {
+      const data = payload as NotificationPayloads["RECRUITER_PACK_APPROVED"];
+      return `Entreprise ${data.companyName} validée. Consultez votre e-mail pour la première connexion.`;
+    }
+    case "RECRUITER_PACK_REJECTED": {
+      const data = payload as NotificationPayloads["RECRUITER_PACK_REJECTED"];
+      return `Demande refusée pour ${data.companyName}. Le montant ${data.amountLabel} est remboursé.`;
+    }
     default: {
       const exhaustive: never = event;
       return String(exhaustive);

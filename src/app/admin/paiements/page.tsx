@@ -30,7 +30,7 @@ export default async function AdminPaymentsPage() {
     <DashboardShell role={Role.ADMIN} title="Administration">
       <h1 className="text-2xl font-semibold">Paiements</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        MoMo et Stripe se confirment par webhook. Orange Money et les virements sont validés ici
+        MoMo et Stripe se confirment par webhook. Orange Money est validé ici
         jusqu&apos;à branchement opérateur.
       </p>
       <div className="mt-6 space-y-3">

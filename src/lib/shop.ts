@@ -26,4 +26,5 @@ export const PAYMENT_STATUS_LABELS: Record<string, string> = {
   pending: "En attente de confirmation",
   paid: "Payé",
   failed: "Échoué",
+  refunded: "Remboursé",
 };

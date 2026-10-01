@@ -7,7 +7,6 @@ import { requireOwnOrder } from "@/server/actions/shop";
 import { db } from "@/lib/db";
 import { fieldErrorsFromZod } from "@/lib/users";
 import { isMomoConfigured, requestToPayment } from "@/lib/payments/momo";
-import { getBankTransferDetails } from "@/lib/payments/bank";
 import { orangePayHint } from "@/lib/payments/orange";
 import { createCheckoutSession, isStripeConfigured } from "@/lib/payments/stripe";
 import {
@@ -265,26 +264,8 @@ export async function startBankTransfer(
     return { ok: true, status: PAYMENT_STATUS.paid, message: "Cette commande est déjà payée." };
   }
 
-  const bank = getBankTransferDetails();
-  const reference =
-    order.payment?.provider === PaymentProvider.BANK_TRANSFER && order.payment.reference
-      ? order.payment.reference
-      : newPaymentReference(PaymentProvider.BANK_TRANSFER);
-
-  await upsertPendingPayment({
-    orderId: order.id,
-    amount: order.total,
-    provider: PaymentProvider.BANK_TRANSFER,
-    reference,
-  });
-
-  revalidatePurchases(order.id);
-  const account = bank.accountNumber ? `Compte ${bank.accountNumber}. ` : "";
   return {
-    ok: true,
-    status: PAYMENT_STATUS.pending,
-    reference,
-    message: `Virement ${formatFcfa(order.total)} vers ${bank.accountName} — ${bank.bankName}. ${account}Indiquez la référence ${reference} dans le motif. La commande reste en attente jusqu'à confirmation.`,
+    message: "Le virement bancaire n'est plus proposé. Utilisez MTN MoMo, Orange Money ou la carte.",
   };
 }
 

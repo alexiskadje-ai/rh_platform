@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { Prisma, Role, TokenType, UserStatus } from "@prisma/client";
 import { signIn, signOut } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { RECRUITER_ONBOARDING_PACK_PATH } from "@/lib/config/recruiter-packs";
+import { FIRST_LOGIN_PATH, RECRUITER_ONBOARDING_PACK_PATH } from "@/lib/config/recruiter-packs";
 import { ROLE_HOME } from "@/lib/constants";
 import {
   generateToken,
@@ -27,6 +27,7 @@ import {
   registerCompanySchema,
   requestPasswordResetSchema,
   resetPasswordSchema,
+  setInitialPasswordSchema,
   twoFactorSchema,
   verifySmsSchema,
 } from "@/lib/validations/auth";
@@ -50,6 +51,20 @@ const TWO_FACTOR_SETUP_COOKIE = "rh_2fa_setup";
 
 function booleanFromForm(value: FormDataEntryValue | null) {
   return value === "on" || value === "true";
+}
+
+function postLoginPath(user: {
+  role: Role;
+  status: UserStatus;
+  isVerified: boolean;
+  mustChangePassword: boolean;
+}) {
+  if (user.mustChangePassword && user.status === UserStatus.ACTIVE) return FIRST_LOGIN_PATH;
+  if (user.role === Role.CANDIDATE && !user.isVerified) return "/verify";
+  if (user.role === Role.RECRUITER && user.status === UserStatus.PENDING) {
+    return RECRUITER_ONBOARDING_PACK_PATH;
+  }
+  return ROLE_HOME[user.role];
 }
 
 function safeRedirectPath(value: FormDataEntryValue | null) {
@@ -349,11 +364,9 @@ export async function login(
 
   const callback = safeRedirectPath(formData.get("callbackUrl"));
   const destination =
-    user.role === Role.CANDIDATE && !user.isVerified
-      ? "/verify"
-      : user.role === Role.RECRUITER && user.status === UserStatus.PENDING
-        ? RECRUITER_ONBOARDING_PACK_PATH
-        : (callback ?? ROLE_HOME[user.role]);
+    user.mustChangePassword && user.status === UserStatus.ACTIVE
+      ? FIRST_LOGIN_PATH
+      : (callback ?? postLoginPath(user));
 
   await createSession(user.id, destination);
   return { ok: true };
@@ -389,12 +402,7 @@ export async function verifyTwoFactor(
     await setTrustedDevice(user.id);
   }
 
-  await createSession(
-    user.id,
-    user.role === Role.RECRUITER && user.status === UserStatus.PENDING
-      ? RECRUITER_ONBOARDING_PACK_PATH
-      : ROLE_HOME[user.role],
-  );
+  await createSession(user.id, postLoginPath(user));
   return { ok: true };
 }
 
@@ -411,7 +419,43 @@ export async function resumeApprovedRecruiter() {
   if (!user || user.status !== UserStatus.ACTIVE || user.company?.status !== "ACTIVE") {
     return;
   }
-  await createSession(user.id, ROLE_HOME.RECRUITER);
+  await createSession(user.id, postLoginPath(user));
+}
+
+export async function setInitialPassword(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const { auth } = await import("@/lib/auth");
+  const session = await auth();
+  if (!session?.user) redirect("/login");
+
+  const parsed = setInitialPasswordSchema.safeParse({
+    password: formData.get("password"),
+    confirmPassword: formData.get("confirmPassword"),
+  });
+  if (!parsed.success) return { errors: fieldErrorsFromZod(parsed.error) };
+
+  const user = await db.user.findUnique({ where: { id: session.user.id } });
+  if (!user?.mustChangePassword) {
+    redirect(postLoginPath({
+      role: user?.role ?? session.user.role,
+      status: user?.status ?? session.user.status,
+      isVerified: user?.isVerified ?? session.user.isVerified,
+      mustChangePassword: false,
+    }));
+  }
+
+  await db.user.update({
+    where: { id: user.id },
+    data: {
+      passwordHash: await hashPassword(parsed.data.password),
+      mustChangePassword: false,
+    },
+  });
+
+  await createSession(user.id, postLoginPath({ ...user, mustChangePassword: false }));
+  return { ok: true };
 }
 
 export async function confirmEmail(token: string) {

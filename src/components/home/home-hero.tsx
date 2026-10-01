@@ -53,15 +53,35 @@ export function HomeHero({
             <p className="w-full text-justify text-sm leading-relaxed text-primary-foreground/75 md:text-base">
               {heroSubtitle}
             </p>
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Link href="/register/candidate" className={cn(buttonVariants({ variant: "accent", size: "lg" }))}>
+            <div
+              className={cn(
+                "flex flex-col gap-3 sm:flex-row",
+                "[&:has([data-cta=candidat]:hover)_[data-cta=recruiter]]:border-accent",
+                "[&:has([data-cta=candidat]:hover)_[data-cta=recruiter]]:bg-accent",
+                "[&:has([data-cta=candidat]:hover)_[data-cta=recruiter]]:text-accent-foreground",
+                "[&:has([data-cta=candidat]:hover)_[data-cta=recruiter]]:shadow-[0_10px_24px_rgba(242,98,0,0.28)]",
+                "[&:has([data-cta=recruiter]:hover)_[data-cta=candidat]]:bg-background",
+                "[&:has([data-cta=recruiter]:hover)_[data-cta=candidat]]:text-primary",
+                "[&:has([data-cta=recruiter]:hover)_[data-cta=candidat]]:shadow-[0_10px_24px_rgba(4,41,99,0.22)]",
+              )}
+            >
+              <Link
+                href="/register/candidate"
+                data-cta="candidat"
+                className={cn(
+                  buttonVariants({ variant: "accent", size: "lg" }),
+                  "hover:bg-accent! hover:text-accent-foreground! hover:shadow-none!",
+                )}
+              >
                 Candidat : créer votre profil
               </Link>
               <Link
                 href="/register/company"
+                data-cta="recruiter"
                 className={cn(
                   buttonVariants({ variant: "outline", size: "lg" }),
                   "border-primary-foreground/40 text-primary-foreground",
+                  "hover:border-primary-foreground/40! hover:bg-transparent! hover:text-primary-foreground! hover:shadow-none!",
                 )}
               >
                 Recruteur : publiez vos offres

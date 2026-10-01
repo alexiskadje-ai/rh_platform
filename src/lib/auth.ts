@@ -48,6 +48,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           role: user.role,
           status: user.status,
           isVerified: user.isVerified,
+          mustChangePassword: user.mustChangePassword,
           firstName: user.firstName,
           lastName: user.lastName,
         };
@@ -62,6 +63,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.role = user.role;
         token.status = user.status;
         token.isVerified = user.isVerified;
+        token.mustChangePassword = user.mustChangePassword;
         token.firstName = user.firstName;
         token.lastName = user.lastName;
       }
@@ -72,6 +74,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       session.user.role = token.role as Role;
       session.user.status = token.status as UserStatus;
       session.user.isVerified = Boolean(token.isVerified);
+      session.user.mustChangePassword = Boolean(token.mustChangePassword);
       session.user.firstName = String(token.firstName ?? "");
       session.user.lastName = String(token.lastName ?? "");
       return session;
