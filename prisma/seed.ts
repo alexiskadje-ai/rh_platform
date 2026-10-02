@@ -1,7 +1,21 @@
-import { PrismaClient, Role, UserStatus } from "@prisma/client";
+import {
+  BillingCycle,
+  CompanyStatus,
+  ContractType,
+  JobStatus,
+  PrismaClient,
+  RecruiterPackTier,
+  Role,
+  SubscriptionStatus,
+  UserStatus,
+} from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { commitmentEndsAt, RECRUITER_PACK_PRICES } from "../src/lib/config/recruiter-packs";
 import { allocateUniqueSlug, courseSlugBase } from "../src/lib/public-slug";
 import { PACK_IDS, PACK_PRICES } from "../src/lib/shop-packs";
+
+const DEMO_PASSWORD = "ChangeMeDemo1";
+const DEMO_COMPANY_ID = "seed-company-pes";
 
 const db = new PrismaClient();
 
@@ -35,6 +49,193 @@ async function main() {
   });
 
   console.log(`Admin prêt : ${email}`);
+
+  const demoHash = await bcrypt.hash(DEMO_PASSWORD, 12);
+  const now = new Date();
+  const company = await db.company.upsert({
+    where: { id: DEMO_COMPANY_ID },
+    update: { status: CompanyStatus.ACTIVE, validatedAt: now },
+    create: {
+      id: DEMO_COMPANY_ID,
+      name: "PES Démo",
+      sector: "Services / Conseil",
+      address: "Logpom Andem, Douala",
+      commerceRegister: "RC/DLA/2026/B/0001",
+      status: CompanyStatus.ACTIVE,
+      validatedAt: now,
+    },
+  });
+
+  await db.user.upsert({
+    where: { email: "recruteur@rh-platform.local" },
+    update: {
+      passwordHash: demoHash,
+      role: Role.RECRUITER,
+      status: UserStatus.ACTIVE,
+      isVerified: true,
+      emailVerifiedAt: now,
+      mustChangePassword: false,
+      companyId: company.id,
+    },
+    create: {
+      email: "recruteur@rh-platform.local",
+      firstName: "Amina",
+      lastName: "Ngo",
+      phone: "+237600000001",
+      passwordHash: demoHash,
+      role: Role.RECRUITER,
+      status: UserStatus.ACTIVE,
+      isVerified: true,
+      emailVerifiedAt: now,
+      termsAcceptedAt: now,
+      mustChangePassword: false,
+      companyId: company.id,
+    },
+  });
+
+  await db.recruiterSubscription.upsert({
+    where: { companyId: company.id },
+    update: {
+      tier: RecruiterPackTier.GOLD,
+      billingCycle: BillingCycle.ANNUAL,
+      priceAtSignup: RECRUITER_PACK_PRICES.GOLD.ANNUAL,
+      status: SubscriptionStatus.ACTIVE,
+      commitmentEndsAt: commitmentEndsAt(now, BillingCycle.ANNUAL),
+    },
+    create: {
+      companyId: company.id,
+      tier: RecruiterPackTier.GOLD,
+      billingCycle: BillingCycle.ANNUAL,
+      priceAtSignup: RECRUITER_PACK_PRICES.GOLD.ANNUAL,
+      status: SubscriptionStatus.ACTIVE,
+      commitmentEndsAt: commitmentEndsAt(now, BillingCycle.ANNUAL),
+    },
+  });
+
+  const offerDeadline = new Date(now);
+  offerDeadline.setUTCMonth(offerDeadline.getUTCMonth() + 2);
+  await db.jobOffer.upsert({
+    where: { slug: "assistant-rh-douala" },
+    update: { status: JobStatus.OPEN, deadline: offerDeadline },
+    create: {
+      companyId: company.id,
+      slug: "assistant-rh-douala",
+      title: "Assistant RH",
+      description: "Suivi des dossiers du personnel et accueil des candidats à Douala.",
+      requirements: "Première expérience en administration du personnel.",
+      city: "Douala",
+      region: "Littoral",
+      location: "Douala, Littoral",
+      contractType: ContractType.CDI,
+      salaryMin: 180000,
+      salaryMax: 250000,
+      deadline: offerDeadline,
+      status: JobStatus.OPEN,
+    },
+  });
+
+  const candidateUser = await db.user.upsert({
+    where: { email: "candidat@rh-platform.local" },
+    update: {
+      passwordHash: demoHash,
+      role: Role.CANDIDATE,
+      status: UserStatus.ACTIVE,
+      isVerified: true,
+      emailVerifiedAt: now,
+      phoneVerifiedAt: now,
+      mustChangePassword: false,
+    },
+    create: {
+      email: "candidat@rh-platform.local",
+      firstName: "Jean",
+      lastName: "Mbarga",
+      phone: "+237600000002",
+      passwordHash: demoHash,
+      role: Role.CANDIDATE,
+      status: UserStatus.ACTIVE,
+      isVerified: true,
+      emailVerifiedAt: now,
+      phoneVerifiedAt: now,
+      termsAcceptedAt: now,
+      mustChangePassword: false,
+    },
+  });
+
+  await db.candidate.upsert({
+    where: { email: candidateUser.email },
+    update: {
+      userId: candidateUser.id,
+      firstName: candidateUser.firstName,
+      lastName: candidateUser.lastName,
+      professionalTitle: "Assistant ressources humaines",
+      skills: ["Paie", "Recrutement", "Droit du travail"],
+      city: "Douala",
+      isVetted: true,
+    },
+    create: {
+      userId: candidateUser.id,
+      email: candidateUser.email,
+      phone: "+237600000002",
+      firstName: candidateUser.firstName,
+      lastName: candidateUser.lastName,
+      professionalTitle: "Assistant ressources humaines",
+      headline: "Assistant RH à Douala",
+      skills: ["Paie", "Recrutement", "Droit du travail"],
+      city: "Douala",
+      region: "Littoral",
+      isVetted: true,
+    },
+  });
+
+  const employeeUser = await db.user.upsert({
+    where: { email: "employe@rh-platform.local" },
+    update: {
+      passwordHash: demoHash,
+      role: Role.EMPLOYEE,
+      status: UserStatus.ACTIVE,
+      isVerified: true,
+      emailVerifiedAt: now,
+      mustChangePassword: false,
+      companyId: company.id,
+    },
+    create: {
+      email: "employe@rh-platform.local",
+      firstName: "Sarah",
+      lastName: "Eyenga",
+      phone: "+237600000003",
+      passwordHash: demoHash,
+      role: Role.EMPLOYEE,
+      status: UserStatus.ACTIVE,
+      isVerified: true,
+      emailVerifiedAt: now,
+      termsAcceptedAt: now,
+      mustChangePassword: false,
+      companyId: company.id,
+    },
+  });
+
+  await db.employee.upsert({
+    where: { userId: employeeUser.id },
+    update: {
+      companyId: company.id,
+      position: "Gestionnaire de paie",
+      department: "Ressources humaines",
+    },
+    create: {
+      userId: employeeUser.id,
+      companyId: company.id,
+      matricule: "PES-0001",
+      position: "Gestionnaire de paie",
+      department: "Ressources humaines",
+      contractType: ContractType.CDI,
+      hireDate: new Date("2024-03-01"),
+    },
+  });
+
+  console.log("Comptes démo prêts (mot de passe ChangeMeDemo1) :");
+  console.log("  Recruteur  recruteur@rh-platform.local  → /company");
+  console.log("  Candidat   candidat@rh-platform.local   → /candidate");
+  console.log("  Employé    employe@rh-platform.local    → /employee");
 
   await db.platformSetting.upsert({
     where: { key: "leave_accrual_rate" },

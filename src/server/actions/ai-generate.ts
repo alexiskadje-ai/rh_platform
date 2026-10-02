@@ -4,7 +4,13 @@ import { AiCallKind } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { requireCandidate, requireRecruiter } from "@/lib/dal";
 import { db } from "@/lib/db";
-import { getOpenAI } from "@/lib/ai/openai";
+import {
+  getMistral,
+  isMistralRateLimitError,
+  MISTRAL_TEXT_MODEL,
+  mistralContentToText,
+  parseMistralJsonObject,
+} from "@/lib/ai/mistral";
 import { logAiCall } from "@/lib/ai/logs";
 import { consumeAiQuota } from "@/lib/ai/rate-limit";
 import { saveBuffer } from "@/lib/storage";
@@ -36,19 +42,19 @@ export async function generateJobOfferCopy(input: {
     return { message: parsed.error.issues[0]?.message ?? "Données insuffisantes." };
   }
 
-  const client = getOpenAI();
+  const client = getMistral();
   if (!client) {
-    return { message: "La clé OPENAI_API_KEY n'est pas configurée." };
+    return { message: "La clé MISTRAL_API_KEY n'est pas configurée." };
   }
 
   const quota = await consumeAiQuota(user.id, "GENERATE");
   if (!quota.ok) return { message: quota.message };
 
   try {
-    const completion = await client.chat.completions.create({
-      model: "gpt-4o-mini",
+    const completion = await client.chat.complete({
+      model: MISTRAL_TEXT_MODEL,
       temperature: 0.4,
-      response_format: { type: "json_object" },
+      responseFormat: { type: "json_object" },
       messages: [
         {
           role: "system",
@@ -61,9 +67,9 @@ export async function generateJobOfferCopy(input: {
         },
       ],
     });
-    const raw = completion.choices[0]?.message?.content;
+    const raw = mistralContentToText(completion.choices[0]?.message?.content);
     if (!raw) throw new Error("Réponse IA vide.");
-    const copy = offerCopySchema.safeParse(JSON.parse(raw));
+    const copy = offerCopySchema.safeParse(parseMistralJsonObject(raw));
     if (!copy.success) throw new Error("Schéma offre invalide.");
     await logAiCall({ userId: user.id, kind: AiCallKind.GENERATE, ok: true, message: "offer" });
     return {
@@ -79,6 +85,9 @@ export async function generateJobOfferCopy(input: {
       ok: false,
       message: error instanceof Error ? error.message : "Génération impossible.",
     });
+    if (isMistralRateLimitError(error)) {
+      return { message: "Le service IA est temporairement saturé. Réessayez dans quelques minutes." };
+    }
     return { message: "La génération a échoué. Rédigez l'offre manuellement." };
   }
 }
@@ -97,9 +106,9 @@ export async function generateCareerDocument(
   });
   if (!parsed.success) return { message: "Type de document invalide." };
 
-  const client = getOpenAI();
+  const client = getMistral();
   if (!client) {
-    return { message: "La clé OPENAI_API_KEY n'est pas configurée." };
+    return { message: "La clé MISTRAL_API_KEY n'est pas configurée." };
   }
   const quota = await consumeAiQuota(user.id, "GENERATE");
   if (!quota.ok) return { message: quota.message };
@@ -128,8 +137,8 @@ export async function generateCareerDocument(
 
   const isCv = parsed.data.kind === "cv";
   try {
-    const completion = await client.chat.completions.create({
-      model: "gpt-4o-mini",
+    const completion = await client.chat.complete({
+      model: MISTRAL_TEXT_MODEL,
       temperature: 0.3,
       messages: [
         {
@@ -141,7 +150,7 @@ export async function generateCareerDocument(
         { role: "user", content: profile || "Profil candidat encore incomplet." },
       ],
     });
-    const content = completion.choices[0]?.message?.content?.trim();
+    const content = mistralContentToText(completion.choices[0]?.message?.content).trim();
     if (!content) throw new Error("Réponse IA vide.");
 
     const title = isCv
@@ -187,6 +196,9 @@ export async function generateCareerDocument(
       ok: false,
       message: error instanceof Error ? error.message : "Génération impossible.",
     });
+    if (isMistralRateLimitError(error)) {
+      return { message: "Le service IA est temporairement saturé. Réessayez dans quelques minutes." };
+    }
     return { message: "La génération a échoué. Réessayez ou complétez d'abord votre profil." };
   }
 }

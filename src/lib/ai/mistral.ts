@@ -1,6 +1,8 @@
 import { Mistral } from "@mistralai/mistralai";
 
-export const MISTRAL_PARSE_MODEL = "mistral-small-latest";
+/** Même modèle que le support : `mistral-small-latest` est à 0 req/min sur le plan actuel. */
+export const MISTRAL_TEXT_MODEL = process.env.MISTRAL_CHAT_MODEL?.trim() || "ministral-8b-latest";
+export const MISTRAL_PARSE_MODEL = MISTRAL_TEXT_MODEL;
 export const MISTRAL_EMBED_MODEL = "mistral-embed";
 export const MISTRAL_EMBED_DIMS = 1024;
 
