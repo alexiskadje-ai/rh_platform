@@ -49,5 +49,7 @@ export function wasAppInstalled() {
 
 export function subscribeInstallPrompt(listener: () => void) {
   listeners.add(listener);
-  return () => listeners.delete(listener);
+  return () => {
+    listeners.delete(listener);
+  };
 }

@@ -59,23 +59,17 @@ export function candidateSpaceLinks(): NavLink[] {
   ];
 }
 
-export function recruiterSpaceLinks(goldAssistant: boolean): NavLink[] {
-  const links: NavLink[] = [
+export function recruiterSpaceLinks(): NavLink[] {
+  return [
     { href: "/company/offres", label: "Offres publiées" },
     { href: "/company/offres", label: "Candidatures reçues" },
     { href: "/company/candidats", label: "Recherche de CV" },
-    { href: "/company/employes", label: "Employés" },
-    { href: "/company/conges", label: "Congés à valider" },
-    { href: "/company/rapports", label: "Rapports" },
+    { href: "/company/utilisateurs", label: "Utilisateurs internes" },
+    { href: "/settings/security", label: "Sécurité / 2FA" },
   ];
-  if (goldAssistant) links.push({ href: "/company/assistant", label: "Assistant RH" });
-  return links;
 }
 
-export function spaceLink(
-  user: { role: Role; status: UserStatus } | null,
-  goldAssistant = false,
-): {
+export function spaceLink(user: { role: Role; status: UserStatus } | null): {
   href: string;
   label: string;
   prominent: boolean;
@@ -95,7 +89,7 @@ export function spaceLink(
       href: user.status === "PENDING" ? RECRUITER_ONBOARDING_PACK_PATH : ROLE_HOME.RECRUITER,
       label: "Espace Recruteur",
       prominent: true,
-      items: recruiterSpaceLinks(goldAssistant),
+      items: recruiterSpaceLinks(),
     };
   }
   return { href: ROLE_HOME[user.role], label: "Tableau de bord", prominent: false, items: [] };

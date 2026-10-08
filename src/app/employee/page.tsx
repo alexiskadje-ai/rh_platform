@@ -6,9 +6,7 @@ import { leaveBalance } from "@/lib/leave-settings";
 import { monthStartYmd, doualaYmd, toDateOnly, addCalendarDays } from "@/lib/leave";
 import { LEAVE_TYPE_LABELS } from "@/lib/constants";
 import { closeOpenAttendances } from "@/server/actions/attendance";
-import { isModuleEnabled } from "@/lib/config/modules";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
-import { InstallAppButton } from "@/components/pwa/install-app-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -50,7 +48,6 @@ export default async function EmployeeDashboardPage() {
             Congés, pointage et documents de votre dossier.
           </p>
         </div>
-        {isModuleEnabled("erp") ? <InstallAppButton appearance="card" /> : null}
       </div>
       <div className="mt-6 grid gap-4 md:grid-cols-3">
         <Card>

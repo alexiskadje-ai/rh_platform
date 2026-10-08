@@ -17,7 +17,6 @@ import {
   LayoutDashboard,
   LogOut,
   ScrollText,
-  Settings,
   Shield,
   ShoppingCart,
   Sparkles,
@@ -47,21 +46,14 @@ const LINKS: Record<Role, { href: string; label: string; icon: LucideIcon; secti
     { href: "/admin/faq", label: "FAQ / Newsletter", icon: HelpCircle, section: "Catalogue" },
     { href: "/admin/contenu-site/services", label: "Services", icon: Briefcase, section: "Contenu du site" },
     { href: "/admin/contenu-site/parametres", label: "Textes et coordonnées", icon: FileText, section: "Contenu du site" },
-    { href: "/admin/parametres", label: "Paramètres RH", icon: Settings, section: "Compte" },
     { href: "/settings/security", label: "Sécurité / 2FA", icon: Shield, section: "Compte" },
   ],
   RECRUITER: [
     { href: "/company", label: "Tableau de bord", icon: LayoutDashboard, section: "Recrutement" },
     { href: "/company/offres", label: "Offres publiées", icon: Briefcase, section: "Recrutement" },
     { href: "/company/candidats", label: "Recherche de CV", icon: UserRound, section: "Recrutement" },
-    { href: "/company/employes", label: "Employés", icon: Users, section: "Équipe" },
-    { href: "/company/conges", label: "Congés à valider", icon: CalendarDays, section: "Équipe" },
-    { href: "/company/absences", label: "Absences", icon: Bell, section: "Équipe" },
-    { href: "/company/pointage", label: "Pointage", icon: Clock, section: "Équipe" },
-    { href: "/company/rapports", label: "Rapports", icon: FileText, section: "Entreprise" },
-    { href: "/company/facturation", label: "Facturation", icon: Wallet, section: "Entreprise" },
-    { href: "/company/utilisateurs", label: "Utilisateurs internes", icon: Users, section: "Entreprise" },
-    { href: "/settings/security", label: "Sécurité / 2FA", icon: Shield, section: "Entreprise" },
+    { href: "/company/utilisateurs", label: "Utilisateurs internes", icon: Users, section: "Compte" },
+    { href: "/settings/security", label: "Sécurité / 2FA", icon: Shield, section: "Compte" },
   ],
   CANDIDATE: [
     { href: "/candidate", label: "Tableau de bord", icon: LayoutDashboard, section: "Parcours" },
@@ -176,6 +168,7 @@ export function DashboardShell({
   const pathname = usePathname();
   const home = ROLE_HOME[role];
   const space = SPACE[role];
+  const links = LINKS[role];
   const pageLabel = /^espace|administration/i.test(title) ? null : title;
 
   return (
@@ -201,7 +194,7 @@ export function DashboardShell({
               </p>
             ) : null}
             <nav className="mt-5 flex max-h-[calc(100vh-13rem)] flex-col gap-0.5 overflow-y-auto pr-1">
-              {LINKS[role].map((link, index, links) => {
+              {links.map((link, index, links) => {
                 const Icon = link.icon;
                 const active = isActive(link.href, pathname, home);
                 const showSection = Boolean(link.section && links[index - 1]?.section !== link.section);

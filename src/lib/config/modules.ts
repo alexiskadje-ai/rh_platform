@@ -1,10 +1,9 @@
 /**
- * Modules activables d'un déploiement.
- * SaaS : les quatre. ERP standalone : `erp` seul.
- * Le gating d'accès viendra ensuite ; ce fichier ne fait que décrire le découpage.
+ * Modules activables d'un déploiement : recrutement, e-learning, boutique.
+ * L'espace employé n'est pas un module : il reste ouvert.
  */
 
-export const APP_MODULES = ["erp", "recrutement", "elearning", "boutique"] as const;
+export const APP_MODULES = ["recrutement", "elearning", "boutique"] as const;
 export type AppModule = (typeof APP_MODULES)[number];
 
 const MODULE_SET = new Set<string>(APP_MODULES);
@@ -12,27 +11,16 @@ const MODULE_SET = new Set<string>(APP_MODULES);
 /**
  * Préfixes exclusifs d'un module. Une URL correspond si elle est égale au
  * préfixe ou si elle continue par `/`. Le plus long préfixe l'emporte
- * (`/employee/formations` est elearning, pas erp).
+ * (`/employee/formations` est elearning).
  *
  * Hors de cette table, la route n'appartient à aucun module :
- * `/company` (tableau de bord), auth, réglages, coquille admin.
+ * `/company` (tableau de bord), `/employee` (compte employé), auth, réglages, coquille admin.
  *
- * TODO(module-boundary): `/company/facturation` mélange la facture de pack
- * recruteur et les factures boutique.
  * TODO(module-boundary): `/admin/paiements` mélange les deux encaissements.
  * TODO(module-boundary): `/candidate`, `/candidate/profil`, `/candidate/booster`
  * et `/candidate/notifications` mélangent le compte candidat et le recrutement.
  */
 export const MODULE_ROUTE_PREFIXES: Record<AppModule, readonly string[]> = {
-  erp: [
-    "/company/employes",
-    "/company/conges",
-    "/company/pointage",
-    "/company/absences",
-    "/company/rapports",
-    "/company/organigramme",
-    "/employee",
-  ],
   recrutement: [
     "/offres",
     "/company/offres",
@@ -41,7 +29,6 @@ export const MODULE_ROUTE_PREFIXES: Record<AppModule, readonly string[]> = {
     "/company/recherche-cv",
     "/company/onboarding/pack",
     "/company/onboarding/confirmation",
-    "/company/assistant",
     "/candidate/offres",
     "/candidate/candidatures",
     "/candidat/depot-libre",
@@ -67,7 +54,7 @@ const PREFIXES_BY_LENGTH: readonly { module: AppModule; prefix: string }[] = APP
   (module) => MODULE_ROUTE_PREFIXES[module].map((prefix) => ({ module, prefix })),
 ).sort((a, b) => b.prefix.length - a.prefix.length);
 
-/** Variable absente ou vide : les quatre modules, comportement actuel. */
+/** Variable absente ou vide : recrutement, e-learning et boutique. */
 export function getEnabledModules(raw: string | undefined = process.env.ENABLED_MODULES): AppModule[] {
   if (raw == null || raw.trim() === "") return [...APP_MODULES];
   const picked: AppModule[] = [];

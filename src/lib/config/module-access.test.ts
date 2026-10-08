@@ -6,22 +6,12 @@ import {
 } from "@/lib/config/module-access";
 import { RECRUITER_ONBOARDING_PACK_PATH } from "@/lib/config/recruiter-packs";
 
-const SAAS = "erp,recrutement,elearning,boutique";
-const ERP_ONLY = "erp";
+const SAAS = "recrutement,elearning,boutique";
+const RECRUTEMENT_ONLY = "recrutement";
 
 describe("module désactivé", () => {
-  it("renvoie 404 sur recrutement, elearning et boutique en ERP seul", () => {
+  it("renvoie 404 sur elearning et boutique quand seul le recrutement est actif", () => {
     const blocked = [
-      "/offres",
-      "/offres/assistant-rh",
-      "/company/offres",
-      "/company/candidatures",
-      "/company/onboarding/pack",
-      "/company/onboarding/confirmation",
-      "/candidate/offres",
-      "/candidate/candidatures",
-      "/candidat/depot-libre",
-      "/admin/recrutement",
       "/formations",
       "/formations/paie",
       "/learn/cours-1",
@@ -36,20 +26,27 @@ describe("module désactivé", () => {
       "/admin/boutique",
     ];
     for (const path of blocked) {
-      expect(isModuleRouteDisabled(path, ERP_ONLY)).toBe(true);
+      expect(isModuleRouteDisabled(path, RECRUTEMENT_ONLY)).toBe(true);
     }
   });
 
-  it("laisse /company et /employee ouverts en SaaS et en ERP seul", () => {
-    const open = ["/company", "/company/employes", "/company/conges", "/employee", "/employee/dossier"];
-    for (const raw of ["", SAAS, ERP_ONLY]) {
+  it("laisse /company, /employee et le recrutement ouverts", () => {
+    const open = [
+      "/company",
+      "/company/offres",
+      "/company/utilisateurs",
+      "/employee",
+      "/employee/dossier",
+      "/offres",
+    ];
+    for (const raw of ["", SAAS, RECRUTEMENT_ONLY]) {
       for (const path of open) {
         expect(isModuleRouteDisabled(path, raw)).toBe(false);
       }
     }
   });
 
-  it("ne bloque aucune route module quand les quatre sont actifs", () => {
+  it("ne bloque aucune route module quand les trois sont actifs", () => {
     expect(isModuleRouteDisabled("/offres", SAAS)).toBe(false);
     expect(isModuleRouteDisabled("/formations", "")).toBe(false);
     expect(isModuleRouteDisabled("/boutique", SAAS)).toBe(false);
@@ -65,7 +62,12 @@ describe("pack recruteur", () => {
     ]) {
       expect(recruiterPackGateApplies(path, "RECRUITER")).toBe(false);
       expect(
-        recruiterPackRedirect({ pathname: path, role: "RECRUITER", subscriptionStatus: null }),
+        recruiterPackRedirect({
+          pathname: path,
+          role: "RECRUITER",
+          companyStatus: null,
+          subscriptionStatus: null,
+        }),
       ).toBeNull();
     }
     expect(recruiterPackGateApplies(RECRUITER_ONBOARDING_PACK_PATH, "RECRUITER")).toBe(false);
@@ -77,54 +79,62 @@ describe("pack recruteur", () => {
       "/offres/assistant-rh",
       "/candidate/offres",
       "/candidate/candidatures",
-      "/candidate/candidatures/abc",
-      "/candidat/depot-libre",
       "/admin/recrutement",
     ];
     for (const path of paths) {
       expect(
-        recruiterPackRedirect({ pathname: path, role: "CANDIDATE", subscriptionStatus: null }),
+        recruiterPackRedirect({
+          pathname: path,
+          role: "CANDIDATE",
+          companyStatus: null,
+          subscriptionStatus: null,
+        }),
       ).toBeNull();
       expect(
-        recruiterPackRedirect({ pathname: path, role: "ADMIN", subscriptionStatus: null }),
+        recruiterPackRedirect({
+          pathname: path,
+          role: "ADMIN",
+          companyStatus: null,
+          subscriptionStatus: null,
+        }),
       ).toBeNull();
     }
   });
 
-  it("exige un pack ACTIVE seulement sur le recrutement entreprise", () => {
+  it("exige entreprise ACTIVE et pack ACTIVE sur tout /company hors onboarding", () => {
     const gated = [
+      "/company",
       "/company/offres",
-      "/company/offres/nouvelle",
-      "/company/candidatures",
-      "/company/candidatures/abc",
       "/company/candidats",
-      "/company/recherche-cv",
-      "/company/assistant",
+      "/company/utilisateurs",
+      "/company/candidatures/abc",
     ];
     for (const path of gated) {
       expect(
-        recruiterPackRedirect({ pathname: path, role: "RECRUITER", subscriptionStatus: null }),
+        recruiterPackRedirect({
+          pathname: path,
+          role: "RECRUITER",
+          companyStatus: "ACTIVE",
+          subscriptionStatus: null,
+        }),
       ).toBe(RECRUITER_ONBOARDING_PACK_PATH);
       expect(
         recruiterPackRedirect({
           pathname: path,
           role: "RECRUITER",
-          subscriptionStatus: "PENDING_REVIEW",
+          companyStatus: "PENDING",
+          subscriptionStatus: "ACTIVE",
         }),
       ).toBe(RECRUITER_ONBOARDING_PACK_PATH);
       expect(
-        recruiterPackRedirect({ pathname: path, role: "RECRUITER", subscriptionStatus: "ACTIVE" }),
+        recruiterPackRedirect({
+          pathname: path,
+          role: "RECRUITER",
+          companyStatus: "ACTIVE",
+          subscriptionStatus: "ACTIVE",
+        }),
       ).toBeNull();
     }
-    expect(
-      recruiterPackRedirect({
-        pathname: "/company/employes",
-        role: "RECRUITER",
-        subscriptionStatus: null,
-      }),
-    ).toBeNull();
-    expect(
-      recruiterPackRedirect({ pathname: "/company", role: "RECRUITER", subscriptionStatus: null }),
-    ).toBeNull();
+    expect(recruiterPackGateApplies("/employee", "RECRUITER")).toBe(false);
   });
 });

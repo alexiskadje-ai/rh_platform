@@ -7,51 +7,35 @@ export async function getCompanyDashboard(companyId: string) {
   const fromDate = toDateOnly(fromYmd);
   const now = new Date();
 
-  const [
-    activeOffers,
-    pendingApps,
-    upcomingInterviewsCount,
-    activeEmployees,
-    pendingLeaves,
-    upcomingInterviews,
-    dailyRows,
-  ] = await Promise.all([
-    db.jobOffer.count({ where: { companyId, status: "OPEN" } }),
-    db.application.count({
-      where: { jobOffer: { companyId }, status: "RECEIVED" },
-    }),
-    db.interview.count({
-      where: {
-        scheduledAt: { gte: now },
-        application: { jobOffer: { companyId } },
-      },
-    }),
-    db.employee.count({
-      where: { companyId, user: { status: "ACTIVE" } },
-    }),
-    db.leaveRequest.findMany({
-      where: { status: "PENDING", employee: { companyId } },
-      include: { employee: { include: { user: true } } },
-      orderBy: { createdAt: "asc" },
-      take: 8,
-    }),
-    db.interview.findMany({
-      where: {
-        scheduledAt: { gte: now },
-        application: { jobOffer: { companyId } },
-      },
-      include: {
-        application: {
-          include: {
-            candidate: { include: { user: true } },
-            jobOffer: true,
+  const [activeOffers, pendingApps, upcomingInterviewsCount, upcomingInterviews, dailyRows] =
+    await Promise.all([
+      db.jobOffer.count({ where: { companyId, status: "OPEN" } }),
+      db.application.count({
+        where: { jobOffer: { companyId }, status: "RECEIVED" },
+      }),
+      db.interview.count({
+        where: {
+          scheduledAt: { gte: now },
+          application: { jobOffer: { companyId } },
+        },
+      }),
+      db.interview.findMany({
+        where: {
+          scheduledAt: { gte: now },
+          application: { jobOffer: { companyId } },
+        },
+        include: {
+          application: {
+            include: {
+              candidate: { include: { user: true } },
+              jobOffer: true,
+            },
           },
         },
-      },
-      orderBy: { scheduledAt: "asc" },
-      take: 5,
-    }),
-    db.$queryRaw<{ day: string; count: number }[]>`
+        orderBy: { scheduledAt: "asc" },
+        take: 5,
+      }),
+      db.$queryRaw<{ day: string; count: number }[]>`
       SELECT to_char((timezone('Africa/Douala', a."createdAt"))::date, 'YYYY-MM-DD') AS day,
              COUNT(*)::int AS count
       FROM "Application" a
@@ -61,7 +45,7 @@ export async function getCompanyDashboard(companyId: string) {
       GROUP BY 1
       ORDER BY 1
     `,
-  ]);
+    ]);
 
   const byDay = new Map(
     dailyRows.map((row) => [String(row.day).slice(0, 10), Number(row.count)]),
@@ -77,8 +61,6 @@ export async function getCompanyDashboard(companyId: string) {
     activeOffers,
     pendingApps,
     upcomingInterviewsCount,
-    activeEmployees,
-    pendingLeaves,
     upcomingInterviews,
     applications30d,
   };

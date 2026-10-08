@@ -4,38 +4,36 @@ import { GET as employeeManifestGet } from "@/app/employee/manifest.webmanifest/
 import { isPwaInstallAsset, PWA_INSTALL_PATHS } from "@/lib/pwa/assets";
 import { companyManifest, employeeManifest } from "@/lib/pwa/manifest";
 
-describe("manifestes ERP", () => {
+describe("manifestes PWA", () => {
   it("déclare un scope de dossier distinct pour chaque espace", () => {
-    const company = companyManifest("erp");
-    const employee = employeeManifest("erp");
+    const company = companyManifest();
+    const employee = employeeManifest();
 
     expect(company.scope).toBe("/company/");
     expect(company.start_url).toBe("/company");
     expect(company.id).toBe("/company/");
-    expect(company.name).toBe("ERP RH — Entreprise");
+    expect(company.name).toBe("PES-RH — Recrutement");
     expect(company.display).toBe("standalone");
 
     expect(employee.scope).toBe("/employee/");
     expect(employee.start_url).toBe("/employee");
     expect(employee.id).toBe("/employee/");
-    expect(employee.name).toBe("ERP RH — Employé");
+    expect(employee.name).toBe("PES-RH — Employé");
 
     expect(`${company.start_url}/`).toBe(company.scope);
     expect(`${employee.start_url}/`).toBe(employee.scope);
   });
 
-  it("n'annonce que les raccourcis dont la page existe et dont le module erp est actif", () => {
-    expect(companyManifest("erp").shortcuts.map((item) => item.url)).toEqual([
-      "/company/employes",
-      "/company/conges",
+  it("annonce des raccourcis vers des pages existantes", () => {
+    expect(companyManifest().shortcuts.map((item) => item.url)).toEqual([
+      "/company/offres",
+      "/company/candidats",
     ]);
-    expect(employeeManifest("erp").shortcuts.map((item) => item.url)).toEqual([
+    expect(employeeManifest().shortcuts.map((item) => item.url)).toEqual([
       "/employee/conges",
       "/employee/pointage",
       "/employee/documents",
     ]);
-    expect(companyManifest("recrutement").shortcuts).toEqual([]);
-    expect(employeeManifest("").shortcuts.length).toBeGreaterThan(0);
   });
 
   it("répond 200 sans session sur les deux manifestes", async () => {
@@ -58,6 +56,6 @@ describe("proxy et installation", () => {
     }
     expect(isPwaInstallAsset("/company")).toBe(false);
     expect(isPwaInstallAsset("/employee")).toBe(false);
-    expect(isPwaInstallAsset("/company/employes")).toBe(false);
+    expect(isPwaInstallAsset("/company/offres")).toBe(false);
   });
 });

@@ -19,8 +19,6 @@ export default async function AdminDashboardPage() {
     candidates,
     companies,
     pendingCompanies,
-    employees,
-    activeEmployees,
     offers,
     paidOrders,
     accepted,
@@ -38,8 +36,6 @@ export default async function AdminDashboardPage() {
       },
       orderBy: { createdAt: "desc" },
     }),
-    db.employee.count(),
-    db.employee.count({ where: { user: { status: "ACTIVE" } } }),
     db.jobOffer.count({ where: { status: "OPEN" } }),
     db.order.aggregate({ where: { status: "paid" }, _sum: { total: true } }),
     db.application.count({ where: { status: "ACCEPTED" } }),
@@ -58,7 +54,6 @@ export default async function AdminDashboardPage() {
   ]);
   const revenue = paidOrders._sum.total ?? 0;
   const recruitment = decided === 0 ? 0 : Math.round((accepted / decided) * 100);
-  const retention = employees === 0 ? 0 : Math.round((activeEmployees / employees) * 100);
   const soldFormations = formationsSold._sum.quantity ?? 0;
 
   return (
@@ -91,12 +86,10 @@ export default async function AdminDashboardPage() {
           ["Candidats", candidates],
           ["Entreprises", companies],
           ["En attente", pendingCompanies.length],
-          ["Employés", employees],
           ["Offres ouvertes", offers],
           ["Formations vendues", soldFormations],
           ["Revenus boutique", formatFcfa(revenue)],
           ["Taux de recrutement", `${recruitment} %`],
-          ["Taux de rétention", `${retention} %`],
         ].map(([label, value]) => (
           <Card key={String(label)} className="hover:translate-y-0">
             <CardHeader>

@@ -1,5 +1,3 @@
-import { isModuleEnabled } from "@/lib/config/modules";
-
 /** Couleurs du design system (globals.css, cahier §6.5). */
 export const PWA_THEME_COLOR = "#042963";
 export const PWA_BACKGROUND_COLOR = "#f4f7fb";
@@ -50,13 +48,9 @@ const EMPLOYEE_ICONS: ManifestIcon[] = [
   { src: "/pwa/employee/icon-512-maskable.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
 ];
 
-/**
- * Raccourcis dont la page existe déjà. L'organigramme (/company/organigramme)
- * n'a pas de page : il n'est pas déclaré.
- */
 const COMPANY_SHORTCUTS: ManifestShortcut[] = [
-  { name: "Employés", url: "/company/employes" },
-  { name: "Congés", url: "/company/conges" },
+  { name: "Offres", url: "/company/offres" },
+  { name: "Recherche de CV", url: "/company/candidats" },
 ];
 
 const EMPLOYEE_SHORTCUTS: ManifestShortcut[] = [
@@ -65,11 +59,11 @@ const EMPLOYEE_SHORTCUTS: ManifestShortcut[] = [
   { name: "Mes documents", url: "/employee/documents" },
 ];
 
-export function companyManifest(raw?: string): ErpManifest {
+export function companyManifest(_raw?: string): ErpManifest {
   return {
     id: COMPANY_SCOPE,
-    name: "ERP RH — Entreprise",
-    short_name: "Entreprise",
+    name: "PES-RH — Recrutement",
+    short_name: "Recrutement",
     scope: COMPANY_SCOPE,
     start_url: "/company",
     display: "standalone",
@@ -77,14 +71,14 @@ export function companyManifest(raw?: string): ErpManifest {
     theme_color: PWA_THEME_COLOR,
     background_color: PWA_BACKGROUND_COLOR,
     icons: COMPANY_ICONS,
-    shortcuts: isModuleEnabled("erp", raw) ? COMPANY_SHORTCUTS : [],
+    shortcuts: COMPANY_SHORTCUTS,
   };
 }
 
-export function employeeManifest(raw?: string): ErpManifest {
+export function employeeManifest(_raw?: string): ErpManifest {
   return {
     id: EMPLOYEE_SCOPE,
-    name: "ERP RH — Employé",
+    name: "PES-RH — Employé",
     short_name: "Employé",
     scope: EMPLOYEE_SCOPE,
     start_url: "/employee",
@@ -93,6 +87,6 @@ export function employeeManifest(raw?: string): ErpManifest {
     theme_color: PWA_THEME_COLOR,
     background_color: PWA_BACKGROUND_COLOR,
     icons: EMPLOYEE_ICONS,
-    shortcuts: isModuleEnabled("erp", raw) ? EMPLOYEE_SHORTCUTS : [],
+    shortcuts: EMPLOYEE_SHORTCUTS,
   };
 }

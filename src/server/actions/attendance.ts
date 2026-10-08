@@ -143,7 +143,7 @@ export async function rhManualCheckout(
       autoClosed: false,
     },
   });
-  revalidatePath("/company/pointage");
+  revalidatePath("/employee/pointage");
   return { ok: true, message: "Sortie enregistrée par le RH." };
 }
 

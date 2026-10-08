@@ -37,7 +37,7 @@ describe("nav variants", () => {
     expect(navVariantForRole("EMPLOYEE")).toBe("vitrine");
   });
 
-  it("lists the space shortcuts and keeps Assistant RH on the Gold pack", () => {
+  it("lists the recruiter space shortcuts without ERP pages", () => {
     expect(candidateSpaceLinks().map((item) => item.label)).toEqual([
       "Mon profil / CV",
       "Mes candidatures",
@@ -46,10 +46,13 @@ describe("nav variants", () => {
       "Notifications",
       "Paramètres",
     ]);
-    const recruiter = recruiterSpaceLinks(false).map((item) => item.label);
-    expect(recruiter).toContain("Recherche de CV");
-    expect(recruiter).not.toContain("Assistant RH");
-    expect(recruiterSpaceLinks(true).map((item) => item.label)).toContain("Assistant RH");
+    expect(recruiterSpaceLinks().map((item) => item.label)).toEqual([
+      "Offres publiées",
+      "Candidatures reçues",
+      "Recherche de CV",
+      "Utilisateurs internes",
+      "Sécurité / 2FA",
+    ]);
   });
 
   it("keeps Nos services only when that audience has at least one service", () => {

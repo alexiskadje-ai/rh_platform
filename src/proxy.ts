@@ -47,15 +47,23 @@ function isPublic(pathname: string) {
   );
 }
 
-async function recruiterSubscriptionStatus(userId: string) {
-  if (!userId) return null;
+async function recruiterGateState(userId: string) {
+  if (!userId) return { companyStatus: null, subscriptionStatus: null };
   const row = await db.user.findUnique({
     where: { id: userId },
     select: {
-      company: { select: { recruiterSubscription: { select: { status: true } } } },
+      company: {
+        select: {
+          status: true,
+          recruiterSubscription: { select: { status: true } },
+        },
+      },
     },
   });
-  return row?.company?.recruiterSubscription?.status ?? null;
+  return {
+    companyStatus: row?.company?.status ?? null,
+    subscriptionStatus: row?.company?.recruiterSubscription?.status ?? null,
+  };
 }
 
 export async function proxy(request: NextRequest) {
@@ -137,10 +145,12 @@ export async function proxy(request: NextRequest) {
   }
 
   if (recruiterPackGateApplies(pathname, user.role)) {
+    const gate = await recruiterGateState(user.id);
     const destination = recruiterPackRedirect({
       pathname,
       role: user.role,
-      subscriptionStatus: await recruiterSubscriptionStatus(user.id),
+      companyStatus: gate.companyStatus,
+      subscriptionStatus: gate.subscriptionStatus,
     });
     if (destination) {
       return NextResponse.redirect(new URL(destination, request.url));

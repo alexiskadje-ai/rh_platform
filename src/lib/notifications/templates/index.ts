@@ -2,7 +2,6 @@ import type { NotificationEvent, NotificationPayloads } from "@/lib/notification
 import { accountCreatedEmail } from "@/lib/notifications/templates/account-created";
 import { courseAvailableEmail } from "@/lib/notifications/templates/course-available";
 import { interviewInviteEmail } from "@/lib/notifications/templates/interview-invite";
-import { leaveDecisionEmail } from "@/lib/notifications/templates/leave-decision";
 import { newApplicationEmail } from "@/lib/notifications/templates/new-application";
 import { paymentConfirmedEmail } from "@/lib/notifications/templates/payment-confirmed";
 import { recruiterPackApprovedEmail } from "@/lib/notifications/templates/recruiter-pack-approved";
@@ -21,8 +20,6 @@ export function renderNotificationEmail<E extends NotificationEvent>(
       return newApplicationEmail(payload as NotificationPayloads["NEW_APPLICATION"]);
     case "INTERVIEW_INVITE":
       return interviewInviteEmail(payload as NotificationPayloads["INTERVIEW_INVITE"]);
-    case "LEAVE_DECISION":
-      return leaveDecisionEmail(payload as NotificationPayloads["LEAVE_DECISION"]);
     case "COURSE_AVAILABLE":
       return courseAvailableEmail(payload as NotificationPayloads["COURSE_AVAILABLE"]);
     case "PAYMENT_CONFIRMED":

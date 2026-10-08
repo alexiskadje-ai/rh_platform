@@ -6,7 +6,6 @@ import { z } from "zod";
 import { canTransitionApplicationStatus } from "@/lib/application-status";
 import { requireRecruiter } from "@/lib/dal";
 import { db } from "@/lib/db";
-import { convertAcceptedCandidate } from "@/server/actions/employees";
 
 export type ApplicationStatusActionState = {
   ok?: boolean;
@@ -67,16 +66,7 @@ export async function updateApplicationStatus(
 
   await recordApplicationStatusChange(application.id, next);
 
-  let hiredNote = "";
-  if (next === ApplicationStatus.ACCEPTED) {
-    const employee = await convertAcceptedCandidate(application.id, companyId);
-    if (employee) {
-      hiredNote = ` Fiche employé créée (${employee.matricule}).`;
-    }
-  }
-
   revalidatePath(`/company/offres/${application.jobOfferId}`);
   revalidatePath(`/company/candidatures/${application.id}`);
-  revalidatePath("/company/employes");
-  return { ok: true, message: `Statut mis à jour.${hiredNote}` };
+  return { ok: true, message: "Statut mis à jour." };
 }

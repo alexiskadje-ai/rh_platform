@@ -23,12 +23,6 @@ export function renderInAppMessage<E extends NotificationEvent>(
       const data = payload as NotificationPayloads["INTERVIEW_INVITE"];
       return `Convocation à un entretien pour « ${data.jobTitle} » le ${data.scheduledAt}.`;
     }
-    case "LEAVE_DECISION": {
-      const data = payload as NotificationPayloads["LEAVE_DECISION"];
-      return data.approved
-        ? `Votre demande de congé du ${data.startDate} au ${data.endDate} a été acceptée.`
-        : `Votre demande de congé du ${data.startDate} au ${data.endDate} a été refusée.`;
-    }
     case "COURSE_AVAILABLE": {
       const data = payload as NotificationPayloads["COURSE_AVAILABLE"];
       return `Nouvelle formation disponible : ${data.courseTitle}.`;

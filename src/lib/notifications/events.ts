@@ -2,7 +2,6 @@ export const NOTIFICATION_EVENTS = [
   "ACCOUNT_CREATED",
   "NEW_APPLICATION",
   "INTERVIEW_INVITE",
-  "LEAVE_DECISION",
   "COURSE_AVAILABLE",
   "PAYMENT_CONFIRMED",
   "RECRUITER_PACK_SUBMITTED",
@@ -21,7 +20,6 @@ export const DEFAULT_CHANNELS: Record<NotificationEvent, readonly NotificationCh
   ACCOUNT_CREATED: ["email"],
   NEW_APPLICATION: ["email", "in-app"],
   INTERVIEW_INVITE: ["email", "sms", "whatsapp"],
-  LEAVE_DECISION: ["email", "in-app"],
   COURSE_AVAILABLE: ["email"],
   PAYMENT_CONFIRMED: ["email", "sms"],
   RECRUITER_PACK_SUBMITTED: ["email"],
@@ -44,12 +42,6 @@ export type NotificationPayloads = {
     scheduledAt: string;
     formatLabel: string;
     locationOrLink?: string;
-  };
-  LEAVE_DECISION: {
-    firstName: string;
-    approved: boolean;
-    startDate: string;
-    endDate: string;
   };
   COURSE_AVAILABLE: {
     firstName: string;

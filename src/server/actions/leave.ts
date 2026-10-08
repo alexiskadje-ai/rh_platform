@@ -3,7 +3,6 @@
 import { LeaveStatus, LeaveType, Role } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { requireEmployee, requireRecruiter, requireUser } from "@/lib/dal";
-import { notify } from "@/lib/notifications";
 import { sendEmail } from "@/lib/notify";
 import { db } from "@/lib/db";
 import { fieldErrorsFromZod } from "@/lib/users";
@@ -215,16 +214,19 @@ export async function decideLeave(
       },
     });
   } else {
-    await notify(leave.employee.userId, "LEAVE_DECISION", {
-      firstName: leave.employee.user.firstName,
-      approved: outcome.status === LeaveStatus.APPROVED,
-      startDate: leave.startDate.toLocaleDateString("fr-FR"),
-      endDate: leave.endDate.toLocaleDateString("fr-FR"),
+    const approved = outcome.status === LeaveStatus.APPROVED;
+    await db.notification.create({
+      data: {
+        userId: leave.employee.userId,
+        channel: "in-app",
+        message: approved
+          ? `Votre demande de congé du ${leave.startDate.toLocaleDateString("fr-FR")} au ${leave.endDate.toLocaleDateString("fr-FR")} a été acceptée.`
+          : `Votre demande de congé du ${leave.startDate.toLocaleDateString("fr-FR")} au ${leave.endDate.toLocaleDateString("fr-FR")} a été refusée.`,
+      },
     });
   }
   revalidatePath("/employee/conges");
   revalidatePath("/employee/validations");
-  revalidatePath("/company/conges");
   return {
     ok: true,
     message:
@@ -291,7 +293,6 @@ export async function validateAbsence(formData: FormData) {
     where: { id },
     data: { validated: true },
   });
-  revalidatePath("/company/absences");
 }
 
 export async function leaveBalanceFor(employeeId: string) {

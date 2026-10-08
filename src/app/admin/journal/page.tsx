@@ -17,7 +17,7 @@ export default async function AdminActivityPage() {
     <DashboardShell role={Role.ADMIN} title="Administration">
       <h1 className="font-display text-3xl font-medium text-primary">Journal d&apos;activité</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Mutations sensibles (utilisateurs, offres, paiements, congés) enregistrées automatiquement.
+        Mutations sensibles (utilisateurs, offres, paiements) enregistrées automatiquement.
       </p>
       <div className="mt-6 space-y-2">
         {logs.length === 0 ? (

@@ -98,7 +98,7 @@ export function SpaceMenu({
               key={item.label}
               href={item.href}
               role="menuitem"
-              className="block px-4 py-2.5 text-sm hover:bg-accent/15 hover:text-accent focus:bg-accent/15 focus:outline-none"
+              className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-accent/15 hover:text-accent focus:bg-accent/15 focus:outline-none"
               onClick={() => {
                 setOpen(false);
                 onNavigate?.();

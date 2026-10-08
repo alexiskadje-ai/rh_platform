@@ -15,17 +15,11 @@ import { issueRecruiterPackInvoice } from "@/lib/payments/recruiter-pack";
 import { refundPaidPayment } from "@/lib/payments/refund";
 import { absoluteUrl } from "@/lib/site";
 import { formatFcfa } from "@/lib/shop";
-import { fieldErrorsFromZod } from "@/lib/users";
-import {
-  LEAVE_ACCRUAL_SETTING,
-  MAX_CARRYOVER_SETTING,
-} from "@/lib/constants";
 import { addMonths } from "@/lib/subscriptions";
 import { SUBSCRIPTION_STATUS_ACTIVE, SUBSCRIPTION_TIERS } from "@/lib/shop-packs";
 import {
   activateRecruteurProSchema,
   changeRoleSchema,
-  leaveSettingsSchema,
 } from "@/lib/validations/platform";
 
 export type AdminActionState = {
@@ -198,33 +192,6 @@ export async function changeUserRole(
   return { ok: true, message: "Rôle mis à jour." };
 }
 
-export async function saveLeaveSettings(
-  _prev: AdminActionState,
-  formData: FormData,
-): Promise<AdminActionState> {
-  await requireAdmin();
-  const parsed = leaveSettingsSchema.safeParse({
-    accrualRate: formData.get("accrualRate"),
-    maxCarryoverDays: formData.get("maxCarryoverDays"),
-  });
-  if (!parsed.success) return { errors: fieldErrorsFromZod(parsed.error) };
-  await db.$transaction([
-    db.platformSetting.upsert({
-      where: { key: LEAVE_ACCRUAL_SETTING },
-      update: { value: String(parsed.data.accrualRate) },
-      create: { key: LEAVE_ACCRUAL_SETTING, value: String(parsed.data.accrualRate) },
-    }),
-    db.platformSetting.upsert({
-      where: { key: MAX_CARRYOVER_SETTING },
-      update: { value: String(parsed.data.maxCarryoverDays) },
-      create: { key: MAX_CARRYOVER_SETTING, value: String(parsed.data.maxCarryoverDays) },
-    }),
-  ]);
-  revalidatePath("/admin");
-  revalidatePath("/admin/parametres");
-  return { ok: true, message: "Taux de congés enregistrés." };
-}
-
 export async function activateRecruteurPro(
   _prev: AdminActionState,
   formData: FormData,
@@ -253,6 +220,5 @@ export async function activateRecruteurPro(
     },
   });
   revalidatePath("/admin");
-  revalidatePath("/company/facturation");
   return { ok: true, message: "Recruteur Pro activé." };
 }
