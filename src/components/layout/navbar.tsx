@@ -32,7 +32,13 @@ export function Navbar({
               key={item.href}
               href={item.href}
               onClick={onNavigate}
-              className="rounded-xl px-3 py-3 text-sm transition-colors hover:bg-accent/15 hover:text-accent"
+              className={cn(
+                "rounded-xl px-3 py-3 text-sm transition-colors",
+                overlay
+                  ? "text-primary-foreground/85 hover:bg-white/10 hover:text-highlight"
+                  : "hover:bg-accent/15 hover:text-accent",
+                active && (overlay ? "bg-white/10 text-highlight" : "text-primary"),
+              )}
             >
               {item.label}
             </Link>

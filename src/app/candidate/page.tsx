@@ -22,7 +22,7 @@ export default async function CandidateDashboardPage() {
 
   return (
     <DashboardShell role={Role.CANDIDATE} title="Espace candidat">
-      <div className="flex flex-col gap-5 rounded-3xl border border-accent/20 bg-gradient-to-br from-accent/10 via-card to-card p-6 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-5 rounded-3xl border border-primary/10 bg-card p-6 shadow-[0_16px_40px_rgba(4,41,99,0.06)] sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <p className="text-[11px] uppercase tracking-[0.22em] text-accent">Parcours</p>
           <h1 className="mt-1 font-display text-3xl font-medium text-primary">Bonjour {user.firstName}</h1>
@@ -55,7 +55,7 @@ export default async function CandidateDashboardPage() {
         </Card>
         <Card className="flex h-full flex-col">
           <CardHeader className="flex flex-row items-center gap-3 space-y-0">
-            <span className="flex size-10 items-center justify-center rounded-2xl bg-accent/10 text-accent">
+            <span className="flex size-10 items-center justify-center rounded-2xl bg-primary/8 text-primary">
               <ClipboardCheck className="size-5" />
             </span>
             <CardTitle className="text-base">Candidatures</CardTitle>
@@ -69,7 +69,7 @@ export default async function CandidateDashboardPage() {
         </Card>
         <Card className="flex h-full flex-col">
           <CardHeader className="flex flex-row items-center gap-3 space-y-0">
-            <span className="flex size-10 items-center justify-center rounded-2xl bg-accent/10 text-accent">
+            <span className="flex size-10 items-center justify-center rounded-2xl bg-primary/8 text-primary">
               <Briefcase className="size-5" />
             </span>
             <CardTitle className="text-base">Entretiens</CardTitle>

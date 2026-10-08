@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
+import {
+  isModuleRouteDisabled,
+  recruiterPackGateApplies,
+  recruiterPackRedirect,
+} from "@/lib/config/module-access";
 import { FIRST_LOGIN_PATH, RECRUITER_ONBOARDING_PACK_PATH } from "@/lib/config/recruiter-packs";
 import { ROLE_HOME } from "@/lib/constants";
+import { db } from "@/lib/db";
 import { blockedPublicRedirect } from "@/lib/nav";
+import { isPwaInstallAsset } from "@/lib/pwa/assets";
 import type { Role } from "@prisma/client";
 
 const PUBLIC_PATHS = [
@@ -40,9 +47,29 @@ function isPublic(pathname: string) {
   );
 }
 
+async function recruiterSubscriptionStatus(userId: string) {
+  if (!userId) return null;
+  const row = await db.user.findUnique({
+    where: { id: userId },
+    select: {
+      company: { select: { recruiterSubscription: { select: { status: true } } } },
+    },
+  });
+  return row?.company?.recruiterSubscription?.status ?? null;
+}
+
 export async function proxy(request: NextRequest) {
-  const session = await auth();
   const { pathname } = request.nextUrl;
+
+  if (isPwaInstallAsset(pathname)) {
+    return NextResponse.next();
+  }
+
+  if (isModuleRouteDisabled(pathname)) {
+    return new NextResponse(null, { status: 404 });
+  }
+
+  const session = await auth();
   const user = session?.user;
 
   if (pathname.startsWith("/login") || pathname.startsWith("/register")) {
@@ -107,6 +134,17 @@ export async function proxy(request: NextRequest) {
       return NextResponse.next();
     }
     return NextResponse.redirect(new URL(RECRUITER_ONBOARDING_PACK_PATH, request.url));
+  }
+
+  if (recruiterPackGateApplies(pathname, user.role)) {
+    const destination = recruiterPackRedirect({
+      pathname,
+      role: user.role,
+      subscriptionStatus: await recruiterSubscriptionStatus(user.id),
+    });
+    if (destination) {
+      return NextResponse.redirect(new URL(destination, request.url));
+    }
   }
 
   const matched = Object.entries(ROLE_PREFIX).find(([prefix]) =>

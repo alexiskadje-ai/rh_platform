@@ -26,6 +26,7 @@ import {
   UserRound,
   Users,
 } from "lucide-react";
+import { clearPwaCaches } from "@/components/pwa/clear-caches";
 import { logout } from "@/server/actions/auth";
 import { ROLE_HOME } from "@/lib/constants";
 import { buttonVariants } from "@/components/ui/button";
@@ -74,42 +75,60 @@ const LINKS: Record<Role, { href: string; label: string; icon: LucideIcon; secti
     { href: "/settings/security", label: "Sécurité / 2FA", icon: Shield, section: "Compte" },
   ],
   EMPLOYEE: [
-    { href: "/employee", label: "Tableau de bord", icon: LayoutDashboard },
-    { href: "/employee/dossier", label: "Mon dossier", icon: Building2 },
-    { href: "/employee/conges", label: "Mes congés", icon: CalendarDays },
-    { href: "/employee/absences", label: "Absences", icon: Bell },
-    { href: "/employee/pointage", label: "Mon pointage", icon: Clock },
-    { href: "/employee/documents", label: "Mes documents", icon: FileText },
-    { href: "/employee/validations", label: "Validations équipe", icon: ClipboardCheck },
-    { href: "/employee/formations", label: "Mes formations", icon: GraduationCap },
-    { href: "/employee/achats", label: "Mes achats", icon: ShoppingCart },
-    { href: "/settings/security", label: "Sécurité / 2FA", icon: Shield },
+    { href: "/employee", label: "Tableau de bord", icon: LayoutDashboard, section: "Mon poste" },
+    { href: "/employee/dossier", label: "Mon dossier", icon: Building2, section: "Mon poste" },
+    { href: "/employee/documents", label: "Mes documents", icon: FileText, section: "Mon poste" },
+    { href: "/employee/conges", label: "Mes congés", icon: CalendarDays, section: "Temps" },
+    { href: "/employee/absences", label: "Absences", icon: Bell, section: "Temps" },
+    { href: "/employee/pointage", label: "Mon pointage", icon: Clock, section: "Temps" },
+    { href: "/employee/validations", label: "Validations équipe", icon: ClipboardCheck, section: "Équipe" },
+    { href: "/employee/formations", label: "Mes formations", icon: GraduationCap, section: "Équipe" },
+    { href: "/employee/achats", label: "Mes achats", icon: ShoppingCart, section: "Compte" },
+    { href: "/settings/security", label: "Sécurité / 2FA", icon: Shield, section: "Compte" },
   ],
 };
 
 const SPACE: Record<
   Role,
-  { label: string; panel: string; stripe: string; eyebrow: string; active: string; idle: string; section: string; logout: string }
+  {
+    label: string;
+    panel: string;
+    stripe: string;
+    eyebrow: string;
+    active: string;
+    idle: string;
+    section: string;
+    icon: string;
+    iconActive: string;
+    logout: string;
+    canvas: boolean;
+  }
 > = {
   CANDIDATE: {
     label: "Espace Candidat",
-    panel: "border-accent/20 bg-gradient-to-b from-accent/10 via-card to-card",
+    panel: "border-primary/10 bg-card",
     stripe: "bg-accent",
     eyebrow: "text-accent",
-    active: "bg-accent text-accent-foreground shadow-[0_8px_20px_rgba(242,98,0,0.22)]",
-    idle: "text-foreground/80 hover:bg-accent/10 hover:text-accent",
-    section: "text-accent",
+    active: "bg-primary text-primary-foreground shadow-[0_8px_20px_rgba(4,41,99,0.18)]",
+    idle: "text-foreground/80 hover:bg-primary/6 hover:text-primary",
+    section: "text-primary/55",
+    icon: "bg-accent/10 text-accent",
+    iconActive: "bg-white/15 text-primary-foreground",
     logout: "",
+    canvas: true,
   },
   RECRUITER: {
     label: "Espace Recruteur",
-    panel: "border-primary/15 bg-gradient-to-b from-primary/[0.07] via-card to-card",
+    panel: "border-primary/10 bg-card",
     stripe: "bg-primary",
     eyebrow: "text-primary",
-    active: "bg-primary text-primary-foreground",
-    idle: "text-foreground/80 hover:bg-primary/8 hover:text-primary",
-    section: "text-primary/70",
+    active: "bg-primary text-primary-foreground shadow-[0_8px_20px_rgba(4,41,99,0.18)]",
+    idle: "text-foreground/80 hover:bg-primary/6 hover:text-primary",
+    section: "text-primary/55",
+    icon: "bg-primary/8 text-primary",
+    iconActive: "bg-white/15 text-primary-foreground",
     logout: "",
+    canvas: true,
   },
   ADMIN: {
     label: "Administration",
@@ -119,18 +138,24 @@ const SPACE: Record<
     active: "bg-highlight text-primary",
     idle: "text-primary-foreground/75 hover:bg-white/10 hover:text-primary-foreground",
     section: "text-highlight",
+    icon: "bg-white/10 text-primary-foreground",
+    iconActive: "bg-primary/10 text-primary",
     logout:
       "border-primary-foreground/25 text-primary-foreground hover:border-highlight hover:bg-highlight hover:text-primary",
+    canvas: false,
   },
   EMPLOYEE: {
     label: "Espace employé",
-    panel: "border-border/80 bg-card",
-    stripe: "bg-primary",
-    eyebrow: "text-accent",
-    active: "bg-primary text-primary-foreground",
-    idle: "text-muted-foreground hover:bg-accent/15 hover:text-accent",
-    section: "text-accent",
+    panel: "border-primary/10 bg-card",
+    stripe: "bg-highlight",
+    eyebrow: "text-primary",
+    active: "bg-primary text-primary-foreground shadow-[0_8px_20px_rgba(4,41,99,0.18)]",
+    idle: "text-foreground/80 hover:bg-primary/6 hover:text-primary",
+    section: "text-primary/55",
+    icon: "bg-highlight/15 text-primary",
+    iconActive: "bg-white/15 text-primary-foreground",
     logout: "",
+    canvas: true,
   },
 };
 
@@ -154,7 +179,14 @@ export function DashboardShell({
   const pageLabel = /^espace|administration/i.test(title) ? null : title;
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-8 md:flex-row md:items-start md:py-10">
+    <div
+      className={cn(
+        "flex flex-1 flex-col",
+        space.canvas &&
+          "bg-[#eef3f9] bg-[radial-gradient(980px_420px_at_0%_-10%,rgba(4,41,99,0.11),transparent_60%),radial-gradient(640px_320px_at_100%_0%,rgba(242,98,0,0.08),transparent_55%)]",
+      )}
+    >
+    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-8 md:flex-row md:items-start md:py-10">
       <aside className="w-full shrink-0 md:sticky md:top-24 md:w-64">
         <div className={cn("overflow-hidden rounded-3xl border shadow-[0_16px_40px_rgba(4,41,99,0.08)]", space.panel)}>
           <div className={cn("h-1.5", space.stripe)} />
@@ -183,18 +215,25 @@ export function DashboardShell({
                     <Link
                       href={link.href}
                       className={cn(
-                        "flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm transition-colors",
+                        "flex items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-sm transition-colors",
                         active ? space.active : space.idle,
                       )}
                     >
-                      <Icon className="size-4 shrink-0" />
+                      <span
+                        className={cn(
+                          "flex size-7 shrink-0 items-center justify-center rounded-lg",
+                          active ? space.iconActive : space.icon,
+                        )}
+                      >
+                        <Icon className="size-3.5" />
+                      </span>
                       {link.label}
                     </Link>
                   </Fragment>
                 );
               })}
             </nav>
-            <form action={logout} className="mt-4 border-t border-current/10 pt-4">
+            <form action={logout} className="mt-4 border-t border-current/10 pt-4" onSubmit={() => clearPwaCaches()}>
               <button
                 type="submit"
                 className={cn(buttonVariants({ variant: "outline", size: "sm" }), "w-full", space.logout)}
@@ -209,6 +248,7 @@ export function DashboardShell({
       <section className="min-w-0 flex-1">
         <FadeIn>{children}</FadeIn>
       </section>
+    </div>
     </div>
   );
 }

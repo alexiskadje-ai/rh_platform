@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
@@ -16,15 +16,20 @@ export function SpaceMenu({
   items,
   placement,
   tone = "primary",
+  onBlue = false,
   onNavigate,
+  footer,
 }: {
   label: string;
   items: readonly NavLink[];
   placement: "overlay" | "inline";
   tone?: "primary" | "accent";
+  onBlue?: boolean;
   onNavigate?: () => void;
+  footer?: (lock: (open: boolean) => void) => ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const [locked, setLocked] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -42,12 +47,13 @@ export function SpaceMenu({
         if (canHover()) setOpen(true);
       }}
       onMouseLeave={() => {
-        if (!canHover()) return;
+        if (!canHover() || locked) return;
         const active = document.activeElement;
         if (rootRef.current?.contains(active)) return;
         setOpen(false);
       }}
       onBlur={(event) => {
+        if (locked) return;
         if (!rootRef.current?.contains(event.relatedTarget as Node | null)) setOpen(false);
       }}
     >
@@ -57,6 +63,7 @@ export function SpaceMenu({
         className={cn(
           buttonVariants({ variant: tone === "accent" ? "accent" : "default", size: "sm" }),
           "justify-between gap-2",
+          onBlue && "hover:bg-highlight! hover:text-primary! hover:shadow-none!",
           placement === "inline" && "w-full",
         )}
         aria-expanded={open}
@@ -107,6 +114,7 @@ export function SpaceMenu({
               {item.label}
             </Link>
           ))}
+          {footer?.(setLocked)}
         </div>
       ) : null}
     </div>

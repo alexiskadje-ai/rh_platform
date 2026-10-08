@@ -1,3 +1,4 @@
+import { CalendarDays, Clock, Umbrella } from "lucide-react";
 import { Role } from "@prisma/client";
 import { requireRole } from "@/lib/dal";
 import { db } from "@/lib/db";
@@ -5,7 +6,9 @@ import { leaveBalance } from "@/lib/leave-settings";
 import { monthStartYmd, doualaYmd, toDateOnly, addCalendarDays } from "@/lib/leave";
 import { LEAVE_TYPE_LABELS } from "@/lib/constants";
 import { closeOpenAttendances } from "@/server/actions/attendance";
+import { isModuleEnabled } from "@/lib/config/modules";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { InstallAppButton } from "@/components/pwa/install-app-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -39,18 +42,33 @@ export default async function EmployeeDashboardPage() {
 
   return (
     <DashboardShell role={Role.EMPLOYEE} title="Espace employé">
-      <h1 className="font-display text-3xl font-medium text-primary">Bonjour {user.firstName}</h1>
-      <div className="mt-8 grid gap-4 md:grid-cols-3">
+      <div className="flex flex-col gap-5 rounded-3xl border border-primary/10 bg-card p-6 shadow-[0_16px_40px_rgba(4,41,99,0.06)] sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.22em] text-primary/70">Mon poste</p>
+          <h1 className="mt-1 font-display text-3xl font-medium text-primary">Bonjour {user.firstName}</h1>
+          <p className="mt-2 max-w-xl text-muted-foreground">
+            Congés, pointage et documents de votre dossier.
+          </p>
+        </div>
+        {isModuleEnabled("erp") ? <InstallAppButton appearance="card" /> : null}
+      </div>
+      <div className="mt-6 grid gap-4 md:grid-cols-3">
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center gap-3 space-y-0">
+            <span className="flex size-10 items-center justify-center rounded-2xl bg-highlight/15 text-primary">
+              <Umbrella className="size-5" />
+            </span>
             <CardTitle className="text-base">Solde de congés</CardTitle>
           </CardHeader>
-          <CardContent className="text-3xl font-semibold">
+          <CardContent className="font-display text-4xl text-primary">
             {balance ? `${balance.available}` : "—"}
           </CardContent>
         </Card>
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center gap-3 space-y-0">
+            <span className="flex size-10 items-center justify-center rounded-2xl bg-primary/8 text-primary">
+              <Clock className="size-5" />
+            </span>
             <CardTitle className="text-base">Dernier pointage</CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
@@ -60,7 +78,10 @@ export default async function EmployeeDashboardPage() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center gap-3 space-y-0">
+            <span className="flex size-10 items-center justify-center rounded-2xl bg-primary/8 text-primary">
+              <CalendarDays className="size-5" />
+            </span>
             <CardTitle className="text-base">Raccourcis</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-2">
