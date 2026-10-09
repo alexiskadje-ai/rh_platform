@@ -4,9 +4,10 @@ import { db } from "@/lib/db";
 import { recruiterSearchAccess } from "@/lib/candidate-search";
 import { searchCandidatesByTrade } from "@/lib/candidate-search-query";
 import { candidateDisplayName } from "@/lib/users";
+import { GOLD_CV_DOWNLOAD_QUOTA } from "@/lib/config/recruiter-packs";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
-import { Badge } from "@/components/ui/badge";
 import { CandidateSearchForm } from "@/components/layout/candidate-search-form";
+import { CvDownloadPanel } from "@/components/recruitment/cv-download-panel";
 
 export default async function RecruiterCandidateSearchPage({
   searchParams,
@@ -18,10 +19,15 @@ export default async function RecruiterCandidateSearchPage({
   const query = q.trim().slice(0, 80);
   const company = await db.company.findUnique({
     where: { id: companyId },
-    select: { recruiterSubscription: { select: { status: true, tier: true } } },
+    select: {
+      recruiterSubscription: {
+        select: { status: true, tier: true, cvDownloadsUsed: true },
+      },
+    },
   });
   const access = recruiterSearchAccess(company?.recruiterSubscription ?? null);
   const results = access.ok && query ? await searchCandidatesByTrade(query, access.tier) : [];
+  const used = company?.recruiterSubscription?.cvDownloadsUsed ?? 0;
 
   return (
     <DashboardShell role={Role.RECRUITER} title="Espace entreprise">
@@ -31,6 +37,9 @@ export default async function RecruiterCandidateSearchPage({
         profil.
         {access.ok && access.tier === "PREMIUM"
           ? " Avec le pack Premium, la liste contient les CV vérifiés."
+          : null}
+        {access.ok && access.tier === "GOLD"
+          ? ` Pack Gold : quota ${GOLD_CV_DOWNLOAD_QUOTA - used} / ${GOLD_CV_DOWNLOAD_QUOTA} CV restants.`
           : null}
       </p>
       <CandidateSearchForm
@@ -45,34 +54,27 @@ export default async function RecruiterCandidateSearchPage({
       ) : null}
       {!access.ok ? (
         <p className="mt-6 text-sm text-muted-foreground">
-          Votre pack n'est pas encore actif. La recherche de CV s'ouvrira après validation.
+          Votre pack n&apos;est pas encore actif. La recherche de CV s&apos;ouvrira après validation.
         </p>
       ) : query && results.length === 0 ? (
         <p className="mt-6 text-sm text-muted-foreground">
           Aucun candidat ne correspond à cette recherche.
         </p>
-      ) : (
-        <div className="mt-6 space-y-3">
-          {results.map((candidate) => (
-            <article
-              key={candidate.id}
-              className="rounded-2xl border border-border bg-card p-4"
-            >
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="font-medium">{candidateDisplayName(candidate)}</p>
-                {candidate.isVetted ? <Badge>CV vérifié</Badge> : null}
-              </div>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {candidate.professionalTitle || "Titre non renseigné"}
-                {candidate.city ? ` · ${candidate.city}` : ""}
-              </p>
-              {candidate.skills.length > 0 ? (
-                <p className="mt-2 text-sm">{candidate.skills.join(" · ")}</p>
-              ) : null}
-            </article>
-          ))}
-        </div>
-      )}
+      ) : access.ok ? (
+        <CvDownloadPanel
+          tier={access.tier}
+          cvDownloadsUsed={used}
+          results={results.map((candidate) => ({
+            id: candidate.id,
+            label: candidateDisplayName(candidate),
+            title: candidate.professionalTitle || "Titre non renseigné",
+            city: candidate.city,
+            skills: candidate.skills,
+            isVetted: candidate.isVetted,
+            hasCv: Boolean(candidate.cvUrl),
+          }))}
+        />
+      ) : null}
     </DashboardShell>
   );
 }

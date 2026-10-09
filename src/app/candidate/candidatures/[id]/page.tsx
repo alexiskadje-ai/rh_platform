@@ -5,7 +5,12 @@ import { db } from "@/lib/db";
 import { INTERVIEW_FORMAT_LABELS } from "@/lib/constants";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { ApplicationTimeline } from "@/components/recruitment/application-timeline";
+import { ConversationThread } from "@/components/messaging/conversation-thread";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  loadApplicationThread,
+  sendApplicationMessage,
+} from "@/server/actions/messaging";
 
 export default async function CandidateApplicationDetailPage({
   params,
@@ -13,7 +18,7 @@ export default async function CandidateApplicationDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { candidate } = await requireCandidate();
+  const { user, candidate } = await requireCandidate();
   const application = await db.application.findFirst({
     where: { id, candidateId: candidate.id },
     include: {
@@ -23,6 +28,7 @@ export default async function CandidateApplicationDetailPage({
     },
   });
   if (!application) notFound();
+  const thread = await loadApplicationThread(application.id);
 
   return (
     <DashboardShell role={Role.CANDIDATE} title="Espace candidat">
@@ -57,6 +63,18 @@ export default async function CandidateApplicationDetailPage({
           </Card>
         ) : null}
       </div>
+      {thread ? (
+        <div className="mt-6">
+          <ConversationThread
+            title={`Messagerie · ${application.jobOffer.company.name}`}
+            currentUserId={user.id}
+            messages={thread.messages}
+            action={sendApplicationMessage}
+            hiddenFields={{ applicationId: application.id }}
+            closed={thread.conversation.isClosed}
+          />
+        </div>
+      ) : null}
     </DashboardShell>
   );
 }

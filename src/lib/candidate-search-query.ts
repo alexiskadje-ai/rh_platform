@@ -34,6 +34,7 @@ export async function searchCandidatesByTrade(query: string, tier: RecruiterSear
       skills: true,
       isVetted: true,
       city: true,
+      cvUrl: true,
       firstName: true,
       lastName: true,
       user: { select: { firstName: true, lastName: true } },

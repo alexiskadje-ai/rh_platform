@@ -49,7 +49,7 @@ export const RECRUITER_PACK_FEATURES: Record<RecruiterPackTier, readonly string[
   PREMIUM: ["Accès aux CV vérifiés uniquement"],
   GOLD: [
     "Accès à toute la base et aux CV vérifiés",
-    "Assistant RH dédié",
+    "Conseiller RH dédié",
     "Téléchargement groupé",
     `Quota de ${GOLD_CV_DOWNLOAD_QUOTA} CV`,
   ],

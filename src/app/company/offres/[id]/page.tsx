@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { closeExpiredOffers } from "@/lib/jobs";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { JobOfferForm } from "@/components/recruitment/job-offer-form";
+import { OfferStatusActions } from "@/components/recruitment/offer-status-actions";
 import { CandidatePipeline } from "@/components/recrutement/candidate-pipeline";
 import { candidateDisplayName } from "@/lib/users";
 
@@ -65,6 +66,13 @@ export default async function CompanyOfferDetailPage({
 
   return (
     <DashboardShell role={Role.RECRUITER} title="Espace entreprise">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground">
+          Statut : {offer.status === "OPEN" ? "Ouverte" : "Clôturée"}
+          {offer.isClosedManually ? " (manuelle)" : ""}
+        </p>
+        <OfferStatusActions offerId={offer.id} status={offer.status} />
+      </div>
       <JobOfferForm offer={offer} companyName={company.name} />
       <div className="mt-8">
         <CandidatePipeline

@@ -64,6 +64,7 @@ export function recruiterSpaceLinks(): NavLink[] {
     { href: "/company/offres", label: "Offres publiées" },
     { href: "/company/offres", label: "Candidatures reçues" },
     { href: "/company/candidats", label: "Recherche de CV" },
+    { href: "/company/conseiller", label: "Conseiller RH" },
     { href: "/company/utilisateurs", label: "Utilisateurs internes" },
     { href: "/settings/security", label: "Sécurité / 2FA" },
   ];

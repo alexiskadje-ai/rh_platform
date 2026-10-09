@@ -50,6 +50,7 @@ describe("nav variants", () => {
       "Offres publiées",
       "Candidatures reçues",
       "Recherche de CV",
+      "Conseiller RH",
       "Utilisateurs internes",
       "Sécurité / 2FA",
     ]);

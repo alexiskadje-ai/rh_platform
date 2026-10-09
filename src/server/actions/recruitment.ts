@@ -566,3 +566,72 @@ export async function inviteToInterview(
   revalidatePath("/candidate/candidatures");
   return { ok: true, message: "Convocation enregistrée." };
 }
+
+export async function closeJobOffer(formData: FormData): Promise<ActionState> {
+  const { companyId } = await requireRecruiter();
+  const id = String(formData.get("id") ?? "").trim();
+  if (!id) return { message: "Offre introuvable." };
+  const offer = await db.jobOffer.findFirst({ where: { id, companyId } });
+  if (!offer) return { message: "Offre introuvable." };
+  if (offer.status === JobStatus.CLOSED) {
+    return { ok: true, message: "Offre déjà clôturée." };
+  }
+  await db.jobOffer.update({
+    where: { id },
+    data: {
+      status: JobStatus.CLOSED,
+      isClosedManually: true,
+      closedAt: new Date(),
+    },
+  });
+  revalidatePath("/company/offres");
+  revalidatePath(`/company/offres/${id}`);
+  revalidatePath("/offres");
+  revalidatePath(`/offres/${offer.slug}`);
+  return { ok: true, message: "Offre clôturée." };
+}
+
+export async function reopenJobOffer(formData: FormData): Promise<ActionState> {
+  const { companyId } = await requireRecruiter();
+  const id = String(formData.get("id") ?? "").trim();
+  if (!id) return { message: "Offre introuvable." };
+  const offer = await db.jobOffer.findFirst({ where: { id, companyId } });
+  if (!offer) return { message: "Offre introuvable." };
+  if (offer.deadline < new Date()) {
+    return { message: "La date limite est passée : prolongez-la avant de rouvrir." };
+  }
+  await db.jobOffer.update({
+    where: { id },
+    data: {
+      status: JobStatus.OPEN,
+      isClosedManually: false,
+      closedAt: null,
+    },
+  });
+  revalidatePath("/company/offres");
+  revalidatePath(`/company/offres/${id}`);
+  revalidatePath("/offres");
+  revalidatePath(`/offres/${offer.slug}`);
+  return { ok: true, message: "Offre rouverte." };
+}
+
+export async function deleteJobOffer(formData: FormData): Promise<ActionState> {
+  const { companyId } = await requireRecruiter();
+  const id = String(formData.get("id") ?? "").trim();
+  if (!id) return { message: "Offre introuvable." };
+  const offer = await db.jobOffer.findFirst({
+    where: { id, companyId },
+    include: { _count: { select: { applications: true } } },
+  });
+  if (!offer) return { message: "Offre introuvable." };
+  if (offer._count.applications > 0) {
+    return {
+      message:
+        "Des candidatures existent : clôturez l'offre au lieu de la supprimer.",
+    };
+  }
+  await db.jobOffer.delete({ where: { id } });
+  revalidatePath("/company/offres");
+  revalidatePath("/offres");
+  redirect("/company/offres");
+}

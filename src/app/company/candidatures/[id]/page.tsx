@@ -7,10 +7,15 @@ import { ApplicationTimeline } from "@/components/recruitment/application-timeli
 import { InterviewForm } from "@/components/recruitment/interview-form";
 import { StatusActions } from "@/components/recruitment/status-actions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ConversationThread } from "@/components/messaging/conversation-thread";
 import { candidateDisplayName } from "@/lib/users";
 import { isPremiumCandidate } from "@/lib/subscriptions";
 import { PremiumBadge } from "@/components/recruitment/premium-badge";
 import { GENDER_LABELS, MARITAL_STATUS_LABELS } from "@/lib/constants";
+import {
+  loadApplicationThread,
+  sendApplicationMessage,
+} from "@/server/actions/messaging";
 
 export default async function RecruiterApplicationPage({
   params,
@@ -18,7 +23,7 @@ export default async function RecruiterApplicationPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { companyId } = await requireRecruiter();
+  const { user, companyId } = await requireRecruiter();
   const application = await db.application.findFirst({
     where: { id, jobOffer: { companyId } },
     include: {
@@ -37,6 +42,7 @@ export default async function RecruiterApplicationPage({
   if (!application) notFound();
   const { candidate } = application;
   const premium = await isPremiumCandidate(candidate.userId);
+  const thread = await loadApplicationThread(application.id);
 
   return (
     <DashboardShell role={Role.RECRUITER} title="Espace entreprise">
@@ -144,6 +150,18 @@ export default async function RecruiterApplicationPage({
           </CardContent>
         </Card>
       </div>
+      {thread ? (
+        <div className="mt-6">
+          <ConversationThread
+            title="Messagerie candidature"
+            currentUserId={user.id}
+            messages={thread.messages}
+            action={sendApplicationMessage}
+            hiddenFields={{ applicationId: application.id }}
+            closed={thread.conversation.isClosed}
+          />
+        </div>
+      ) : null}
     </DashboardShell>
   );
 }
