@@ -1,5 +1,6 @@
 import { builtinModules } from "node:module";
 import type { NextConfig } from "next";
+import { securityHeaders } from "@/lib/security/headers";
 
 type ResolveRequest = { request?: string } | null | undefined;
 
@@ -35,7 +36,16 @@ const nodeOnlyPackages = [
 ];
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   serverExternalPackages: nodeOnlyPackages,
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: securityHeaders(),
+      },
+    ];
+  },
   // Webpack (used when Windows blocks Next's native SWC/Turbopack binary)
   // otherwise tries to bundle Node-only packages into instrumentation.
   webpack: (config, { isServer }) => {

@@ -1,0 +1,19 @@
+# Déploiement local / staging : app + Postgres + Redis.
+# Usage : docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://rh_user:rh_password@postgres:5432/rh_platform
+      REDIS_URL: redis://redis:6379
+      AUTH_URL: ${AUTH_URL:-http://localhost:3000}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-${AUTH_SECRET}}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started

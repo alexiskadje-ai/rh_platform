@@ -49,7 +49,7 @@ export function HeaderBar({
   const light = workspace || overlay;
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
+    const onScroll = () => setScrolled(window.scrollY > 12);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -58,12 +58,12 @@ export function HeaderBar({
   return (
     <header
       className={cn(
-        "fixed top-0 z-50 w-full transition-all duration-500",
+        "fixed top-0 z-50 w-full transition-[background-color,box-shadow,border-color,backdrop-filter] duration-300",
         workspace
           ? "border-b border-white/10 bg-primary text-primary-foreground shadow-[0_12px_32px_rgba(4,41,99,0.22)]"
           : overlay
             ? "border-transparent bg-transparent text-primary-foreground"
-            : "border-b border-border/60 bg-background/85 text-foreground shadow-[0_8px_30px_rgba(20,33,28,0.06)] backdrop-blur-xl",
+            : "border-b border-border/60 bg-background/90 text-foreground shadow-[0_8px_30px_rgba(20,33,28,0.06)] backdrop-blur-xl",
       )}
     >
       <div className="mx-auto flex h-[4.25rem] w-full max-w-6xl items-center justify-between gap-4 px-4">

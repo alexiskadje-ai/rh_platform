@@ -56,6 +56,32 @@ export async function sendEmail({ to, subject, text, html, replyTo }: MailPayloa
 }
 
 export async function sendSms(to: string, message: string) {
+  const sid = process.env.TWILIO_ACCOUNT_SID?.trim();
+  const token = process.env.TWILIO_AUTH_TOKEN?.trim();
+  const from = process.env.TWILIO_FROM?.trim() || process.env.TWILIO_PHONE_NUMBER?.trim();
+  if (sid && token && from) {
+    const { toE164 } = await import("@/lib/notifications/phone");
+    const body = new URLSearchParams({
+      To: toE164(to),
+      From: from,
+      Body: message,
+    });
+    const response = await fetch(
+      `https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Basic ${Buffer.from(`${sid}:${token}`).toString("base64")}`,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body,
+      },
+    );
+    if (!response.ok) {
+      console.error("[sms] Twilio error", response.status, await response.text());
+    }
+    return;
+  }
   console.info(`[sms] to=${to}\n${message}`);
 }
 

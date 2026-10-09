@@ -33,6 +33,7 @@ import {
 } from "@/lib/validations/auth";
 import { GUEST_CV_DUPLICATE_MESSAGE } from "@/lib/validations/free-cv";
 import { recaptchaFailed, RECAPTCHA_REQUIRED_MESSAGE } from "@/lib/recaptcha";
+import { clientIpFromHeaders, consumeRateLimit } from "@/lib/security/rate-limit";
 import { fieldErrorsFromZod, normalizeIdentifier, splitContactName } from "@/lib/users";
 
 export type ActionState = {
@@ -326,6 +327,19 @@ export async function login(
 
   if (!parsed.success) {
     return { errors: fieldErrorsFromZod(parsed.error) };
+  }
+
+  const ip = await clientIpFromHeaders();
+  const idKey = sha256(parsed.data.identifier.trim().toLowerCase()).slice(0, 16);
+  const limited = await consumeRateLimit({
+    key: `login:${ip}:${idKey}`,
+    limit: 10,
+    windowMs: 15 * 60 * 1000,
+  });
+  if (!limited.ok) {
+    return {
+      message: `Trop de tentatives. Réessayez dans ${limited.retryAfterSec} seconde(s).`,
+    };
   }
 
   const identifier = normalizeIdentifier(parsed.data.identifier);

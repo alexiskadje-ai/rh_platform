@@ -7,7 +7,7 @@ import { chatRequestSchema } from "@/lib/validations/chat";
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  const quota = consumeChatQuota(clientKeyFromRequest(request));
+  const quota = await consumeChatQuota(clientKeyFromRequest(request));
   if (!quota.ok) {
     return NextResponse.json(
       { error: "Trop de messages d'affilée. Patientez quelques minutes." },

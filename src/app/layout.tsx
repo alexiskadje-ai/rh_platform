@@ -49,8 +49,16 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${display.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col font-sans">
+        <a
+          href="#contenu-principal"
+          className="absolute left-4 top-4 z-[100] -translate-y-[220%] rounded-full bg-primary px-4 py-2 text-sm text-primary-foreground opacity-0 transition focus:translate-y-0 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-highlight"
+        >
+          Aller au contenu
+        </a>
         <SiteHeader />
-        <div className="flex flex-1 flex-col pt-[4.25rem]">{children}</div>
+        <div id="contenu-principal" className="flex flex-1 flex-col pt-[4.25rem]">
+          {children}
+        </div>
         <SiteFooter />
         <ChatWidget />
       </body>
