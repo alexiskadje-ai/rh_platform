@@ -89,7 +89,7 @@ export function OtpInput({
   }
 
   const boxClass = cn(
-    "h-12 min-w-0 flex-1 rounded-xl border border-border/80 bg-card text-center text-lg font-semibold tabular-nums text-primary outline-none transition-all",
+    "size-10 shrink-0 rounded-lg border border-border/80 bg-card text-center text-base font-semibold tabular-nums text-primary outline-none transition-all sm:size-11",
     "focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring/25",
   );
 
@@ -97,54 +97,27 @@ export function OtpInput({
     <div className="space-y-2">
       <Label htmlFor={`${baseId}-0`}>{label}</Label>
       <input type="hidden" name={name} value={digits.join("")} />
-      <div className="flex items-center gap-2 sm:gap-3" role="group" aria-label={label}>
-        <div className="flex flex-1 gap-1.5 sm:gap-2">
-          {digits.slice(0, 3).map((digit, index) => (
-            <input
-              key={index}
-              ref={(node) => {
-                boxes.current[index] = node;
-              }}
-              id={`${baseId}-${index}`}
-              value={digit}
-              inputMode="numeric"
-              autoComplete={index === 0 ? "one-time-code" : "off"}
-              autoFocus={autoFocus && index === 0}
-              maxLength={index === 0 ? OTP_LENGTH : 1}
-              aria-label={`Chiffre ${index + 1} sur ${OTP_LENGTH}`}
-              className={boxClass}
-              onChange={(event) => onBoxInput(index, event.target.value)}
-              onKeyDown={(event) => onKeyDown(index, event)}
-              onPaste={onPaste}
-              onFocus={(event) => event.currentTarget.select()}
-            />
-          ))}
-        </div>
-        <span className="hidden h-1.5 w-1.5 shrink-0 rounded-full bg-border sm:block" aria-hidden />
-        <div className="flex flex-1 gap-1.5 sm:gap-2">
-          {digits.slice(3).map((digit, offset) => {
-            const index = offset + 3;
-            return (
-              <input
-                key={index}
-                ref={(node) => {
-                  boxes.current[index] = node;
-                }}
-                id={`${baseId}-${index}`}
-                value={digit}
-                inputMode="numeric"
-                autoComplete="off"
-                maxLength={1}
-                aria-label={`Chiffre ${index + 1} sur ${OTP_LENGTH}`}
-                className={boxClass}
-                onChange={(event) => onBoxInput(index, event.target.value)}
-                onKeyDown={(event) => onKeyDown(index, event)}
-                onPaste={onPaste}
-                onFocus={(event) => event.currentTarget.select()}
-              />
-            );
-          })}
-        </div>
+      <div className="flex w-fit max-w-full flex-wrap items-center gap-1.5 sm:gap-2" role="group" aria-label={label}>
+        {digits.map((digit, index) => (
+          <input
+            key={index}
+            ref={(node) => {
+              boxes.current[index] = node;
+            }}
+            id={`${baseId}-${index}`}
+            value={digit}
+            inputMode="numeric"
+            autoComplete={index === 0 ? "one-time-code" : "off"}
+            autoFocus={autoFocus && index === 0}
+            maxLength={index === 0 ? OTP_LENGTH : 1}
+            aria-label={`Chiffre ${index + 1} sur ${OTP_LENGTH}`}
+            className={cn(boxClass, index === 3 && "ml-1 sm:ml-2")}
+            onChange={(event) => onBoxInput(index, event.target.value)}
+            onKeyDown={(event) => onKeyDown(index, event)}
+            onPaste={onPaste}
+            onFocus={(event) => event.currentTarget.select()}
+          />
+        ))}
       </div>
     </div>
   );
