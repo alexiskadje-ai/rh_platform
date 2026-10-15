@@ -17,6 +17,14 @@ pg_dump "$DATABASE_URL" -Fc -f "/backups/rh_platform-$(date +%F).dump"
 find /backups -name 'rh_platform-*.dump' -mtime +14 -delete
 ```
 
+En local (Docker) :
+
+```powershell
+powershell -File scripts/backup-db.ps1
+```
+
+Le fichier est écrit dans `backups/` (ignoré par Git).
+
 - Conserver au moins 14 jours, hors machine de prod si possible.
 - Tester une restauration chaque trimestre.
 

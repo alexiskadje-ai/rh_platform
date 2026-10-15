@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
 import type { ContractType, JobOffer, JobVisibility } from "@prisma/client";
 import { createJobOffer, updateJobOffer, type ActionState } from "@/server/actions/recruitment";
 import { CAMEROON_REGIONS, CONTRACT_LABELS } from "@/lib/constants";
@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { GenerateOfferButton } from "@/components/recruitment/generate-offer-button";
+import { clearSessionDraft, readSessionDraft, writeSessionDraft } from "@/lib/form-draft";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -36,6 +37,81 @@ export function JobOfferForm({
   );
   const [positionsCount, setPositionsCount] = useState(String(offer?.positionsCount ?? 1));
   const [visibility, setVisibility] = useState<JobVisibility>(offer?.visibility ?? "PUBLIC");
+  const [draftReady, setDraftReady] = useState(Boolean(offer));
+  const draftKey = "rh_job_offer_draft";
+
+  useEffect(() => {
+    if (offer) return;
+    const saved = readSessionDraft<{
+      title: string;
+      description: string;
+      requirements: string;
+      city: string;
+      region: string;
+      contractType: ContractType;
+      salaryMin: string;
+      salaryMax: string;
+      salaryNegotiable: boolean;
+      hideSalary: boolean;
+      deadline: string;
+      positionsCount: string;
+      visibility: JobVisibility;
+    }>(draftKey);
+    if (!saved) {
+      setDraftReady(true);
+      return;
+    }
+    if (saved.title) setTitle(saved.title);
+    if (saved.description) setDescription(saved.description);
+    if (saved.requirements) setRequirements(saved.requirements);
+    if (saved.city) setCity(saved.city);
+    if (saved.region) setRegion(saved.region);
+    if (saved.contractType) setContractType(saved.contractType);
+    if (saved.salaryMin) setSalaryMin(saved.salaryMin);
+    if (saved.salaryMax) setSalaryMax(saved.salaryMax);
+    if (typeof saved.salaryNegotiable === "boolean") setSalaryNegotiable(saved.salaryNegotiable);
+    if (typeof saved.hideSalary === "boolean") setHideSalary(saved.hideSalary);
+    if (saved.deadline) setDeadline(saved.deadline);
+    if (saved.positionsCount) setPositionsCount(saved.positionsCount);
+    if (saved.visibility) setVisibility(saved.visibility);
+    setDraftReady(true);
+  }, [offer]);
+
+  useEffect(() => {
+    if (offer || !draftReady) return;
+    writeSessionDraft(draftKey, {
+      title,
+      description,
+      requirements,
+      city,
+      region,
+      contractType,
+      salaryMin,
+      salaryMax,
+      salaryNegotiable,
+      hideSalary,
+      deadline,
+      positionsCount,
+      visibility,
+    });
+  }, [
+    offer,
+    draftReady,
+    title,
+    description,
+    requirements,
+    city,
+    region,
+    contractType,
+    salaryMin,
+    salaryMax,
+    salaryNegotiable,
+    hideSalary,
+    deadline,
+    positionsCount,
+    visibility,
+    state,
+  ]);
 
   const preview = useMemo(
     () => ({
@@ -78,7 +154,13 @@ export function JobOfferForm({
           <CardTitle>{offer ? "Modifier l'offre" : "Publier une offre"}</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={formAction} className="space-y-4">
+          <form
+            action={formAction}
+            className="space-y-4"
+            onSubmit={() => {
+              if (!offer) clearSessionDraft(draftKey);
+            }}
+          >
             {offer ? <input type="hidden" name="id" value={offer.id} /> : null}
             <Field label="Intitulé du poste" error={state.errors?.title?.[0]}>
               <Input name="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
@@ -216,7 +298,9 @@ export function JobOfferForm({
               </select>
             </Field>
             {state.message && !state.ok ? (
-              <p className="text-sm text-destructive">{state.message}</p>
+              <p className="text-sm text-destructive" role="alert">
+                {state.message}
+              </p>
             ) : null}
             {state.ok ? <p className="text-sm text-primary">{state.message}</p> : null}
             <SubmitButton>{offer ? "Enregistrer" : "Publier l'offre"}</SubmitButton>
@@ -250,7 +334,11 @@ function Field({
     <div className="space-y-2">
       <Label>{label}</Label>
       {children}
-      {error ? <p className="text-xs text-destructive">{error}</p> : null}
+      {error ? (
+        <p className="text-xs text-destructive" role="alert">
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }

@@ -16,6 +16,7 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PasswordStrength } from "@/components/auth/password-strength";
 import { RecaptchaField } from "@/components/security/recaptcha-field";
+import { clearSessionDraft, readSessionDraft, writeSessionDraft } from "@/lib/form-draft";
 
 export function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
   const [state, action] = useActionState(login, {} as ActionState);
@@ -57,7 +58,11 @@ export function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
             <input type="checkbox" name="rememberDevice" className="size-4 accent-primary" />
             Se souvenir de cet appareil (30 jours, si 2FA activé)
           </label>
-          {state.message ? <p className="text-sm text-destructive">{state.message}</p> : null}
+          {state.message ? (
+            <p className="text-sm text-destructive" role="alert">
+              {state.message}
+            </p>
+          ) : null}
           <RecaptchaField />
           <SubmitButton>Se connecter</SubmitButton>
         </form>
@@ -97,9 +102,15 @@ export function TwoFactorForm() {
             Se souvenir de cet appareil pendant 30 jours
           </label>
           {state.errors?.code?.[0] ? (
-            <p className="text-sm text-destructive">{state.errors.code[0]}</p>
+            <p className="text-sm text-destructive" role="alert">
+              {state.errors.code[0]}
+            </p>
           ) : null}
-          {state.message ? <p className="text-sm text-destructive">{state.message}</p> : null}
+          {state.message ? (
+            <p className="text-sm text-destructive" role="alert">
+              {state.message}
+            </p>
+          ) : null}
           <SubmitButton>Valider</SubmitButton>
         </form>
       </CardContent>
@@ -107,76 +118,197 @@ export function TwoFactorForm() {
   );
 }
 
+const CANDIDATE_DRAFT_KEY = "rh_candidate_register_draft";
+
+type CandidateDraft = {
+  lastName: string;
+  firstName: string;
+  email: string;
+  phone: string;
+};
+
+const emptyCandidateDraft = (): CandidateDraft => ({
+  lastName: "",
+  firstName: "",
+  email: "",
+  phone: "",
+});
+
 export function CandidateRegisterForm() {
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [state, action] = useActionState(registerCandidate, {} as ActionState);
+  const [step, setStep] = useState(1);
+  const [draft, setDraft] = useState<CandidateDraft>(emptyCandidateDraft);
+  const [draftReady, setDraftReady] = useState(false);
+
+  useEffect(() => {
+    const saved = readSessionDraft<CandidateDraft>(CANDIDATE_DRAFT_KEY);
+    if (saved) {
+      const next = emptyCandidateDraft();
+      (Object.keys(next) as (keyof CandidateDraft)[]).forEach((key) => {
+        if (typeof saved[key] === "string") next[key] = saved[key];
+      });
+      setDraft(next);
+    }
+    setDraftReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!draftReady) return;
+    writeSessionDraft(CANDIDATE_DRAFT_KEY, draft);
+  }, [draft, draftReady, state]);
+
+  function update<K extends keyof CandidateDraft>(key: K, value: CandidateDraft[K]) {
+    setDraft((prev) => ({ ...prev, [key]: value }));
+  }
 
   return (
     <Card className="w-full max-w-lg">
       <CardHeader>
         <CardTitle>Inscription candidat</CardTitle>
         <CardDescription>
-          Un e-mail de confirmation et un code SMS vous seront envoyés.
+          Étape {step} sur 2. Le brouillon (sans mot de passe) reste dans cet onglet.
         </CardDescription>
+        <div
+          className="mt-3 h-2 overflow-hidden rounded-full bg-muted"
+          role="progressbar"
+          aria-valuemin={1}
+          aria-valuemax={2}
+          aria-valuenow={step}
+          aria-label={`Étape ${step} sur 2`}
+        >
+          <div
+            className="h-full rounded-full bg-primary transition-all duration-300"
+            style={{ width: `${(step / 2) * 100}%` }}
+          />
+        </div>
       </CardHeader>
       <CardContent>
-        <form action={action} className="grid gap-4 sm:grid-cols-2">
-          <Field label="Nom" name="lastName" error={state.errors?.lastName?.[0]} />
-          <Field label="Prénom" name="firstName" error={state.errors?.firstName?.[0]} />
-          <Field
-            className="sm:col-span-2"
-            label="E-mail"
-            name="email"
-            type="email"
-            error={state.errors?.email?.[0]}
-          />
-          <Field
-            className="sm:col-span-2"
-            label="Téléphone"
-            name="phone"
-            placeholder="+237 6XX XX XX XX"
-            error={state.errors?.phone?.[0]}
-          />
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="password">Mot de passe</Label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              required
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-            />
-            <PasswordFieldHint password={password} error={state.errors?.password?.[0]} />
-          </div>
-          <Field
-            className="sm:col-span-2"
-            label="Confirmation mot de passe"
-            name="confirmPassword"
-            type="password"
-            error={state.errors?.confirmPassword?.[0]}
-          />
-          <label className="flex items-start gap-2 text-sm sm:col-span-2">
-            <input type="checkbox" name="acceptTerms" className="mt-1 size-4 accent-primary" />
-            J&apos;accepte les{" "}
-            <Link href="/cgu" className="text-primary underline">
-              conditions générales d&apos;utilisation
-            </Link>
-          </label>
-          {state.errors?.acceptTerms ? (
-            <p className="text-xs text-destructive sm:col-span-2">
-              {state.errors.acceptTerms[0]}
-            </p>
-          ) : null}
-          {state.message ? (
-            <p className="text-sm text-destructive sm:col-span-2">{state.message}</p>
-          ) : null}
-          <div className="sm:col-span-2">
-            <RecaptchaField />
-          </div>
-          <div className="sm:col-span-2">
-            <SubmitButton>Créer mon profil</SubmitButton>
-          </div>
+        <form
+          action={action}
+          className="grid gap-4"
+          onSubmit={() => {
+            if (step === 2) clearSessionDraft(CANDIDATE_DRAFT_KEY);
+          }}
+        >
+          {step === 1 ? (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field
+                label="Nom"
+                name="lastName"
+                error={state.errors?.lastName?.[0]}
+                value={draft.lastName}
+                onChange={(value) => update("lastName", value)}
+              />
+              <Field
+                label="Prénom"
+                name="firstName"
+                error={state.errors?.firstName?.[0]}
+                value={draft.firstName}
+                onChange={(value) => update("firstName", value)}
+              />
+              <Field
+                className="sm:col-span-2"
+                label="E-mail"
+                name="email"
+                type="email"
+                error={state.errors?.email?.[0]}
+                value={draft.email}
+                onChange={(value) => update("email", value)}
+              />
+              <Field
+                className="sm:col-span-2"
+                label="Téléphone"
+                name="phone"
+                placeholder="+237 6XX XX XX XX"
+                error={state.errors?.phone?.[0]}
+                value={draft.phone}
+                onChange={(value) => update("phone", value)}
+              />
+              <div className="sm:col-span-2">
+                <button
+                  type="button"
+                  className="h-11 w-full rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground"
+                  onClick={() => {
+                    if (!draft.lastName.trim() || !draft.firstName.trim() || !draft.email.trim() || !draft.phone.trim()) {
+                      return;
+                    }
+                    setStep(2);
+                  }}
+                >
+                  Continuer
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              <input type="hidden" name="lastName" value={draft.lastName} />
+              <input type="hidden" name="firstName" value={draft.firstName} />
+              <input type="hidden" name="email" value={draft.email} />
+              <input type="hidden" name="phone" value={draft.phone} />
+              <div className="space-y-2">
+                <Label htmlFor="password">Mot de passe</Label>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                  autoComplete="new-password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                />
+                <PasswordFieldHint password={password} error={state.errors?.password?.[0]} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirmation mot de passe</Label>
+                <Input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  required
+                  autoComplete="new-password"
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                />
+                {state.errors?.confirmPassword ? (
+                  <p className="text-xs text-destructive" role="alert">
+                    {state.errors.confirmPassword[0]}
+                  </p>
+                ) : null}
+              </div>
+              <label className="flex items-start gap-2 text-sm">
+                <input type="checkbox" name="acceptTerms" className="mt-1 size-4 accent-primary" required />
+                J&apos;accepte les{" "}
+                <Link href="/cgu" className="text-primary underline">
+                  conditions générales d&apos;utilisation
+                </Link>
+              </label>
+              {state.errors?.acceptTerms ? (
+                <p className="text-xs text-destructive" role="alert">
+                  {state.errors.acceptTerms[0]}
+                </p>
+              ) : null}
+              {state.message ? (
+                <p className="text-sm text-destructive" role="alert">
+                  {state.message}
+                </p>
+              ) : null}
+              <RecaptchaField />
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  className="h-11 rounded-full border border-border px-5 text-sm font-medium"
+                  onClick={() => setStep(1)}
+                >
+                  Retour
+                </button>
+                <div className="min-w-[10rem] flex-1">
+                  <SubmitButton>Créer mon profil</SubmitButton>
+                </div>
+              </div>
+            </div>
+          )}
         </form>
       </CardContent>
     </Card>
@@ -207,6 +339,7 @@ export function CompanyRegisterForm({ sectors }: { sectors: readonly string[] })
   const [state, action] = useActionState(registerCompany, {} as ActionState);
   const [step, setStep] = useState(1);
   const [draft, setDraft] = useState<CompanyDraft>(emptyCompanyDraft);
+  const [draftReady, setDraftReady] = useState(false);
 
   useEffect(() => {
     try {
@@ -216,12 +349,15 @@ export function CompanyRegisterForm({ sectors }: { sectors: readonly string[] })
       setDraft({ ...emptyCompanyDraft(), ...parsed });
     } catch {
       /* ignore */
+    } finally {
+      setDraftReady(true);
     }
   }, []);
 
   useEffect(() => {
+    if (!draftReady) return;
     sessionStorage.setItem(COMPANY_DRAFT_KEY, JSON.stringify(draft));
-  }, [draft]);
+  }, [draft, draftReady, state]);
 
   function update<K extends keyof CompanyDraft>(key: K, value: CompanyDraft[K]) {
     setDraft((prev) => ({ ...prev, [key]: value }));
@@ -339,7 +475,11 @@ export function CompanyRegisterForm({ sectors }: { sectors: readonly string[] })
                   conditions générales d&apos;utilisation
                 </Link>
               </label>
-              {state.message ? <p className="text-sm text-destructive">{state.message}</p> : null}
+              {state.message ? (
+                <p className="text-sm text-destructive" role="alert">
+                  {state.message}
+                </p>
+              ) : null}
               <RecaptchaField />
               <div className="flex flex-wrap gap-2">
                 <button
@@ -392,7 +532,11 @@ function Field({
         value={value}
         onChange={onChange ? (event) => onChange(event.target.value) : undefined}
       />
-      {error ? <p className="text-xs text-destructive">{error}</p> : null}
+      {error ? (
+        <p className="text-xs text-destructive" role="alert">
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }
