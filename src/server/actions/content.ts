@@ -72,6 +72,7 @@ export async function submitTestimonial(
     role: formData.get("role") || undefined,
     email: formData.get("email"),
     quote: formData.get("quote"),
+    rating: formData.get("rating"),
   });
   if (!parsed.success) return { errors: fieldErrorsFromZod(parsed.error) };
 
@@ -81,6 +82,7 @@ export async function submitTestimonial(
       role: parsed.data.role ?? "",
       email: parsed.data.email.toLowerCase(),
       quote: parsed.data.quote,
+      rating: parsed.data.rating,
       status: TestimonialStatus.PENDING,
     },
   });
@@ -105,7 +107,7 @@ export async function submitTestimonial(
       to: inbox,
       subject: `Avis accueil — ${parsed.data.name}`,
       replyTo: parsed.data.email,
-      text: `Nom : ${parsed.data.name}\nFonction : ${parsed.data.role || "—"}\nE-mail : ${parsed.data.email}\n\n${parsed.data.quote}`,
+      text: `Nom : ${parsed.data.name}\nFonction : ${parsed.data.role || "—"}\nE-mail : ${parsed.data.email}\nNote : ${parsed.data.rating}/5\n\n${parsed.data.quote}`,
     });
   }
 
@@ -121,7 +123,7 @@ export async function loadPublishedTestimonials() {
     return await db.testimonial.findMany({
       where: { status: TestimonialStatus.PUBLISHED },
       orderBy: { publishedAt: "desc" },
-      select: { id: true, name: true, role: true, quote: true },
+      select: { id: true, name: true, role: true, quote: true, rating: true },
       take: 8,
     });
   } catch {

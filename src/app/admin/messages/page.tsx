@@ -36,6 +36,7 @@ export default async function AdminMessagesPage() {
                 <p className="font-medium">
                   {item.name}
                   {item.role ? ` · ${item.role}` : ""} · {item.email}
+                  {item.rating != null ? ` · ${item.rating}/5` : ""}
                 </p>
                 <p className="mt-2 whitespace-pre-wrap text-muted-foreground">“{item.quote}”</p>
                 <div className="mt-3 flex flex-wrap gap-2">

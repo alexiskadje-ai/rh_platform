@@ -610,6 +610,7 @@ model Testimonial {
   role        String             @default("")
   email       String
   quote       String
+  rating      Int?
   status      TestimonialStatus  @default(PENDING)
   createdAt   DateTime           @default(now())
   publishedAt DateTime?

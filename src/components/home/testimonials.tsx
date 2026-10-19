@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { FadeIn } from "@/components/motion/reveal";
+import { StarRating } from "@/components/home/star-rating";
 import { TestimonialAskForm } from "@/components/home/testimonial-ask-form";
 import { cn } from "@/lib/utils";
 
@@ -42,6 +43,7 @@ export type PublishedTestimonial = {
   name: string;
   role: string;
   quote: string;
+  rating: number | null;
 };
 
 const INTERVAL_MS = 6500;
@@ -54,6 +56,7 @@ export function Testimonials({ published = [] }: { published?: PublishedTestimon
       name: item.name,
       role: item.role,
       photo: item.photo as string | undefined,
+      rating: null as number | null,
     })),
     ...published.map((item) => ({
       key: item.id,
@@ -61,8 +64,14 @@ export function Testimonials({ published = [] }: { published?: PublishedTestimon
       name: item.name,
       role: item.role,
       photo: undefined as string | undefined,
+      rating: item.rating,
     })),
   ];
+  const rated = published.filter((item) => item.rating != null);
+  const average =
+    rated.length === 0
+      ? null
+      : rated.reduce((sum, item) => sum + (item.rating ?? 0), 0) / rated.length;
   const lastIndex = quotes.length;
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -85,6 +94,18 @@ export function Testimonials({ published = [] }: { published?: PublishedTestimon
         <h2 className="mt-3 font-display text-3xl font-medium text-primary md:text-4xl">
           Ils nous font confiance
         </h2>
+        {average != null ? (
+          <p className="mt-4 flex flex-wrap items-center gap-2 text-sm text-primary">
+            <StarRating value={average} />
+            <span className="font-medium">
+              {average.toLocaleString("fr-FR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+              /5
+            </span>
+            <span className="text-muted-foreground">
+              · {rated.length} avis publié{rated.length > 1 ? "s" : ""}
+            </span>
+          </p>
+        ) : null}
       </FadeIn>
       <div
         className="mt-10 overflow-hidden rounded-[2rem] border border-border/80 bg-card p-6 md:p-10"
@@ -123,6 +144,11 @@ export function Testimonials({ published = [] }: { published?: PublishedTestimon
                     <p className="font-medium">{current.name}</p>
                     {current.role ? (
                       <p className="text-sm text-muted-foreground">{current.role}</p>
+                    ) : null}
+                    {current.rating != null ? (
+                      <p className="mt-2">
+                        <StarRating value={current.rating} label={`Note de ${current.name} : ${current.rating} sur 5`} />
+                      </p>
                     ) : null}
                   </figcaption>
                 </div>

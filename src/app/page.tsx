@@ -18,19 +18,33 @@ export default async function HomePage() {
   let companyCount = 0;
   let satisfaction = 0;
   let recruiterCount = 0;
+  let openOffers = 0;
+  let profileInitials: string[] = [];
 
   try {
-    const [cvs, companies, decided, accepted, recruiters] = await Promise.all([
+    const [cvs, companies, decided, accepted, recruiters, offers, recentProfiles] = await Promise.all([
       db.candidate.count(),
       db.company.count({ where: { status: "ACTIVE" } }),
       db.application.count({ where: { status: { in: ["ACCEPTED", "REJECTED"] } } }),
       db.application.count({ where: { status: "ACCEPTED" } }),
       db.user.count({ where: { role: "RECRUITER", status: "ACTIVE" } }),
+      db.jobOffer.count({ where: publicJobWhere() }),
+      db.user.findMany({
+        where: { role: "CANDIDATE", firstName: { not: "" } },
+        orderBy: { createdAt: "desc" },
+        take: 6,
+        select: { firstName: true, lastName: true },
+      }),
     ]);
     cvCount = cvs;
     companyCount = companies;
     satisfaction = decided === 0 ? 0 : Math.round((accepted / decided) * 100);
     recruiterCount = recruiters;
+    openOffers = offers;
+    profileInitials = recentProfiles
+      .map((person) => profileInitialsFrom(person.firstName, person.lastName))
+      .filter((value) => value.length > 0)
+      .slice(0, 3);
   } catch {
     // Database may be unavailable during first boot.
   }
@@ -45,7 +59,14 @@ export default async function HomePage() {
 
   return (
     <main>
-      <HomeHero stats={stats} heroTitle={site.heroTitle} heroSubtitle={site.heroSubtitle} />
+      <HomeHero
+        stats={stats}
+        profileCount={cvCount}
+        profileInitials={profileInitials}
+        openOffers={openOffers}
+        heroTitle={site.heroTitle}
+        heroSubtitle={site.heroSubtitle}
+      />
       <ServicesGrid />
       <WhyAccompany />
       <HowItWorks />
@@ -54,6 +75,12 @@ export default async function HomePage() {
       <CtaBand />
     </main>
   );
+}
+
+function profileInitialsFrom(firstName: string, lastName: string) {
+  const first = firstName.trim()[0] ?? "";
+  const last = lastName.trim()[0] ?? "";
+  return `${first}${last}`.toUpperCase();
 }
 
 async function TestimonialsSection() {

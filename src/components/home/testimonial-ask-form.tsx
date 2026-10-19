@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { StarRatingField } from "@/components/home/star-rating";
 import { submitTestimonial, type ContentActionState } from "@/server/actions/content";
 import { RecaptchaField } from "@/components/security/recaptcha-field";
 import { Input } from "@/components/ui/input";
@@ -58,6 +59,9 @@ export function TestimonialAskForm() {
         {state.errors?.email ? (
           <p className="text-xs text-destructive">{state.errors.email[0]}</p>
         ) : null}
+      </div>
+      <div className="sm:col-span-2">
+        <StarRatingField error={state.errors?.rating?.[0]} />
       </div>
       <div className="space-y-2 sm:col-span-2">
         <Label htmlFor="avis-quote">Votre avis</Label>

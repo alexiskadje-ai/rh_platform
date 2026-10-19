@@ -5,6 +5,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowRight, Search } from "lucide-react";
 import { COMPANY_SLOGAN } from "@/lib/company";
+import { ProfileTrust } from "@/components/home/profile-trust";
 import { StatsRow } from "@/components/home/stats-row";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -12,10 +13,16 @@ import { fieldClass } from "@/lib/ui";
 
 export function HomeHero({
   stats,
+  profileCount,
+  profileInitials,
+  openOffers,
   heroTitle = "Faites la différence en boostant votre carrière",
   heroSubtitle = "Nous mettons à votre disposition les talents et les opportunités dont vous avez besoin. Le recrutement peut être long, coûteux et complexe — comme la recherche d'un emploi. Confiez-nous cette mission et concentrez-vous sur le développement de votre activité et de votre carrière.",
 }: {
   stats: { label: string; value: number; suffix?: string; plus?: boolean }[];
+  profileCount: number;
+  profileInitials: string[];
+  openOffers: number;
   heroTitle?: string;
   heroSubtitle?: string;
 }) {
@@ -87,7 +94,8 @@ export function HomeHero({
                 Recruteur : publiez vos offres
               </Link>
             </div>
-            <StatsRow stats={stats} className="pt-3" />
+            <ProfileTrust count={profileCount} initials={profileInitials} />
+            <StatsRow stats={stats} className="pt-1" />
           </motion.div>
           <motion.form
             action="/offres"
@@ -96,10 +104,18 @@ export function HomeHero({
             transition={{ duration: 0.8, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
             className="rounded-[1.75rem] bg-card p-6 text-card-foreground shadow-[0_30px_80px_rgba(0,0,0,0.25)]"
           >
-            <p className="flex items-center gap-2 text-sm font-medium">
-              <Search className="size-4 text-accent" />
-              Recherche rapide d&apos;offres
-            </p>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="flex items-center gap-2 text-sm font-medium">
+                <Search className="size-4 text-accent" />
+                Recherche rapide d&apos;offres
+              </p>
+              {openOffers > 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  {openOffers.toLocaleString("fr-FR")} offre{openOffers > 1 ? "s" : ""} ouverte
+                  {openOffers > 1 ? "s" : ""}
+                </p>
+              ) : null}
+            </div>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <input name="q" placeholder="Métier, compétence…" className={fieldClass} />
               <input name="location" placeholder="Ville, région…" className={fieldClass} />

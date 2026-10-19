@@ -30,6 +30,11 @@ export const submitTestimonialSchema = z.object({
     .trim()
     .min(20, "Écrivez au moins 20 caractères.")
     .max(500, "L'avis est trop long (500 caractères)."),
+  rating: z.coerce
+    .number({ error: "Choisissez une note de 1 à 5." })
+    .int()
+    .min(1, "Choisissez une note de 1 à 5.")
+    .max(5, "Choisissez une note de 1 à 5."),
 });
 
 export const newsletterSchema = z.object({
