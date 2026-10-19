@@ -11,6 +11,13 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { fieldClass } from "@/lib/ui";
 
+const heroCtaClass = cn(
+  buttonVariants({ size: "lg" }),
+  "border border-white/25 bg-[#1a4f9c] text-white shadow-none",
+  "hover:border-accent! hover:bg-accent! hover:text-white! hover:shadow-[0_10px_24px_rgba(242,98,0,0.28)]!",
+  "active:border-accent! active:bg-accent! active:text-white!",
+);
+
 export function HomeHero({
   stats,
   profileCount,
@@ -27,7 +34,7 @@ export function HomeHero({
   heroSubtitle?: string;
 }) {
   return (
-    <section className="relative -mt-[4.25rem] overflow-hidden bg-primary text-primary-foreground">
+    <section className="relative overflow-hidden bg-primary text-primary-foreground">
       <Image
         src="/home/hero.jpg"
         alt=""
@@ -43,7 +50,7 @@ export function HomeHero({
       >
         RH
       </div>
-      <div className="relative mx-auto max-w-6xl px-4 pb-10 pt-24 md:pb-12 md:pt-28">
+      <div className="relative mx-auto max-w-6xl px-4 py-12 md:py-16">
         <div className="grid gap-8 md:grid-cols-2 md:items-center">
           <motion.div
             initial={{ opacity: 0, y: 28 }}
@@ -60,37 +67,11 @@ export function HomeHero({
             <p className="w-full text-justify text-sm leading-relaxed text-primary-foreground/75 md:text-base">
               {heroSubtitle}
             </p>
-            <div
-              className={cn(
-                "flex flex-col gap-3 sm:flex-row",
-                "[&:has([data-cta=candidat]:hover)_[data-cta=recruiter]]:border-accent",
-                "[&:has([data-cta=candidat]:hover)_[data-cta=recruiter]]:bg-accent",
-                "[&:has([data-cta=candidat]:hover)_[data-cta=recruiter]]:text-accent-foreground",
-                "[&:has([data-cta=candidat]:hover)_[data-cta=recruiter]]:shadow-[0_10px_24px_rgba(242,98,0,0.28)]",
-                "[&:has([data-cta=recruiter]:hover)_[data-cta=candidat]]:bg-background",
-                "[&:has([data-cta=recruiter]:hover)_[data-cta=candidat]]:text-primary",
-                "[&:has([data-cta=recruiter]:hover)_[data-cta=candidat]]:shadow-[0_10px_24px_rgba(4,41,99,0.22)]",
-              )}
-            >
-              <Link
-                href="/register/candidate"
-                data-cta="candidat"
-                className={cn(
-                  buttonVariants({ variant: "accent", size: "lg" }),
-                  "hover:bg-accent! hover:text-accent-foreground! hover:shadow-none!",
-                )}
-              >
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Link href="/register/candidate" className={heroCtaClass}>
                 Candidat : créer votre profil
               </Link>
-              <Link
-                href="/register/recruiter"
-                data-cta="recruiter"
-                className={cn(
-                  buttonVariants({ variant: "outline", size: "lg" }),
-                  "border-primary-foreground/40 text-primary-foreground",
-                  "hover:border-primary-foreground/40! hover:bg-transparent! hover:text-primary-foreground! hover:shadow-none!",
-                )}
-              >
+              <Link href="/register/recruiter" className={heroCtaClass}>
                 Recruteur : publiez vos offres
               </Link>
             </div>

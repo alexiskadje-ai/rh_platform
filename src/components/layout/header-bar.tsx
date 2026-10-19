@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
@@ -43,27 +43,16 @@ export function HeaderBar({
   installInRecruiterMenu?: boolean;
 }) {
   const pathname = usePathname();
-  const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
-  const overlay = !workspace && pathname === "/" && !scrolled;
-  const light = workspace || overlay;
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 12);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  const light = workspace;
 
   return (
     <header
       className={cn(
-        "fixed top-0 z-50 w-full transition-[background-color,box-shadow,border-color,backdrop-filter] duration-300",
+        "fixed top-0 z-50 w-full",
         workspace
           ? "border-b border-white/10 bg-primary text-primary-foreground shadow-[0_12px_32px_rgba(4,41,99,0.22)]"
-          : overlay
-            ? "border-transparent bg-transparent text-primary-foreground"
-            : "border-b border-border/60 bg-background/90 text-foreground shadow-[0_8px_30px_rgba(20,33,28,0.06)] backdrop-blur-xl",
+          : "border-b border-border/70 bg-background/95 text-foreground shadow-[0_8px_30px_rgba(20,33,28,0.06)] backdrop-blur-xl",
       )}
     >
       <div className="mx-auto flex h-[4.25rem] w-full max-w-6xl items-center justify-between gap-4 px-4">
@@ -133,7 +122,6 @@ export function HeaderBar({
                 href="/login"
                 className={cn(
                   buttonVariants({ variant: "ghost", size: "sm" }),
-                  overlay && "text-primary-foreground",
                   "hidden sm:inline-flex",
                 )}
               >
@@ -142,7 +130,7 @@ export function HeaderBar({
               <Link
                 href="/register"
                 className={cn(
-                  buttonVariants({ variant: overlay ? "accent" : "default", size: "sm" }),
+                  buttonVariants({ variant: "default", size: "sm" }),
                   "hidden sm:inline-flex",
                 )}
               >
