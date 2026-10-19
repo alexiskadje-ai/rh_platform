@@ -17,7 +17,7 @@ export default function ServicesPage() {
       </div>
       <ServicesGrid hideHeading />
       <div className="mx-auto flex max-w-6xl flex-wrap gap-3 px-4 pb-20">
-        <Link href="/register/company" className={cn(buttonVariants({ size: "lg" }))}>
+        <Link href="/register/recruiter" className={cn(buttonVariants({ size: "lg" }))}>
           Devenir recruteur
         </Link>
         <a

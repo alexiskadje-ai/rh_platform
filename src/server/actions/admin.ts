@@ -108,7 +108,7 @@ export async function approveRecruiterPack(
   revalidatePath("/admin");
   revalidatePath("/admin/utilisateurs");
   revalidatePath("/pending-approval");
-  return { ok: true, message: "Entreprise validée. Facture émise et e-mail de première connexion envoyé." };
+  return { ok: true, message: "Recruteur validé. Facture émise et e-mail de première connexion envoyé." };
 }
 
 export async function rejectRecruiterPack(

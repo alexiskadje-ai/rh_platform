@@ -44,10 +44,10 @@ export default function RegisterChoicePage() {
               </CardHeader>
               <CardContent>
                 <Link
-                  href="/register/company"
+                  href="/register/recruiter"
                   className={cn(buttonVariants({ variant: "accent" }), "w-full")}
                 >
-                  Inscription entreprise
+                  Inscription recruteur
                 </Link>
               </CardContent>
             </Card>

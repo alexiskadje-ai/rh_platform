@@ -54,13 +54,13 @@ async function main() {
   const now = new Date();
   const company = await db.company.upsert({
     where: { id: DEMO_COMPANY_ID },
-    update: { status: CompanyStatus.ACTIVE, validatedAt: now },
+    update: { status: CompanyStatus.ACTIVE, validatedAt: now, rccm: "RC/DLA/2026/B/0001" },
     create: {
       id: DEMO_COMPANY_ID,
       name: "PES Démo",
       sector: "Services / Conseil",
       address: "Logpom Andem, Douala",
-      commerceRegister: "RC/DLA/2026/B/0001",
+      rccm: "RC/DLA/2026/B/0001",
       status: CompanyStatus.ACTIVE,
       validatedAt: now,
     },

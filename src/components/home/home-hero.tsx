@@ -76,7 +76,7 @@ export function HomeHero({
                 Candidat : créer votre profil
               </Link>
               <Link
-                href="/register/company"
+                href="/register/recruiter"
                 data-cta="recruiter"
                 className={cn(
                   buttonVariants({ variant: "outline", size: "lg" }),

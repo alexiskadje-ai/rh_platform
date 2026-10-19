@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { Prisma, Role, TokenType, UserStatus } from "@prisma/client";
+import { Prisma, RecruiterType, Role, TokenType, UserStatus } from "@prisma/client";
 import { signIn, signOut } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { FIRST_LOGIN_PATH, RECRUITER_ONBOARDING_PACK_PATH } from "@/lib/config/recruiter-packs";
@@ -24,13 +24,18 @@ import { verifyTotp } from "@/lib/two-factor";
 import {
   loginSchema,
   registerCandidateSchema,
-  registerCompanySchema,
   requestPasswordResetSchema,
   resetPasswordSchema,
   setInitialPasswordSchema,
   twoFactorSchema,
   verifySmsSchema,
 } from "@/lib/validations/auth";
+import { parseRegisterRecruiterForm } from "@/lib/validations/recruiter-signup";
+import {
+  findRecruiterSignupConflict,
+  RECRUITER_SIGNUP_CONFLICT_MESSAGE,
+  type RecruiterSignupLookup,
+} from "@/lib/recruiter-signup";
 import { GUEST_CV_DUPLICATE_MESSAGE } from "@/lib/validations/free-cv";
 import { recaptchaFailed, RECAPTCHA_REQUIRED_MESSAGE } from "@/lib/recaptcha";
 import { clientIpFromHeaders, consumeRateLimit } from "@/lib/security/rate-limit";
@@ -255,52 +260,73 @@ export async function registerCompany(
   if (await recaptchaFailed(formData)) {
     return { message: RECAPTCHA_REQUIRED_MESSAGE };
   }
-  const parsed = registerCompanySchema.safeParse({
-    companyName: formData.get("companyName"),
-    sector: formData.get("sector"),
-    contactName: formData.get("contactName"),
-    email: formData.get("email"),
-    phone: formData.get("phone"),
-    commerceRegister: formData.get("commerceRegister") || undefined,
-    acceptTerms: booleanFromForm(formData.get("acceptTerms")),
-  });
+  const parsed = parseRegisterRecruiterForm(formData);
 
   if (!parsed.success) {
     return { errors: fieldErrorsFromZod(parsed.error) };
   }
 
   const data = parsed.data;
-  const existing = await db.user.findFirst({
-    where: { OR: [{ email: data.email.toLowerCase() }, { phone: data.phone }] },
+  const lookup: RecruiterSignupLookup = {
+    user: { findFirst: (args) => db.user.findFirst(args) },
+    company: { findFirst: (args) => db.company.findFirst(args) },
+  };
+  const conflict = await findRecruiterSignupConflict(lookup, {
+    email: data.email,
+    phone: data.phone,
+    rccm: data.recruiterType === "COMPANY" ? data.rccm : undefined,
+    niu: data.recruiterType === "COMPANY" ? data.niu : undefined,
   });
-  if (existing) {
-    return { message: "Un compte existe déjà avec cet e-mail ou ce téléphone." };
+  if (conflict) {
+    return { message: RECRUITER_SIGNUP_CONFLICT_MESSAGE };
   }
 
-  const { firstName, lastName } = splitContactName(data.contactName);
-
-  const user = await db.user.create({
-    data: {
-      firstName,
-      lastName,
-      email: data.email.toLowerCase(),
-      phone: data.phone,
-      passwordHash: await hashPassword(generateToken()),
-      mustChangePassword: true,
-      role: Role.RECRUITER,
-      status: UserStatus.PENDING,
-      termsAcceptedAt: new Date(),
-      company: {
-        create: {
+  const { firstName, lastName } = splitContactName(data.fullName);
+  const company =
+    data.recruiterType === "HEADHUNTER"
+      ? {
+          name: data.fullName,
+          type: RecruiterType.HEADHUNTER,
+        }
+      : {
           name: data.companyName,
-          sector: data.sector,
-          commerceRegister: data.commerceRegister,
-        },
-      },
-    },
-  });
+          type: RecruiterType.COMPANY,
+          legalForm: data.legalForm,
+          rccm: data.rccm,
+          niu: data.niu,
+          taxpayerNumber: data.taxpayerNumber,
+          employeeCountRange: data.employeeCountRange,
+          annualRevenueRange: data.annualRevenueRange,
+        };
 
-  await notify(user.id, "ACCOUNT_CREATED", { firstName: user.firstName });
+  let user;
+  try {
+    user = await db.user.create({
+      data: {
+        firstName,
+        lastName,
+        civility: data.civility,
+        email: data.email.toLowerCase(),
+        phone: data.phone,
+        passwordHash: await hashPassword(generateToken()),
+        mustChangePassword: true,
+        role: Role.RECRUITER,
+        status: UserStatus.PENDING,
+        termsAcceptedAt: new Date(),
+        company: { create: company },
+      },
+    });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return { message: RECRUITER_SIGNUP_CONFLICT_MESSAGE };
+    }
+    throw error;
+  }
+
+  await notify(user.id, "ACCOUNT_CREATED", {
+    firstName: user.firstName,
+    accountLabel: "recruteur",
+  });
 
   const emailToken = await issueToken(user.id, TokenType.EMAIL);
   const smsCode = await issueToken(user.id, TokenType.SMS);

@@ -23,7 +23,7 @@ export async function requireOnboardingRecruiter() {
     },
   });
   if (!user?.company) {
-    redirect("/register/company");
+    redirect("/register/recruiter");
   }
 
   const subscription = user.company.recruiterSubscription;

@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PackReviewActions } from "@/components/admin/pack-review-actions";
+import { RecruiterPendingDetails } from "@/components/admin/recruiter-pending-details";
 import {
   BILLING_CYCLE_LABELS,
   RECRUITER_PACK_LABELS,
@@ -84,7 +85,7 @@ export default async function AdminDashboardPage() {
       <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {[
           ["Candidats", candidates],
-          ["Entreprises", companies],
+          ["Recruteurs", companies],
           ["En attente", pendingCompanies.length],
           ["Offres ouvertes", offers],
           ["Formations vendues", soldFormations],
@@ -102,7 +103,7 @@ export default async function AdminDashboardPage() {
 
       <section className="mt-8">
         <div className="flex flex-wrap items-end justify-between gap-3">
-          <h2 className="text-lg font-semibold text-primary">Packs payés à valider</h2>
+          <h2 className="text-lg font-semibold text-primary">Demandes recruteurs en attente</h2>
         </div>
         <div className="mt-4 space-y-3">
           {pendingCompanies.length === 0 ? (
@@ -117,11 +118,7 @@ export default async function AdminDashboardPage() {
                   className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div>
-                    <p className="font-medium">{company.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {company.sector}
-                      {contact ? ` · ${contact.email}` : ""}
-                    </p>
+                    <RecruiterPendingDetails company={company} contact={contact} />
                     {pack ? (
                       <p className="text-sm text-muted-foreground">
                         {RECRUITER_PACK_LABELS[pack.tier]} · {BILLING_CYCLE_LABELS[pack.billingCycle]} ·{" "}

@@ -26,6 +26,11 @@ enum CompanyStatus {
   SUSPENDED
 }
 
+enum RecruiterType {
+  COMPANY
+  HEADHUNTER
+}
+
 enum ContractType {
   CDI
   CDD
@@ -155,6 +160,7 @@ model User {
   phone           String?   @unique
   firstName       String
   lastName        String
+  civility        String?
   passwordHash    String
   role            Role
   status          UserStatus @default(PENDING)
@@ -188,9 +194,17 @@ model User {
 model Company {
   id                 String        @id @default(cuid())
   name               String
-  sector             String
+  type               RecruiterType @default(COMPANY)
+  sector             String?
   address            String?
+  /// @deprecated Utiliser `rccm`. Ne plus écrire ; conservé pour l'historique des lignes existantes.
   commerceRegister   String?
+  legalForm          String?
+  rccm               String?       @unique
+  niu                String?       @unique
+  taxpayerNumber     String?
+  employeeCountRange String?
+  annualRevenueRange String?
   status             CompanyStatus @default(PENDING)
   validatedAt        DateTime?
   leaveDualApproval  Boolean       @default(false)

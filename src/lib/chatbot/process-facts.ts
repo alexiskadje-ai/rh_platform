@@ -19,7 +19,7 @@ export function currentProcessFacts() {
 
   return [
     "Inscription candidat : la page Inscription demande nom, prénom, e-mail, téléphone, mot de passe et acceptation des conditions, puis une vérification e-mail et SMS.",
-    "Inscription entreprise : le formulaire demande le nom de l'entreprise, le secteur, le contact RH, l'e-mail, le téléphone et le registre de commerce facultatif. Il n'y a pas de champ mot de passe. Le bouton Suivant crée le compte et ouvre directement le choix du pack, sans écran de validation administrateur avant ce choix.",
+    "Inscription recruteur : le formulaire demande d'abord si le recruteur est une entreprise ou un chasseur de têtes, puis la civilité, le nom complet, le téléphone et l'e-mail. Une entreprise ajoute le nom, le RCCM, la forme juridique, l'effectif, le chiffre d'affaires, le NIU et le numéro de contribuable. Il n'y a pas de champ mot de passe. Le bouton Suivant crée le compte et ouvre directement le choix du pack, sans écran de validation administrateur avant ce choix.",
     "Après le choix du pack, Suivant ouvre le paiement (MTN Mobile Money, Orange Money ou carte). Une fois le paiement confirmé, un message indique qu'un administrateur a pris en compte la demande, qu'elle sera analysée et qu'une réponse arrive d'ici 72 h, et qu'un e-mail de confirmation est envoyé.",
     "Si l'administrateur refuse la demande, le montant payé est remboursé par le système.",
     "Si l'administrateur valide, la facture est émise et le recruteur reçoit par e-mail un lien de première connexion avec un mot de passe temporaire. Il se connecte avec ce mot de passe, en choisit un personnel, puis accède à son tableau de bord.",

@@ -33,18 +33,6 @@ export const registerCandidateSchema = z
     path: ["confirmPassword"],
   });
 
-export const registerCompanySchema = z.object({
-  companyName: z.string().trim().min(1, "Le nom de l'entreprise est obligatoire."),
-  sector: z.string().trim().min(1, "Le secteur d'activité est obligatoire."),
-  contactName: z.string().trim().min(1, "Le nom du contact RH est obligatoire."),
-  email: z.email("Adresse e-mail professionnelle invalide."),
-  phone: phoneSchema,
-  commerceRegister: z.string().trim().optional(),
-  acceptTerms: z.literal(true, {
-    error: "Vous devez accepter les conditions d'utilisation.",
-  }),
-});
-
 export const loginSchema = z.object({
   identifier: z.string().trim().min(1, "E-mail ou téléphone obligatoire."),
   password: z.string().min(1, "Le mot de passe est obligatoire."),
@@ -96,6 +84,5 @@ export const resetPasswordSchema = z
   });
 
 export type RegisterCandidateInput = z.infer<typeof registerCandidateSchema>;
-export type RegisterCompanyInput = z.infer<typeof registerCompanySchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type FormErrors = Record<string, string[] | undefined>;

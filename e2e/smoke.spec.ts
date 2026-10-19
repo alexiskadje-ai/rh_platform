@@ -22,12 +22,16 @@ test.describe("smoke public", () => {
     await expect(page.locator("#contenu-principal")).toBeVisible();
   });
 
-  test("l'inscription candidat et entreprise affiche une progression", async ({ page }) => {
+  test("l'inscription candidat affiche une progression", async ({ page }) => {
     await page.goto("/register/candidate");
     await expect(page.getByRole("progressbar")).toBeVisible();
     await expect(page.getByRole("button", { name: "Continuer" })).toBeVisible();
+  });
+
+  test("l'ancienne inscription entreprise ouvre l'inscription recruteur", async ({ page }) => {
     await page.goto("/register/company");
-    await expect(page.getByRole("progressbar")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Continuer" })).toBeVisible();
+    await expect(page).toHaveURL(/\/register\/recruiter$/);
+    await expect(page.getByRole("heading", { name: "Inscription recruteur" })).toBeVisible();
+    await expect(page.getByRole("radiogroup", { name: "Type de recruteur" })).toBeVisible();
   });
 });

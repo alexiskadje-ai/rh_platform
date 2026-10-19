@@ -40,7 +40,7 @@ export async function SiteFooter() {
             <Link href="/contact" className="hover:text-highlight">
               Contact
             </Link>
-            <Link href="/register/company" className="hover:text-highlight">
+            <Link href="/register/recruiter" className="hover:text-highlight">
               Espace recruteur
             </Link>
           </div>

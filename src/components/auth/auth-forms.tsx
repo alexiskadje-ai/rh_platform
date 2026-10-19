@@ -5,7 +5,6 @@ import Link from "next/link";
 import {
   login,
   registerCandidate,
-  registerCompany,
   verifyTwoFactor,
   type ActionState,
 } from "@/server/actions/auth";
@@ -315,192 +314,6 @@ export function CandidateRegisterForm() {
   );
 }
 
-const COMPANY_DRAFT_KEY = "rh_company_register_draft";
-
-type CompanyDraft = {
-  companyName: string;
-  sector: string;
-  contactName: string;
-  email: string;
-  phone: string;
-  commerceRegister: string;
-};
-
-const emptyCompanyDraft = (): CompanyDraft => ({
-  companyName: "",
-  sector: "",
-  contactName: "",
-  email: "",
-  phone: "",
-  commerceRegister: "",
-});
-
-export function CompanyRegisterForm({ sectors }: { sectors: readonly string[] }) {
-  const [state, action] = useActionState(registerCompany, {} as ActionState);
-  const [step, setStep] = useState(1);
-  const [draft, setDraft] = useState<CompanyDraft>(emptyCompanyDraft);
-  const [draftReady, setDraftReady] = useState(false);
-
-  useEffect(() => {
-    try {
-      const raw = sessionStorage.getItem(COMPANY_DRAFT_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as Partial<CompanyDraft>;
-      setDraft({ ...emptyCompanyDraft(), ...parsed });
-    } catch {
-      /* ignore */
-    } finally {
-      setDraftReady(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!draftReady) return;
-    sessionStorage.setItem(COMPANY_DRAFT_KEY, JSON.stringify(draft));
-  }, [draft, draftReady, state]);
-
-  function update<K extends keyof CompanyDraft>(key: K, value: CompanyDraft[K]) {
-    setDraft((prev) => ({ ...prev, [key]: value }));
-  }
-
-  return (
-    <Card className="w-full max-w-lg">
-      <CardHeader>
-        <CardTitle>Inscription entreprise</CardTitle>
-        <CardDescription>
-          Étape {step} sur 2 — le brouillon est conservé dans cet onglet jusqu&apos;à l&apos;envoi.
-        </CardDescription>
-        <div
-          className="mt-3 h-2 overflow-hidden rounded-full bg-muted"
-          role="progressbar"
-          aria-valuemin={1}
-          aria-valuemax={2}
-          aria-valuenow={step}
-          aria-label={`Étape ${step} sur 2`}
-        >
-          <div
-            className="h-full rounded-full bg-primary transition-all duration-300"
-            style={{ width: `${(step / 2) * 100}%` }}
-          />
-        </div>
-      </CardHeader>
-      <CardContent>
-        <form
-          action={action}
-          className="grid gap-4"
-          onSubmit={() => {
-            if (step === 2) sessionStorage.removeItem(COMPANY_DRAFT_KEY);
-          }}
-        >
-          {step === 1 ? (
-            <div className="grid gap-4">
-              <Field
-                label="Nom de l'entreprise"
-                name="companyName"
-                error={state.errors?.companyName?.[0]}
-                value={draft.companyName}
-                onChange={(value) => update("companyName", value)}
-              />
-              <div className="space-y-2">
-                <Label htmlFor="sector">Secteur d&apos;activité</Label>
-                <select
-                  id="sector"
-                  name="sector"
-                  required
-                  value={draft.sector}
-                  onChange={(event) => update("sector", event.target.value)}
-                  className="h-11 w-full rounded-xl border border-input bg-card px-3 text-sm"
-                >
-                  <option value="">Sélectionner</option>
-                  {sectors.map((sector) => (
-                    <option key={sector} value={sector}>
-                      {sector}
-                    </option>
-                  ))}
-                </select>
-                {state.errors?.sector ? (
-                  <p className="text-xs text-destructive">{state.errors.sector[0]}</p>
-                ) : null}
-              </div>
-              <Field
-                label="Registre de commerce / N° contribuable"
-                name="commerceRegister"
-                error={state.errors?.commerceRegister?.[0]}
-                value={draft.commerceRegister}
-                onChange={(value) => update("commerceRegister", value)}
-              />
-              <button
-                type="button"
-                className="h-11 rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground"
-                onClick={() => {
-                  if (!draft.companyName.trim() || !draft.sector) return;
-                  setStep(2);
-                }}
-              >
-                Continuer
-              </button>
-            </div>
-          ) : (
-            <div className="grid gap-4">
-              <input type="hidden" name="companyName" value={draft.companyName} />
-              <input type="hidden" name="sector" value={draft.sector} />
-              <input type="hidden" name="commerceRegister" value={draft.commerceRegister} />
-              <Field
-                label="Nom du contact RH"
-                name="contactName"
-                error={state.errors?.contactName?.[0]}
-                value={draft.contactName}
-                onChange={(value) => update("contactName", value)}
-              />
-              <Field
-                label="E-mail professionnel"
-                name="email"
-                type="email"
-                error={state.errors?.email?.[0]}
-                value={draft.email}
-                onChange={(value) => update("email", value)}
-              />
-              <Field
-                label="Téléphone"
-                name="phone"
-                placeholder="+237 6XX XX XX XX"
-                error={state.errors?.phone?.[0]}
-                value={draft.phone}
-                onChange={(value) => update("phone", value)}
-              />
-              <label className="flex items-start gap-2 text-sm">
-                <input type="checkbox" name="acceptTerms" className="mt-1 size-4 accent-primary" required />
-                J&apos;accepte les{" "}
-                <Link href="/cgu" className="text-primary underline">
-                  conditions générales d&apos;utilisation
-                </Link>
-              </label>
-              {state.message ? (
-                <p className="text-sm text-destructive" role="alert">
-                  {state.message}
-                </p>
-              ) : null}
-              <RecaptchaField />
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  className="h-11 rounded-full border border-border px-5 text-sm font-medium"
-                  onClick={() => setStep(1)}
-                >
-                  Retour
-                </button>
-                <div className="min-w-[10rem] flex-1">
-                  <SubmitButton>Suivant</SubmitButton>
-                </div>
-              </div>
-            </div>
-          )}
-        </form>
-      </CardContent>
-    </Card>
-  );
-}
-
 function Field({
   label,
   name,
@@ -528,7 +341,7 @@ function Field({
         name={name}
         type={type}
         placeholder={placeholder}
-        required={name !== "commerceRegister"}
+        required
         value={value}
         onChange={onChange ? (event) => onChange(event.target.value) : undefined}
       />

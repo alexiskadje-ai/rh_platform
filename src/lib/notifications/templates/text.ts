@@ -13,8 +13,12 @@ export function renderInAppMessage<E extends NotificationEvent>(
   payload: NotificationPayloads[E],
 ) {
   switch (event) {
-    case "ACCOUNT_CREATED":
-      return "Votre compte a été créé.";
+    case "ACCOUNT_CREATED": {
+      const data = payload as NotificationPayloads["ACCOUNT_CREATED"];
+      return data.accountLabel === "recruteur"
+        ? "Votre inscription recruteur a été enregistrée."
+        : "Votre compte a été créé.";
+    }
     case "NEW_APPLICATION": {
       const data = payload as NotificationPayloads["NEW_APPLICATION"];
       return `${data.candidateName} a postulé à « ${data.jobTitle} ».`;
@@ -37,7 +41,7 @@ export function renderInAppMessage<E extends NotificationEvent>(
     }
     case "RECRUITER_PACK_APPROVED": {
       const data = payload as NotificationPayloads["RECRUITER_PACK_APPROVED"];
-      return `Entreprise ${data.companyName} validée. Consultez votre e-mail pour la première connexion.`;
+      return `Compte recruteur ${data.companyName} validé. Consultez votre e-mail pour la première connexion.`;
     }
     case "RECRUITER_PACK_REJECTED": {
       const data = payload as NotificationPayloads["RECRUITER_PACK_REJECTED"];

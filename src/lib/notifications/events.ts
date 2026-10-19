@@ -30,6 +30,7 @@ export const DEFAULT_CHANNELS: Record<NotificationEvent, readonly NotificationCh
 export type NotificationPayloads = {
   ACCOUNT_CREATED: {
     firstName: string;
+    accountLabel?: "recruteur";
   };
   NEW_APPLICATION: {
     jobTitle: string;
