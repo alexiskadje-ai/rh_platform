@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { phoneSchema } from "@/lib/validations/auth";
 
 export const momoPhoneSchema = z
   .string()
@@ -28,7 +29,7 @@ export const startStripePaymentSchema = z.object({
 
 export const startOrangePaymentSchema = z.object({
   orderId: z.string().min(1),
-  phone: momoPhoneSchema,
+  phone: phoneSchema,
 });
 
 export const startBankTransferSchema = z.object({

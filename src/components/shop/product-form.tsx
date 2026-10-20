@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { selectFieldClass } from "@/lib/ui";
 
 export function ProductForm({
   productId,
@@ -48,7 +49,7 @@ export function ProductForm({
             name="type"
             required
             defaultValue={initial?.type ?? PRODUCT_TYPES[0]}
-            className="h-11 w-full rounded-xl border border-input bg-card px-3 text-sm"
+            className={selectFieldClass}
           >
             {PRODUCT_TYPES.map((type) => (
               <option key={type} value={type}>

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { selectFieldClass } from "@/lib/ui";
 
 export function InterviewForm({
   applicationId,
@@ -50,7 +51,7 @@ export function InterviewForm({
           id="format"
           name="format"
           defaultValue={format ?? "ONSITE"}
-          className="h-11 w-full rounded-xl border border-input bg-card px-3 text-sm"
+          className={selectFieldClass}
           required
         >
           {Object.entries(INTERVIEW_FORMAT_LABELS).map(([value, label]) => (

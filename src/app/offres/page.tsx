@@ -8,7 +8,7 @@ import { JobOfferCard } from "@/components/recruitment/job-offer-card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { PageHero } from "@/components/layout/page-hero";
-import { fieldClass } from "@/lib/ui";
+import { selectFieldClass } from "@/lib/ui";
 
 export const metadata: Metadata = {
   title: "Offres d'emploi",
@@ -51,7 +51,7 @@ export default async function PublicJobsPage({
         <select
           name="contractType"
           defaultValue={filters.contractType ?? ""}
-          className={fieldClass}
+          className={selectFieldClass}
         >
           <option value="">Tous les contrats</option>
           {Object.entries(CONTRACT_LABELS).map(([value, label]) => (

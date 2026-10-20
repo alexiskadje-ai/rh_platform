@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { confirmEmail } from "@/server/actions/auth";
 import { SmsVerifyForm } from "@/components/auth/sms-verify-form";
 import { EmailVerifyForm } from "@/components/auth/email-verify-form";
+import { ResendSmsButton } from "@/components/auth/resend-sms-button";
 import { ResendVerificationButton } from "@/components/auth/resend-verification-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getSessionUser } from "@/lib/dal";
@@ -25,7 +26,7 @@ export default async function VerifyPage({
   const dbUser = user
     ? await db.user.findUnique({
         where: { id: user.id },
-        select: { emailVerifiedAt: true },
+        select: { emailVerifiedAt: true, phoneVerifiedAt: true },
       })
     : null;
 
@@ -38,33 +39,45 @@ export default async function VerifyPage({
             Confirmez votre e-mail avec le code (ou le lien) reçu, puis saisissez le code SMS.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {emailResult?.ok || dbUser?.emailVerifiedAt ? (
-            <p className="rounded-xl bg-muted px-3 py-2 text-sm">E-mail confirmé.</p>
-          ) : null}
-          {emailResult && !emailResult.ok ? (
-            <p className="text-sm text-destructive">{emailResult.message}</p>
-          ) : null}
-          {!dbUser?.emailVerifiedAt && debugEmail ? (
-            <p className="text-sm">
-              Lien de développement :{" "}
-              <Link className="font-medium text-primary underline" href={`/verify?token=${debugEmail}`}>
-                confirmer l&apos;e-mail
-              </Link>
-            </p>
-          ) : null}
-          {debugSms ? (
-            <p className="rounded-xl bg-muted px-3 py-2 text-xs text-muted-foreground">
-              Code SMS (dev) : {debugSms}
-            </p>
-          ) : null}
-          {!dbUser?.emailVerifiedAt ? (
-            <div className="space-y-4">
-              <EmailVerifyForm />
-              <ResendVerificationButton />
-            </div>
-          ) : null}
-          <SmsVerifyForm />
+        <CardContent className="space-y-8">
+          <section className="space-y-4">
+            <h3 className="text-sm font-medium text-foreground">1. E-mail</h3>
+            {emailResult?.ok || dbUser?.emailVerifiedAt ? (
+              <p className="rounded-xl bg-muted px-3 py-2 text-sm">E-mail confirmé.</p>
+            ) : (
+              <>
+                {emailResult && !emailResult.ok ? (
+                  <p className="text-sm text-destructive">{emailResult.message}</p>
+                ) : null}
+                {debugEmail ? (
+                  <p className="text-sm">
+                    Lien de développement :{" "}
+                    <Link className="font-medium text-primary underline" href={`/verify?token=${debugEmail}`}>
+                      confirmer l&apos;e-mail
+                    </Link>
+                  </p>
+                ) : null}
+                <EmailVerifyForm />
+                <ResendVerificationButton />
+              </>
+            )}
+          </section>
+          <section className="space-y-4 border-t border-border pt-6">
+            <h3 className="text-sm font-medium text-foreground">2. SMS</h3>
+            {dbUser?.phoneVerifiedAt ? (
+              <p className="rounded-xl bg-muted px-3 py-2 text-sm">Téléphone confirmé.</p>
+            ) : (
+              <>
+                {debugSms ? (
+                  <p className="rounded-xl bg-muted px-3 py-2 text-xs text-muted-foreground">
+                    Code SMS (dev) : {debugSms}
+                  </p>
+                ) : null}
+                <SmsVerifyForm />
+                <ResendSmsButton />
+              </>
+            )}
+          </section>
         </CardContent>
       </Card>
     </main>

@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { selectFieldClass } from "@/lib/ui";
 
 export function CvImportReview() {
   const [parseState, parseAction] = useActionState(parseCvFromUpload, {} as ParseCvState);
@@ -138,7 +139,7 @@ function ReviewForm({
               <select
                 value={region}
                 onChange={(event) => setRegion(event.target.value)}
-                className="h-11 w-full rounded-xl border border-input bg-card px-3 text-sm"
+                className={selectFieldClass}
               >
                 <option value="">Non renseignée</option>
                 {CAMEROON_REGIONS.map((item) => (
@@ -176,7 +177,7 @@ function ReviewForm({
             <select
               value={availability}
               onChange={(event) => setAvailability(event.target.value)}
-              className="h-11 w-full rounded-xl border border-input bg-card px-3 text-sm"
+              className={selectFieldClass}
             >
               <option value="">Non renseignée</option>
               {AVAILABILITY_OPTIONS.map((option) => (

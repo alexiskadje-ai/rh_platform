@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { selectFieldClass } from "@/lib/ui";
 
 type Profile = Candidate & {
   educations: Education[];
@@ -178,7 +179,7 @@ function PreferencesSection({
                 id="region"
                 name="region"
                 defaultValue={region ?? ""}
-                className="h-11 w-full rounded-xl border border-input bg-card px-3 text-sm"
+                className={selectFieldClass}
               >
                 <option value="">Non renseignée</option>
                 {CAMEROON_REGIONS.map((item) => (
@@ -536,7 +537,7 @@ function AvailabilitySection({
               setValue(event.target.value);
               schedule();
             }}
-            className="h-11 w-full rounded-xl border border-input bg-card px-3 text-sm"
+            className={selectFieldClass}
           >
             <option value="">Sélectionner</option>
             {AVAILABILITY_OPTIONS.map((option) => (

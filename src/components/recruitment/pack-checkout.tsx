@@ -117,18 +117,31 @@ export function PackCheckout({
               <button
                 key={id}
                 type="button"
+                aria-pressed={method === id}
+                aria-label={PAYMENT_METHOD_LABELS[id]}
                 onClick={() => setMethod(id)}
                 className={cn(
-                  "rounded-2xl border p-3 text-left text-sm",
-                  method === id ? "border-primary bg-primary/5" : "border-border",
+                  "flex h-28 items-center justify-center rounded-2xl border bg-card px-4 transition-all",
+                  method === id
+                    ? "border-primary shadow-[0_0_0_4px_rgba(4,41,99,0.12)]"
+                    : "border-border/80 hover:border-accent hover:bg-accent/5",
                 )}
               >
                 {id === "CARD" ? (
-                  <CreditCard className="size-5" />
+                  <span className="flex flex-col items-center gap-2 text-center">
+                    <span className="inline-flex size-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
+                      <CreditCard className="size-5" />
+                    </span>
+                    <span className="text-sm font-medium">{PAYMENT_METHOD_LABELS[id]}</span>
+                  </span>
+                ) : id === "MTN_MOMO" ? (
+                  <PaymentBrandLogo brand="MTN_MOMO" className="size-16 rounded-2xl" />
                 ) : (
-                  <PaymentBrandLogo brand={id} className="h-8 w-auto" />
+                  <PaymentBrandLogo
+                    brand="ORANGE_MONEY"
+                    className="h-12 w-auto max-w-[9.5rem] object-contain"
+                  />
                 )}
-                <span className="mt-2 block font-medium">{PAYMENT_METHOD_LABELS[id]}</span>
               </button>
             ))}
           </div>

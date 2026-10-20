@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { selectFieldClass } from "@/lib/ui";
 
 const TABS = ["Infos", "Contenu", "Évaluation"] as const;
 
@@ -124,7 +125,7 @@ export function CourseForm({
                 name="category"
                 required
                 defaultValue={initial?.category ?? COURSE_CATEGORIES[0]}
-                className="h-11 w-full rounded-xl border border-input bg-card px-3 text-sm"
+                className={selectFieldClass}
               >
                 {COURSE_CATEGORIES.map((item) => (
                   <option key={item} value={item}>
@@ -148,7 +149,7 @@ export function CourseForm({
               <select
                 name="accessMode"
                 defaultValue={initial?.accessMode ?? "LINEAR"}
-                className="h-11 w-full rounded-xl border border-input bg-card px-3 text-sm"
+                className={selectFieldClass}
               >
                 {Object.entries(COURSE_ACCESS_LABELS).map(([value, label]) => (
                   <option key={value} value={value}>

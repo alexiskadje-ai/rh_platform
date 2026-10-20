@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageHero } from "@/components/layout/page-hero";
-import { fieldClass } from "@/lib/ui";
+import { selectFieldClass } from "@/lib/ui";
 
 export const metadata: Metadata = {
   title: "Formations",
@@ -53,7 +53,7 @@ export default async function PublicCoursesPage({
         <select
           name="category"
           defaultValue={filters.category ?? ""}
-          className={fieldClass}
+          className={selectFieldClass}
         >
           <option value="">Toutes les catégories</option>
           {COURSE_CATEGORIES.map((item) => (

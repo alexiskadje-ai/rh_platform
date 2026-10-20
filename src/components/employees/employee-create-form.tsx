@@ -7,6 +7,7 @@ import { CONTRACT_LABELS, DEFAULT_WORK_DAYS } from "@/lib/constants";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { selectFieldClass } from "@/lib/ui";
 
 const WEEKDAYS = [
   [1, "Lun"],
@@ -42,7 +43,7 @@ export function EmployeeCreateForm({
           <Label>Type de contrat</Label>
           <select
             name="contractType"
-            className="h-11 w-full rounded-xl border border-input bg-card px-3 text-sm"
+            className={selectFieldClass}
             required
           >
             {Object.entries(CONTRACT_LABELS).map(([value, label]) => (
@@ -57,7 +58,7 @@ export function EmployeeCreateForm({
           <Label>Supérieur hiérarchique</Label>
           <select
             name="managerId"
-            className="h-11 w-full rounded-xl border border-input bg-card px-3 text-sm"
+            className={selectFieldClass}
           >
             <option value="">Aucun (validation RH)</option>
             {managers.map((manager) => (

@@ -23,40 +23,52 @@ function isUniqueConstraint(error: unknown) {
  * priceAtSignup reprend le montant déjà encaissé, pas un nouveau calcul de grille.
  * Aucune souscription n'est créée si ce paiement n'est pas passé à "paid".
  */
-export async function activateRecruiterPackPayment(paymentId: string) {
+export async function activateRecruiterPackPayment(
+  paymentId: string,
+  options?: { feeAmount?: number | null },
+) {
   const payment = await db.payment.findUnique({ where: { id: paymentId } });
   if (!payment) return null;
   const pack = parseRecruiterPackReference(payment.reference);
   if (!pack) return null;
 
   const paidAt = payment.paidAt ?? new Date();
-  if (payment.status !== "paid") {
-    await db.payment.update({
-      where: { id: payment.id },
-      data: {
-        status: "paid",
-        paidAt,
-        failureReason: null,
-      },
-    });
-  }
-
+  const lateLocal = payment.status === "failed" || payment.status === "expired";
   let created = false;
   try {
-    await db.recruiterSubscription.create({
-      data: {
-        companyId: pack.companyId,
-        tier: pack.tier,
-        billingCycle: pack.cycle,
-        priceAtSignup: payment.amount,
-        status: SubscriptionStatus.PENDING_REVIEW,
-        commitmentEndsAt: commitmentEndsAt(paidAt, pack.cycle),
-        paymentId: payment.id,
-      },
+    created = await db.$transaction(async (tx) => {
+      const claimed = await tx.payment.updateMany({
+        where: {
+          id: payment.id,
+          status: { in: ["pending", "processing", "failed", "expired"] },
+        },
+        data: {
+          status: "paid",
+          paidAt,
+          failureReason: null,
+          ...(options && "feeAmount" in options ? { feeAmount: options.feeAmount } : {}),
+        },
+      });
+      if (claimed.count !== 1) return false;
+      await tx.recruiterSubscription.create({
+        data: {
+          companyId: pack.companyId,
+          tier: pack.tier,
+          billingCycle: pack.cycle,
+          priceAtSignup: payment.amount,
+          status: SubscriptionStatus.PENDING_REVIEW,
+          commitmentEndsAt: commitmentEndsAt(paidAt, pack.cycle),
+          paymentId: payment.id,
+        },
+      });
+      return true;
     });
-    created = true;
   } catch (error) {
     if (!isUniqueConstraint(error)) throw error;
+  }
+
+  if (created && lateLocal) {
+    console.warn("[notchpay] paiement confirmé après échec local", { reference: payment.reference });
   }
 
   if (created) {

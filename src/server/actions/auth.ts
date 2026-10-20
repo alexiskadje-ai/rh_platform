@@ -565,6 +565,41 @@ export async function resendVerification(
   return { ok: true, message: "Un nouveau code a été envoyé à votre e-mail." };
 }
 
+export async function resendSmsVerification(
+  _prev: ActionState,
+  _formData: FormData,
+): Promise<ActionState> {
+  const { auth } = await import("@/lib/auth");
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { message: "Connectez-vous pour renvoyer le code." };
+  }
+  const user = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { phone: true, phoneVerifiedAt: true },
+  });
+  if (!user?.phone) return { message: "Aucun numéro n'est associé à ce compte." };
+  if (user.phoneVerifiedAt) return { ok: true, message: "Votre téléphone est déjà confirmé." };
+
+  const smsCode = await issueToken(session.user.id, TokenType.SMS);
+  const sent = await sendVerificationSms(user.phone, smsCode);
+  if (process.env.NODE_ENV !== "production") {
+    const jar = await cookies();
+    jar.set("rh_debug_sms", smsCode, { path: "/", maxAge: 10 * 60 });
+  }
+  if (!sent && process.env.NODE_ENV !== "production") {
+    return {
+      ok: true,
+      message: "Twilio n'est pas configuré : utilisez le code affiché ci-dessous.",
+      debug: { smsCode },
+    };
+  }
+  if (!sent) {
+    return { message: "Le SMS n'a pas pu être envoyé. Réessayez dans un instant." };
+  }
+  return { ok: true, message: "Un nouveau code a été envoyé par SMS." };
+}
+
 export async function confirmSms(
   _prev: ActionState,
   formData: FormData,

@@ -78,11 +78,13 @@ export async function sendSms(to: string, message: string) {
       },
     );
     if (!response.ok) {
-      console.error("[sms] Twilio error", response.status, await response.text());
+      console.error("[sms] Twilio error", response.status);
+      return false;
     }
-    return;
+    return true;
   }
   console.info(`[sms] to=${to}\n${message}`);
+  return false;
 }
 
 export async function sendVerificationEmail(email: string, token: string) {
@@ -109,7 +111,7 @@ export async function sendVerificationEmail(email: string, token: string) {
 }
 
 export async function sendVerificationSms(phone: string, code: string) {
-  await sendSms(
+  return sendSms(
     phone,
     `${APP_NAME} : votre code de vérification est ${code}. Il expire dans 10 minutes.`,
   );

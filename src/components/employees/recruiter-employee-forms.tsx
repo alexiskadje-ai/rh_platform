@@ -11,6 +11,7 @@ import { FileUrlField } from "@/components/employees/file-url-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { selectFieldClass } from "@/lib/ui";
 
 const WEEKDAYS = [
   [1, "Lun"],
@@ -85,7 +86,7 @@ export function DocumentAttachForm({ employeeId }: { employeeId: string }) {
         <Label>Type</Label>
         <select
           name="type"
-          className="h-11 w-full rounded-xl border border-input bg-card px-3 text-sm"
+          className={selectFieldClass}
         >
           {Object.entries(DOCUMENT_TYPE_LABELS).map(([value, label]) => (
             <option key={value} value={value}>

@@ -8,6 +8,8 @@ import { PipelineColumn } from "@/components/recrutement/pipeline-column";
 import { SortableCandidateCard, type SortableApplication } from "@/components/recrutement/sortable-candidate-card";
 import { useCandidateDrag } from "@/hooks/use-candidate-drag";
 import { PIPELINE_COLUMNS } from "@/lib/application-status";
+import { selectFieldClass } from "@/lib/ui";
+import { cn } from "@/lib/utils";
 
 export function CandidatePipeline({
   applications,
@@ -34,7 +36,7 @@ export function CandidatePipeline({
           <label className="block text-sm text-muted-foreground">
             Offre
             <select
-              className="mt-1 h-11 w-full min-w-56 rounded-xl border border-border bg-card px-3 text-sm text-foreground"
+              className={cn(selectFieldClass, "mt-1 min-w-56")}
               value={currentOfferId}
               onChange={(event) => router.push(`/company/offres/${event.target.value}`)}
             >

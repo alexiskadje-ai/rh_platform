@@ -12,16 +12,16 @@ import { db } from "@/lib/db";
 import { requireOnboardingRecruiter } from "@/lib/recruiter-onboarding";
 import { PAYMENT_STATUS, markPaymentFailed } from "@/lib/payments/confirm";
 import { isMomoConfigured, requestToPayment } from "@/lib/payments/momo";
-import { orangePayHint } from "@/lib/payments/orange";
+import { beginOrangeCharge } from "@/lib/payments/notchpay";
 import { createCheckoutSession, isStripeConfigured } from "@/lib/payments/stripe";
-import { applyMomoStatus, applyStripeStatus } from "@/lib/payments/sync";
+import { applyMomoStatus, applyNotchpayStatus, applyStripeStatus } from "@/lib/payments/sync";
 import {
   buildRecruiterPackReference,
   newRecruiterPackUnique,
   parseRecruiterPackReference,
 } from "@/lib/recruiter-pack-reference";
-import { formatFcfa } from "@/lib/shop";
 import { fieldErrorsFromZod } from "@/lib/users";
+import { phoneSchema } from "@/lib/validations/auth";
 import { momoPhoneSchema } from "@/lib/validations/payment";
 import { recruiterPackCheckoutSchema } from "@/lib/validations/recruiter-pack";
 
@@ -66,8 +66,15 @@ export async function startRecruiterPackPayment(
 
   const { tier, cycle, provider } = parsed.data;
   let phone: string | undefined;
-  if (provider !== "CARD") {
+  if (provider === "MTN_MOMO") {
     const phoneParsed = momoPhoneSchema.safeParse(parsed.data.phone ?? "");
+    if (!phoneParsed.success) {
+      return { errors: { phone: phoneParsed.error.issues.map((issue) => issue.message) } };
+    }
+    phone = phoneParsed.data;
+  }
+  if (provider === "ORANGE_MONEY") {
+    const phoneParsed = phoneSchema.safeParse(parsed.data.phone ?? "");
     if (!phoneParsed.success) {
       return { errors: { phone: phoneParsed.error.issues.map((issue) => issue.message) } };
     }
@@ -153,11 +160,22 @@ export async function startRecruiterPackPayment(
       };
     }
 
+    await beginOrangeCharge({
+      paymentId: payment.id,
+      description: `Pack ${RECRUITER_PACK_LABELS[tier]} · ${BILLING_CYCLE_LABELS[cycle]}`,
+      customer: {
+        name: `${user.firstName} ${user.lastName}`.trim() || company.name,
+        email: user.email,
+        phone: phone ?? "",
+      },
+      walletPhone: phone ?? "",
+    });
+    revalidatePath(RECRUITER_ONBOARDING_CONFIRM_PATH);
     return {
       ok: true,
       status: PAYMENT_STATUS.pending,
       reference,
-      message: `${orangePayHint()} Montant : ${formatFcfa(amount)}. Référence : ${reference}.`,
+      message: "Validez la demande de paiement sur votre téléphone.",
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Impossible d'initier le paiement.";
@@ -179,11 +197,13 @@ export async function refreshRecruiterPackPayment(
 
   try {
     const updated =
-      payment.provider === PaymentProvider.CARD && payment.providerRef
-        ? await applyStripeStatus(payment.providerRef)
-        : payment.provider === PaymentProvider.MTN_MOMO && payment.providerRef
-          ? await applyMomoStatus(payment.providerRef)
-          : payment;
+      payment.gateway === "NOTCHPAY"
+        ? await applyNotchpayStatus(payment.id)
+        : payment.provider === PaymentProvider.CARD && payment.providerRef
+          ? await applyStripeStatus(payment.providerRef)
+          : payment.provider === PaymentProvider.MTN_MOMO && payment.providerRef
+            ? await applyMomoStatus(payment.providerRef)
+            : payment;
     return {
       ok: true,
       status: updated?.status ?? payment.status,

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { selectFieldClass } from "@/lib/ui";
 
 export function AbsenceForm() {
   const [state, action] = useActionState(declareAbsence, {} as ActionState);
@@ -31,7 +32,7 @@ export function AbsenceForm() {
           name="reason"
           value={reason}
           onChange={(event) => setReason(event.target.value)}
-          className="h-11 w-full rounded-xl border border-input bg-card px-3 text-sm"
+          className={selectFieldClass}
         >
           {Object.entries(ABSENCE_REASON_LABELS).map(([value, label]) => (
             <option key={value} value={value}>

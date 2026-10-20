@@ -11,14 +11,14 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { fieldClass } from "@/lib/ui";
+import { fieldClass, selectFieldClass } from "@/lib/ui";
 import { GENDER_LABELS, MARITAL_STATUS_LABELS } from "@/lib/constants";
 import { TRADE_NAMES, skillsForTrade, type TradeName } from "@/lib/trades";
 import { localTodayYmd } from "@/lib/validations/free-cv";
 
 const compactField = "h-9 rounded-lg text-sm";
 const selectClass = cn(
-  fieldClass,
+  selectFieldClass,
   compactField,
   "disabled:cursor-not-allowed disabled:opacity-60",
 );

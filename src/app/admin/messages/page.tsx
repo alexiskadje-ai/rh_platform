@@ -5,6 +5,8 @@ import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { activateRecruteurPro } from "@/server/actions/admin";
 import { publishTestimonial, rejectTestimonial } from "@/server/actions/content";
 import { Button } from "@/components/ui/button";
+import { fieldClass, selectFieldClass } from "@/lib/ui";
+import { cn } from "@/lib/utils";
 
 export default async function AdminMessagesPage() {
   await requireAdmin();
@@ -94,7 +96,7 @@ export default async function AdminMessagesPage() {
           <select
             name="companyId"
             required
-            className="h-11 rounded-xl border border-input bg-card px-3 text-sm"
+            className={cn(selectFieldClass, "w-auto")}
           >
             <option value="">Entreprise…</option>
             {companies.map((company) => (
@@ -109,7 +111,7 @@ export default async function AdminMessagesPage() {
             min={1}
             max={24}
             defaultValue={12}
-            className="h-11 w-24 rounded-xl border border-input bg-card px-3 text-sm"
+            className={cn(fieldClass, "w-24")}
           />
           <Button type="submit">Activer</Button>
         </form>

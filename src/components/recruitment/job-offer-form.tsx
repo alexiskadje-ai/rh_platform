@@ -12,6 +12,7 @@ import { GenerateOfferButton } from "@/components/recruitment/generate-offer-but
 import { clearSessionDraft, readSessionDraft, writeSessionDraft } from "@/lib/form-draft";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { selectFieldClass } from "@/lib/ui";
 
 export function JobOfferForm({
   offer,
@@ -200,7 +201,7 @@ export function JobOfferForm({
                   name="region"
                   value={region}
                   onChange={(e) => setRegion(e.target.value)}
-                  className="h-11 w-full rounded-xl border border-input bg-card px-3 text-sm"
+                  className={selectFieldClass}
                 >
                   {CAMEROON_REGIONS.map((item) => (
                     <option key={item} value={item}>
@@ -215,7 +216,7 @@ export function JobOfferForm({
                 name="contractType"
                 value={contractType}
                 onChange={(e) => setContractType(e.target.value as ContractType)}
-                className="h-11 w-full rounded-xl border border-input bg-card px-3 text-sm"
+                className={selectFieldClass}
               >
                 {Object.entries(CONTRACT_LABELS).map(([value, label]) => (
                   <option key={value} value={value}>
@@ -291,7 +292,7 @@ export function JobOfferForm({
                 name="visibility"
                 value={visibility}
                 onChange={(e) => setVisibility(e.target.value as JobVisibility)}
-                className="h-11 w-full rounded-xl border border-input bg-card px-3 text-sm"
+                className={selectFieldClass}
               >
                 <option value="PUBLIC">Publique</option>
                 <option value="INVITE">Sur invitation</option>

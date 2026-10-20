@@ -89,8 +89,8 @@ export function OtpInput({
   }
 
   const boxClass = cn(
-    "size-10 shrink-0 rounded-lg border border-border/80 bg-card text-center text-base font-semibold tabular-nums text-primary outline-none transition-all sm:size-11",
-    "focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring/25",
+    "size-11 shrink-0 rounded-xl border border-border bg-card text-center text-lg font-semibold tabular-nums text-primary shadow-sm outline-none transition-[border-color,box-shadow] sm:size-12",
+    "focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-ring/15",
   );
 
   return (

@@ -19,7 +19,10 @@ function invoiceNumber(reference: string, date = new Date()) {
   return `FAC-${date.getFullYear()}-${reference.slice(-8).toUpperCase()}`;
 }
 
-export async function confirmPaidPayment(paymentId: string) {
+export async function confirmPaidPayment(
+  paymentId: string,
+  options?: { feeAmount?: number | null },
+) {
   const payment = await db.payment.findUnique({
     where: { id: paymentId },
     include: {
@@ -33,12 +36,14 @@ export async function confirmPaidPayment(paymentId: string) {
   });
   if (!payment) return null;
   if (parseRecruiterPackReference(payment.reference)) {
-    return activateRecruiterPackPayment(payment.id);
+    return activateRecruiterPackPayment(payment.id, options);
   }
   if (!payment.order) return null;
   if (payment.status === PAYMENT_STATUS.paid && payment.invoiceUrl) {
     return payment;
   }
+
+  const lateLocal = payment.status === "failed" || payment.status === "expired";
 
   const { order } = payment;
   const issuedAt = payment.paidAt ?? new Date();
@@ -82,6 +87,10 @@ export async function confirmPaidPayment(paymentId: string) {
     });
     return next;
   });
+
+  if (lateLocal) {
+    console.warn("[notchpay] paiement confirmé après échec local", { reference: payment.reference });
+  }
 
   await grantPaidOrderEntitlements({
     userId: order.userId,

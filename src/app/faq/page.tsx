@@ -31,7 +31,7 @@ const FALLBACK_FAQS = [
     id: "fallback-paiements",
     question: "Quels paiements sont prévus ?",
     answer:
-      "Le checkout boutique encaisse via Stripe (carte) et MTN MoMo. La commande reste en attente jusqu'au webhook, puis la facture PDF est générée.",
+      "Le checkout encaisse par carte (Stripe), MTN MoMo et Orange Money via Notch Pay. La commande reste en attente jusqu'à confirmation, puis la facture PDF est générée.",
   },
   {
     id: "fallback-mobile",

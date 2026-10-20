@@ -3,6 +3,8 @@
 import { useActionState } from "react";
 import { changeUserRole, type AdminActionState } from "@/server/actions/admin";
 import { Button } from "@/components/ui/button";
+import { selectFieldClass } from "@/lib/ui";
+import { cn } from "@/lib/utils";
 import type { Role } from "@prisma/client";
 
 export function ChangeRoleForm({ userId, role }: { userId: string; role: Role }) {
@@ -13,7 +15,7 @@ export function ChangeRoleForm({ userId, role }: { userId: string; role: Role })
       <select
         name="role"
         defaultValue={role}
-        className="h-10 rounded-xl border border-input bg-card px-3 text-sm"
+        className={cn(selectFieldClass, "h-10 w-auto")}
       >
         <option value="ADMIN">Admin</option>
         <option value="RECRUITER">Recruteur</option>

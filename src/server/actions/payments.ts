@@ -7,21 +7,21 @@ import { requireOwnOrder } from "@/server/actions/shop";
 import { db } from "@/lib/db";
 import { fieldErrorsFromZod } from "@/lib/users";
 import { isMomoConfigured, requestToPayment } from "@/lib/payments/momo";
-import { orangePayHint } from "@/lib/payments/orange";
+import { beginOrangeCharge } from "@/lib/payments/notchpay";
 import { createCheckoutSession, isStripeConfigured } from "@/lib/payments/stripe";
 import {
   PAYMENT_STATUS,
   confirmPaidPayment,
+  markPaymentFailed,
   newPaymentReference,
 } from "@/lib/payments/confirm";
-import { applyMomoStatus, applyStripeStatus } from "@/lib/payments/sync";
+import { applyMomoStatus, applyNotchpayStatus, applyStripeStatus } from "@/lib/payments/sync";
 import {
   startBankTransferSchema,
   startMomoPaymentSchema,
   startOrangePaymentSchema,
   startStripePaymentSchema,
 } from "@/lib/validations/payment";
-import { formatFcfa } from "@/lib/shop";
 
 export type PaymentActionState = {
   ok?: boolean;
@@ -49,7 +49,7 @@ async function upsertPendingPayment(input: {
   phone?: string | null;
   providerRef?: string | null;
 }) {
-  await db.payment.upsert({
+  const payment = await db.payment.upsert({
     where: { orderId: input.orderId },
     create: {
       orderId: input.orderId,
@@ -76,6 +76,7 @@ async function upsertPendingPayment(input: {
     where: { id: input.orderId },
     data: { status: PAYMENT_STATUS.pending },
   });
+  return payment;
 }
 
 export async function startMomoPayment(
@@ -225,12 +226,16 @@ export async function startOrangePayment(
     return { ok: true, status: PAYMENT_STATUS.paid, message: "Cette commande est déjà payée." };
   }
 
+  if (!order.user.email) {
+    return { message: "Un e-mail est requis pour le paiement Orange Money." };
+  }
+
   const reference =
     order.payment?.provider === PaymentProvider.ORANGE_MONEY && order.payment.reference
       ? order.payment.reference
       : newPaymentReference(PaymentProvider.ORANGE_MONEY);
 
-  await upsertPendingPayment({
+  const payment = await upsertPendingPayment({
     orderId: order.id,
     amount: order.total,
     provider: PaymentProvider.ORANGE_MONEY,
@@ -238,12 +243,34 @@ export async function startOrangePayment(
     phone: parsed.data.phone,
   });
 
+  const description = order.items
+    .map((item) => item.product.title)
+    .join(", ")
+    .slice(0, 120);
+
+  try {
+    await beginOrangeCharge({
+      paymentId: payment.id,
+      description: description || "Commande boutique",
+      customer: {
+        name: `${order.user.firstName} ${order.user.lastName}`.trim() || "Client",
+        email: order.user.email,
+        phone: parsed.data.phone,
+      },
+      walletPhone: parsed.data.phone,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Impossible d'initier Orange Money.";
+    await markPaymentFailed(payment.id, message);
+    return { message, status: PAYMENT_STATUS.failed };
+  }
+
   revalidatePurchases(order.id);
   return {
     ok: true,
     status: PAYMENT_STATUS.pending,
     reference,
-    message: `${orangePayHint()} Montant : ${formatFcfa(order.total)}. Référence : ${reference}.`,
+    message: "Validez la demande de paiement sur votre téléphone.",
   };
 }
 
@@ -276,11 +303,13 @@ export async function refreshPayment(orderId: string): Promise<PaymentActionStat
 
   try {
     const updated =
-      payment.provider === PaymentProvider.CARD && payment.providerRef
-        ? await applyStripeStatus(payment.providerRef)
-        : payment.provider === PaymentProvider.MTN_MOMO && payment.providerRef
-          ? await applyMomoStatus(payment.providerRef)
-          : payment;
+      payment.gateway === "NOTCHPAY"
+        ? await applyNotchpayStatus(payment.id)
+        : payment.provider === PaymentProvider.CARD && payment.providerRef
+          ? await applyStripeStatus(payment.providerRef)
+          : payment.provider === PaymentProvider.MTN_MOMO && payment.providerRef
+            ? await applyMomoStatus(payment.providerRef)
+            : payment;
     revalidatePurchases(orderId);
     return {
       ok: true,
@@ -308,6 +337,7 @@ export async function confirmManualPayment(formData: FormData) {
 
   const payment = await db.payment.findUnique({ where: { id: paymentId } });
   if (!payment || payment.status === PAYMENT_STATUS.paid) return;
+  if (payment.gateway === "NOTCHPAY") return;
   if (
     payment.provider !== PaymentProvider.ORANGE_MONEY &&
     payment.provider !== PaymentProvider.BANK_TRANSFER

@@ -30,8 +30,7 @@ export default async function AdminPaymentsPage() {
     <DashboardShell role={Role.ADMIN} title="Administration">
       <h1 className="text-2xl font-semibold">Paiements</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        MoMo et Stripe se confirment par webhook. Orange Money est validé ici
-        jusqu&apos;à branchement opérateur.
+        MoMo, Stripe et Orange Money (Notch Pay) se confirment automatiquement.
       </p>
       <div className="mt-6 space-y-3">
         {payments.length === 0 ? (
@@ -40,6 +39,7 @@ export default async function AdminPaymentsPage() {
           payments.map((payment) => {
             const canConfirm =
               payment.status === "pending" &&
+              payment.gateway !== "NOTCHPAY" &&
               (payment.provider === PaymentProvider.ORANGE_MONEY ||
                 payment.provider === PaymentProvider.BANK_TRANSFER);
             return (

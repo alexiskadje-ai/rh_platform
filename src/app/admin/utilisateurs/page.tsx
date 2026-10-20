@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ChangeRoleForm } from "@/components/admin/change-role-form";
 import { setUserStatus } from "@/server/actions/admin";
-import { fieldClass } from "@/lib/ui";
+import { selectFieldClass } from "@/lib/ui";
 
 const STATUS_LABELS: Record<UserStatus, string> = {
   ACTIVE: "Actif",
@@ -55,14 +55,14 @@ export default async function AdminUsersPage({
       <h1 className="font-display text-3xl font-medium text-primary">Utilisateurs et rôles</h1>
       <form action="/admin/utilisateurs" className="mt-6 grid gap-3 md:grid-cols-4">
         <Input name="q" placeholder="Nom, e-mail, téléphone" defaultValue={q} />
-        <select name="role" defaultValue={role ?? ""} className={fieldClass}>
+        <select name="role" defaultValue={role ?? ""} className={selectFieldClass}>
           <option value="">Tous les rôles</option>
           <option value="ADMIN">Admin</option>
           <option value="RECRUITER">Recruteur</option>
           <option value="CANDIDATE">Candidat</option>
           <option value="EMPLOYEE">Employé</option>
         </select>
-        <select name="status" defaultValue={status ?? ""} className={fieldClass}>
+        <select name="status" defaultValue={status ?? ""} className={selectFieldClass}>
           <option value="">Tous les statuts</option>
           <option value="ACTIVE">Actif</option>
           <option value="PENDING">En attente</option>

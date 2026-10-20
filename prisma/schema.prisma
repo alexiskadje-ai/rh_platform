@@ -123,6 +123,19 @@ enum PaymentProvider {
   BANK_TRANSFER
 }
 
+enum PaymentGateway {
+  MTN_DIRECT
+  ORANGE_DIRECT
+  NOTCHPAY
+  STRIPE
+}
+
+enum RefundStatus {
+  NONE
+  PENDING
+  DONE
+}
+
 enum TokenType {
   EMAIL
   SMS
@@ -513,21 +526,26 @@ model OrderItem {
 }
 
 model Payment {
-  id            String          @id @default(cuid())
-  order         Order?          @relation(fields: [orderId], references: [id])
-  orderId       String?         @unique
-  provider      PaymentProvider
-  amount        Int
-  status        String
-  reference     String          @unique
-  providerRef   String?         @unique
-  phone         String?
-  invoiceUrl    String?
-  failureReason String?
-  paidAt                 DateTime?
-  createdAt              DateTime               @default(now())
-  updatedAt              DateTime               @updatedAt
-  recruiterSubscription  RecruiterSubscription?
+  id                    String                 @id @default(cuid())
+  order                 Order?                 @relation(fields: [orderId], references: [id])
+  orderId               String?                @unique
+  provider              PaymentProvider
+  gateway               PaymentGateway?
+  gatewayReference      String?                @unique
+  customerWalletPhone   String?
+  amount                Int
+  feeAmount             Int?
+  refundStatus          RefundStatus           @default(NONE)
+  status                String
+  reference             String                 @unique
+  providerRef           String?                @unique
+  phone                 String?
+  invoiceUrl            String?
+  failureReason         String?
+  paidAt                DateTime?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  recruiterSubscription RecruiterSubscription?
 }
 
 model Subscription {

@@ -2,7 +2,7 @@
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { fieldClass } from "@/lib/ui";
+import { selectFieldClass } from "@/lib/ui";
 
 export function SignupTextField({
   label,
@@ -53,7 +53,7 @@ export function SignupChoice({
         name={name}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className={fieldClass}
+        className={selectFieldClass}
       >
         <option value="">Sélectionner</option>
         {options.map((option) => (

@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { PageHero } from "@/components/layout/page-hero";
-import { fieldClass } from "@/lib/ui";
+import { selectFieldClass } from "@/lib/ui";
 
 export default async function ShopCatalogPage({
   searchParams,
@@ -67,7 +67,7 @@ export default async function ShopCatalogPage({
           <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input name="q" placeholder="Rechercher…" defaultValue={filters.q} className="pl-10" />
         </div>
-        <select name="type" defaultValue={type ?? ""} className={fieldClass}>
+        <select name="type" defaultValue={type ?? ""} className={selectFieldClass}>
           <option value="">Tous les types</option>
           {PRODUCT_TYPES.map((item) => (
             <option key={item} value={item}>

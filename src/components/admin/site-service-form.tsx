@@ -1,6 +1,6 @@
 import { SERVICE_AUDIENCE_LABELS, SERVICE_AUDIENCES } from "@/lib/nav";
 import { SITE_ICON_NAMES } from "@/lib/site-content";
-import { fieldClass } from "@/lib/ui";
+import { fieldClass, selectFieldClass } from "@/lib/ui";
 import { Textarea } from "@/components/ui/textarea";
 import { SubmitButton } from "@/components/ui/submit-button";
 
@@ -32,7 +32,7 @@ export function SiteServiceForm({
       </label>
       <label className="text-sm font-medium">
         Icône
-        <select name="icon" defaultValue={service?.icon ?? "Briefcase"} className={`${fieldClass} mt-1`}>
+        <select name="icon" defaultValue={service?.icon ?? "Briefcase"} className={`${selectFieldClass} mt-1`}>
           {SITE_ICON_NAMES.map((name) => (
             <option key={name} value={name}>
               {name}
@@ -42,7 +42,7 @@ export function SiteServiceForm({
       </label>
       <label className="text-sm font-medium">
         Audience
-        <select name="audience" defaultValue={service?.audience ?? "PUBLIC"} className={`${fieldClass} mt-1`}>
+        <select name="audience" defaultValue={service?.audience ?? "PUBLIC"} className={`${selectFieldClass} mt-1`}>
           {SERVICE_AUDIENCES.map((audience) => (
             <option key={audience} value={audience}>
               {SERVICE_AUDIENCE_LABELS[audience]}
