@@ -5,7 +5,9 @@ import { db } from "@/lib/db";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { ApplicationTimeline } from "@/components/recruitment/application-timeline";
 import { InterviewForm } from "@/components/recruitment/interview-form";
+import { ErpHireActions } from "@/components/recruitment/erp-hire-actions";
 import { StatusActions } from "@/components/recruitment/status-actions";
+import { isErpIntegrationEnabled } from "@/lib/erp/access";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConversationThread } from "@/components/messaging/conversation-thread";
 import { candidateDisplayName } from "@/lib/users";
@@ -23,7 +25,7 @@ export default async function RecruiterApplicationPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { user, companyId } = await requireRecruiter();
+  const { user, companyId, company } = await requireRecruiter();
   const application = await db.application.findFirst({
     where: { id, jobOffer: { companyId } },
     include: {
@@ -53,8 +55,14 @@ export default async function RecruiterApplicationPage({
       <p className="text-muted-foreground">
         {application.jobOffer.title} · score {application.matchScore ?? 0}%
       </p>
-      <div className="mt-4">
+      <div className="mt-4 flex flex-col gap-3">
         <StatusActions applicationId={application.id} status={application.status} />
+        <ErpHireActions
+          applicationId={application.id}
+          accepted={application.status === "ACCEPTED"}
+          sync={application.erpSyncStatus}
+          linked={company.erpLinked && isErpIntegrationEnabled()}
+        />
       </div>
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <Card>

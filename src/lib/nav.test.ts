@@ -6,6 +6,7 @@ import {
   candidateSpaceLinks,
   navLinksFor,
   navVariantForRole,
+  partnerSpaceLinks,
   recruiterSpaceLinks,
 } from "@/lib/nav";
 
@@ -53,6 +54,15 @@ describe("nav variants", () => {
       "Conseiller RH",
       "Utilisateurs internes",
       "Sécurité / 2FA",
+    ]);
+  });
+
+  it("builds partner login links only when the ERP address is set", () => {
+    expect(partnerSpaceLinks(undefined)).toBeNull();
+    expect(partnerSpaceLinks("  ")).toBeNull();
+    expect(partnerSpaceLinks("https://erp.example.com/")).toEqual([
+      { href: "https://erp.example.com/login?space=employee", label: "Employé" },
+      { href: "https://erp.example.com/login?space=employer", label: "Recruteur" },
     ]);
   });
 

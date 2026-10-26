@@ -59,8 +59,8 @@ export function candidateSpaceLinks(): NavLink[] {
   ];
 }
 
-export function recruiterSpaceLinks(): NavLink[] {
-  return [
+export function recruiterSpaceLinks(erp = false): NavLink[] {
+  const items: NavLink[] = [
     { href: "/company/offres", label: "Offres publiées" },
     { href: "/company/offres", label: "Candidatures reçues" },
     { href: "/company/candidats", label: "Recherche de CV" },
@@ -68,9 +68,23 @@ export function recruiterSpaceLinks(): NavLink[] {
     { href: "/company/utilisateurs", label: "Utilisateurs internes" },
     { href: "/settings/security", label: "Sécurité / 2FA" },
   ];
+  if (erp) items.push({ href: "/api/erp/sso", label: "Ouvrir l'ERP" });
+  return items;
 }
 
-export function spaceLink(user: { role: Role; status: UserStatus } | null): {
+export function partnerSpaceLinks(erpUrl: string | null | undefined): NavLink[] | null {
+  const base = erpUrl?.trim().replace(/\/+$/, "");
+  if (!base) return null;
+  return [
+    { href: `${base}/login?space=employee`, label: "Employé" },
+    { href: `${base}/login?space=employer`, label: "Recruteur" },
+  ];
+}
+
+export function spaceLink(
+  user: { role: Role; status: UserStatus } | null,
+  erp = false,
+): {
   href: string;
   label: string;
   prominent: boolean;
@@ -90,7 +104,7 @@ export function spaceLink(user: { role: Role; status: UserStatus } | null): {
       href: user.status === "PENDING" ? RECRUITER_ONBOARDING_PACK_PATH : ROLE_HOME.RECRUITER,
       label: "Espace Recruteur",
       prominent: true,
-      items: recruiterSpaceLinks(),
+      items: recruiterSpaceLinks(erp),
     };
   }
   return { href: ROLE_HOME[user.role], label: "Tableau de bord", prominent: false, items: [] };

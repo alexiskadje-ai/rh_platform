@@ -1,8 +1,12 @@
 import Redis from "ioredis";
 import { Queue } from "bullmq";
+import { ERP_HIRE_RETRY_MS } from "@/lib/erp/access";
 import type { NotificationChannel, NotificationEvent, NotificationPayloads } from "@/lib/notifications/events";
 
 export const NOTIFICATION_QUEUE = "notifications";
+export const ERP_HIRE_QUEUE = "erp-hires";
+
+export type ErpHireJobData = { applicationId: string };
 
 export type NotificationJobData<E extends NotificationEvent = NotificationEvent> = {
   userId: string;
@@ -15,6 +19,7 @@ export type NotificationJobData<E extends NotificationEvent = NotificationEvent>
 const globalForRedis = globalThis as unknown as {
   notificationRedis?: Redis | null;
   notificationQueue?: Queue<NotificationJobData> | null;
+  erpHireQueue?: Queue<ErpHireJobData> | null;
 };
 
 export function getRedisConnection() {
@@ -49,4 +54,25 @@ export function getNotificationQueue() {
     },
   });
   return globalForRedis.notificationQueue;
+}
+
+export function getErpHireQueue() {
+  if (globalForRedis.erpHireQueue !== undefined) {
+    return globalForRedis.erpHireQueue;
+  }
+  const connection = getRedisConnection();
+  if (!connection) {
+    globalForRedis.erpHireQueue = null;
+    return null;
+  }
+  globalForRedis.erpHireQueue = new Queue<ErpHireJobData>(ERP_HIRE_QUEUE, {
+    connection,
+    defaultJobOptions: {
+      attempts: 5,
+      backoff: { type: "exponential", delay: ERP_HIRE_RETRY_MS },
+      removeOnComplete: 1000,
+      removeOnFail: 5000,
+    },
+  });
+  return globalForRedis.erpHireQueue;
 }

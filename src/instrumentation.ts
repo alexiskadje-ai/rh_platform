@@ -4,4 +4,6 @@ export async function register() {
   assertStorageConfig();
   const { startNotificationWorker } = await import("@/jobs/worker");
   startNotificationWorker();
+  const { startErpHireWorker } = await import("@/jobs/erp-worker");
+  startErpHireWorker();
 }

@@ -11,6 +11,7 @@ import { logout } from "@/server/actions/auth";
 import { BrandLogo } from "@/components/layout/brand-logo";
 import { CandidateSearchForm } from "@/components/layout/candidate-search-form";
 import { Navbar } from "@/components/layout/navbar";
+import { PartnerMenu } from "@/components/layout/partner-menu";
 import { NotificationBell } from "@/components/layout/notification-bell";
 import { SpaceMenu } from "@/components/layout/space-menu";
 import { clearPwaCaches } from "@/components/pwa/clear-caches";
@@ -28,6 +29,7 @@ export function HeaderBar({
   items,
   logoHref,
   space,
+  partnerLinks = null,
   candidateSearch = false,
   installInHeader = false,
   installInRecruiterMenu = false,
@@ -38,6 +40,7 @@ export function HeaderBar({
   items: readonly NavLink[];
   logoHref: string;
   space: { href: string; label: string; prominent: boolean; items: readonly NavLink[] } | null;
+  partnerLinks?: readonly NavLink[] | null;
   candidateSearch?: boolean;
   installInHeader?: boolean;
   installInRecruiterMenu?: boolean;
@@ -118,6 +121,11 @@ export function HeaderBar({
             </>
           ) : (
             <>
+              {partnerLinks ? (
+                <div className="hidden sm:block">
+                  <PartnerMenu items={partnerLinks} placement="overlay" />
+                </div>
+              ) : null}
               <Link
                 href="/login"
                 className={cn(
@@ -214,6 +222,13 @@ export function HeaderBar({
                   </>
                 ) : (
                   <>
+                    {partnerLinks ? (
+                      <PartnerMenu
+                        items={partnerLinks}
+                        placement="inline"
+                        onNavigate={() => setOpen(false)}
+                      />
+                    ) : null}
                     <Link href="/login" className={cn(buttonVariants({ variant: "outline" }), "w-full")}>
                       Se connecter
                     </Link>

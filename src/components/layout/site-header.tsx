@@ -1,6 +1,8 @@
 import { Role } from "@prisma/client";
 import { getSessionUser } from "@/lib/dal";
-import { navLinksFor, navVariantForRole, spaceLink } from "@/lib/nav";
+import { db } from "@/lib/db";
+import { isErpIntegrationEnabled } from "@/lib/erp/access";
+import { navLinksFor, navVariantForRole, partnerSpaceLinks, spaceLink } from "@/lib/nav";
 import { loadPublicServices } from "@/lib/site-content";
 import { getInboxPreview } from "@/lib/notifications/inbox";
 import { HeaderBar } from "@/components/layout/header-bar";
@@ -12,7 +14,15 @@ export async function SiteHeader() {
   const inbox =
     user && INBOX_ROLES.includes(user.role) ? await getInboxPreview(user.id) : null;
   const variant = navVariantForRole(user?.role);
-  const space = spaceLink(user);
+  let erp = false;
+  if (user?.role === Role.RECRUITER && isErpIntegrationEnabled()) {
+    const row = await db.user.findUnique({
+      where: { id: user.id },
+      select: { company: { select: { erpLinked: true } } },
+    });
+    erp = row?.company?.erpLinked === true;
+  }
+  const space = spaceLink(user, erp);
   const services = await loadPublicServices();
   const workspace =
     user?.role === Role.CANDIDATE ||
@@ -28,6 +38,7 @@ export async function SiteHeader() {
       items={navLinksFor(variant, services.length > 0)}
       logoHref={space?.href ?? "/"}
       space={space}
+      partnerLinks={user ? null : partnerSpaceLinks(process.env.NEXT_PUBLIC_ERP_URL)}
       candidateSearch={variant === "recruiter"}
     />
   );

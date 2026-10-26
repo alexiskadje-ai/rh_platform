@@ -46,6 +46,13 @@ enum ApplicationStatus {
   REJECTED
 }
 
+enum ErpSyncStatus {
+  NONE
+  PENDING
+  SENT
+  FAILED
+}
+
 enum JobVisibility {
   PUBLIC
   INVITE
@@ -219,6 +226,7 @@ model Company {
   employeeCountRange String?
   annualRevenueRange String?
   status             CompanyStatus @default(PENDING)
+  erpLinked          Boolean       @default(false)
   validatedAt        DateTime?
   leaveDualApproval  Boolean       @default(false)
   createdAt          DateTime      @default(now())
@@ -308,6 +316,8 @@ model Application {
   jobOffer          JobOffer          @relation(fields: [jobOfferId], references: [id], onDelete: Cascade)
   jobOfferId        String
   status            ApplicationStatus @default(RECEIVED)
+  erpSyncStatus     ErpSyncStatus     @default(NONE)
+  erpSyncedAt       DateTime?
   statusChangedAt   DateTime          @default(now())
   notes             String?
   coverLetter       String?

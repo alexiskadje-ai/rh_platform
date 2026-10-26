@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ChangeRoleForm } from "@/components/admin/change-role-form";
 import { setUserStatus } from "@/server/actions/admin";
+import { setCompanyErpLinked } from "@/server/actions/erp";
+import { isErpIntegrationEnabled } from "@/lib/erp/access";
 import { selectFieldClass } from "@/lib/ui";
 
 const STATUS_LABELS: Record<UserStatus, string> = {
@@ -20,6 +22,7 @@ export default async function AdminUsersPage({
   searchParams: Promise<{ q?: string; role?: string; status?: string }>;
 }) {
   await requireAdmin();
+  const erpEnabled = isErpIntegrationEnabled();
   const filters = await searchParams;
   const role =
     filters.role && ["ADMIN", "RECRUITER", "CANDIDATE", "EMPLOYEE"].includes(filters.role)
@@ -45,7 +48,7 @@ export default async function AdminUsersPage({
           }
         : {}),
     },
-    include: { company: { select: { name: true } } },
+    include: { company: { select: { id: true, name: true, erpLinked: true } } },
     orderBy: { createdAt: "desc" },
     take: 100,
   });
@@ -110,6 +113,15 @@ export default async function AdminUsersPage({
               <div className="mt-3">
                 <ChangeRoleForm userId={user.id} role={user.role} />
               </div>
+              {erpEnabled && user.company ? (
+                <form action={setCompanyErpLinked} className="mt-3">
+                  <input type="hidden" name="companyId" value={user.company.id} />
+                  <input type="hidden" name="erpLinked" value={user.company.erpLinked ? "false" : "true"} />
+                  <Button type="submit" size="sm" variant="outline">
+                    {user.company.erpLinked ? "Délier de l'ERP" : "Lier à l'ERP"}
+                  </Button>
+                </form>
+              ) : null}
             </div>
           ))
         )}

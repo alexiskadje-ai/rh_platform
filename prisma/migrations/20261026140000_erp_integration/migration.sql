@@ -1,0 +1,6 @@
+CREATE TYPE "ErpSyncStatus" AS ENUM ('NONE', 'PENDING', 'SENT', 'FAILED');
+
+ALTER TABLE "Company" ADD COLUMN "erpLinked" BOOLEAN NOT NULL DEFAULT false;
+
+ALTER TABLE "Application" ADD COLUMN "erpSyncStatus" "ErpSyncStatus" NOT NULL DEFAULT 'NONE';
+ALTER TABLE "Application" ADD COLUMN "erpSyncedAt" TIMESTAMP(3);
