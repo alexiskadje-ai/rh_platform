@@ -2,11 +2,13 @@
 /* eslint-disable @next/next/no-img-element */
 import { cn } from "@/lib/utils";
 
+const wordmark = "block h-7 w-auto max-w-[5.5rem] min-w-0 object-contain";
+
 export function PaymentBrandLogo({
   brand,
   className,
 }: {
-  brand: "MTN_MOMO" | "ORANGE_MONEY";
+  brand: "MTN_MOMO" | "ORANGE_MONEY" | "STRIPE";
   className?: string;
 }) {
   if (brand === "MTN_MOMO") {
@@ -14,7 +16,17 @@ export function PaymentBrandLogo({
       <img
         src="/brand/mtn-momo.svg"
         alt="MTN MoMo"
-        className={cn("size-11 shrink-0 rounded-lg bg-[#ffcb05] object-cover", className)}
+        className={cn("size-12 shrink-0 rounded-xl bg-[#ffcb05] object-cover", className)}
+      />
+    );
+  }
+
+  if (brand === "STRIPE") {
+    return (
+      <img
+        src="/brand/stripe.svg"
+        alt="Stripe"
+        className={cn("size-12 shrink-0 object-contain", className)}
       />
     );
   }
@@ -23,7 +35,7 @@ export function PaymentBrandLogo({
     <img
       src="/brand/orange-money.svg"
       alt="Orange Money"
-      className={cn("block h-8 w-full max-w-full object-contain object-left", className)}
+      className={cn(wordmark, className)}
     />
   );
 }

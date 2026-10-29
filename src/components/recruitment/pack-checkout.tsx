@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { CreditCard, LoaderCircle } from "lucide-react";
+import { LoaderCircle } from "lucide-react";
 import { PaymentBrandLogo } from "@/components/shop/payment-brand-logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +34,7 @@ export function PackCheckout({
   defaultPhone,
   momoConfigured,
   stripeConfigured,
+  orangeSandbox = false,
   failed,
 }: {
   tier: RecruiterPackTier;
@@ -45,6 +46,7 @@ export function PackCheckout({
   defaultPhone?: string | null;
   momoConfigured: boolean;
   stripeConfigured: boolean;
+  orangeSandbox?: boolean;
   failed?: boolean;
 }) {
   const router = useRouter();
@@ -118,29 +120,21 @@ export function PackCheckout({
                 key={id}
                 type="button"
                 aria-pressed={method === id}
-                aria-label={PAYMENT_METHOD_LABELS[id]}
+                aria-label={id === "CARD" ? "Stripe" : PAYMENT_METHOD_LABELS[id]}
                 onClick={() => setMethod(id)}
                 className={cn(
-                  "flex h-28 items-center justify-center rounded-2xl border bg-card px-4 transition-all",
+                  "flex h-28 min-w-0 items-center justify-center overflow-hidden rounded-2xl border bg-card px-3 transition-all",
                   method === id
                     ? "border-primary shadow-[0_0_0_4px_rgba(4,41,99,0.12)]"
                     : "border-border/80 hover:border-accent hover:bg-accent/5",
                 )}
               >
                 {id === "CARD" ? (
-                  <span className="flex flex-col items-center gap-2 text-center">
-                    <span className="inline-flex size-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
-                      <CreditCard className="size-5" />
-                    </span>
-                    <span className="text-sm font-medium">{PAYMENT_METHOD_LABELS[id]}</span>
-                  </span>
+                  <PaymentBrandLogo brand="STRIPE" />
                 ) : id === "MTN_MOMO" ? (
-                  <PaymentBrandLogo brand="MTN_MOMO" className="size-16 rounded-2xl" />
+                  <PaymentBrandLogo brand="MTN_MOMO" />
                 ) : (
-                  <PaymentBrandLogo
-                    brand="ORANGE_MONEY"
-                    className="h-12 w-auto max-w-[9.5rem] object-contain"
-                  />
+                  <PaymentBrandLogo brand="ORANGE_MONEY" />
                 )}
               </button>
             ))}
@@ -153,6 +147,11 @@ export function PackCheckout({
                 <p className="text-xs text-destructive">{state.errors.phone[0]}</p>
               ) : null}
             </div>
+          ) : null}
+          {orangeSandbox && method === "ORANGE_MONEY" ? (
+            <p className="text-sm text-muted-foreground">
+              Mode test Notch Pay : indiquez +237670000000 pour simuler un paiement réussi.
+            </p>
           ) : null}
           {state.message ? <p className="text-sm text-muted-foreground">{state.message}</p> : null}
           {!momoConfigured && method === "MTN_MOMO" ? (

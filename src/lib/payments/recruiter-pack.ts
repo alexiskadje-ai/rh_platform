@@ -9,6 +9,7 @@ import {
 } from "@/lib/config/recruiter-packs";
 import { db } from "@/lib/db";
 import { notify } from "@/lib/notifications";
+import { pushErpInvoice } from "@/lib/erp/invoice";
 import { renderInvoicePdf } from "@/lib/payments/invoice";
 import { parseRecruiterPackReference } from "@/lib/recruiter-pack-reference";
 import { saveBuffer } from "@/lib/storage";
@@ -131,6 +132,25 @@ export async function issueRecruiterPackInvoice(input: {
   await db.payment.update({
     where: { id: input.payment.id },
     data: { invoiceUrl },
+  });
+  const pack = parseRecruiterPackReference(input.payment.reference);
+  await pushErpInvoice({
+    number,
+    platformPaymentRef: input.payment.reference,
+    platformCompanyId: pack?.companyId ?? null,
+    buyerName: input.buyerName,
+    buyerEmail: input.buyerEmail,
+    buyerPhone: input.payment.phone,
+    provider: input.payment.provider,
+    total: input.payment.amount,
+    issuedAt,
+    lines: [
+      {
+        title: `${input.packLabel} — ${input.cycleLabel}`,
+        quantity: 1,
+        unitPrice: input.payment.amount,
+      },
+    ],
   });
   return { invoiceUrl, invoiceNumber: number };
 }

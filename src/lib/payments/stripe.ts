@@ -11,6 +11,33 @@ export function stripeCurrency() {
   return (process.env.STRIPE_CURRENCY?.trim() || "xaf").toLowerCase();
 }
 
+const ZERO_DECIMAL = new Set([
+  "bif",
+  "clp",
+  "djf",
+  "gnf",
+  "jpy",
+  "kmf",
+  "krw",
+  "mga",
+  "pyg",
+  "rwf",
+  "ugx",
+  "vnd",
+  "vuv",
+  "xaf",
+  "xof",
+  "xpf",
+]);
+
+/** XAF is charged in whole francs. Other currencies are sent in minor units. */
+export function stripeUnitAmount(amount: number, currency = stripeCurrency()) {
+  if (!Number.isInteger(amount) || amount <= 0) {
+    throw new Error("Montant Stripe invalide.");
+  }
+  return ZERO_DECIMAL.has(currency) ? amount : amount * 100;
+}
+
 export function getStripe() {
   const secret = process.env.STRIPE_SECRET_KEY?.trim();
   if (!secret) {
@@ -57,7 +84,18 @@ export async function createCheckoutSession(input: {
       orderId: input.orderId,
       reference: input.reference,
     },
+    invoice_creation: {
+      enabled: true,
+      invoice_data: {
+        description: input.description,
+        metadata: {
+          orderId: input.orderId,
+          reference: input.reference,
+        },
+      },
+    },
     payment_intent_data: {
+      receipt_email: input.customerEmail,
       metadata: {
         orderId: input.orderId,
         reference: input.reference,
@@ -68,7 +106,7 @@ export async function createCheckoutSession(input: {
         quantity: 1,
         price_data: {
           currency,
-          unit_amount: input.amount,
+          unit_amount: stripeUnitAmount(input.amount, currency),
           product_data: {
             name: `${APP_NAME} — ${input.reference}`,
             description: input.description,
@@ -80,7 +118,28 @@ export async function createCheckoutSession(input: {
 }
 
 export async function retrieveCheckoutSession(sessionId: string) {
-  return getStripe().checkout.sessions.retrieve(sessionId);
+  return getStripe().checkout.sessions.retrieve(sessionId, {
+    expand: ["payment_intent.latest_charge", "invoice"],
+  });
+}
+
+export async function resolveStripeReceiptUrl(session: Stripe.Checkout.Session) {
+  const invoice = session.invoice;
+  try {
+    if (invoice && typeof invoice !== "string") {
+      if (invoice.hosted_invoice_url) return invoice.hosted_invoice_url;
+    } else if (typeof invoice === "string") {
+      const full = await getStripe().invoices.retrieve(invoice);
+      if (full.hosted_invoice_url) return full.hosted_invoice_url;
+    }
+  } catch {
+    // The charge receipt remains if the hosted invoice is not ready yet.
+  }
+  const intent = session.payment_intent;
+  if (!intent || typeof intent === "string") return null;
+  const charge = intent.latest_charge;
+  if (!charge || typeof charge === "string") return null;
+  return charge.receipt_url ?? null;
 }
 
 export async function refundCheckoutSession(sessionId: string) {

@@ -551,6 +551,7 @@ model Payment {
   providerRef           String?                @unique
   phone                 String?
   invoiceUrl            String?
+  receiptUrl            String?
   failureReason         String?
   paidAt                DateTime?
   createdAt             DateTime               @default(now())

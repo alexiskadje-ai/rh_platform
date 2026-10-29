@@ -12,6 +12,7 @@ import {
 } from "@/lib/config/recruiter-packs";
 import { requireOnboardingRecruiter } from "@/lib/recruiter-onboarding";
 import { isMomoConfigured } from "@/lib/payments/momo";
+import { isNotchpaySandbox } from "@/lib/payments/notchpay";
 import { isStripeConfigured } from "@/lib/payments/stripe";
 import { applyStripeStatus } from "@/lib/payments/sync";
 
@@ -63,6 +64,7 @@ export default async function RecruiterPackConfirmationPage({
           defaultPhone={user.phone}
           momoConfigured={isMomoConfigured()}
           stripeConfigured={isStripeConfigured()}
+          orangeSandbox={isNotchpaySandbox()}
           failed={query.paiement === "echec"}
         />
       </div>

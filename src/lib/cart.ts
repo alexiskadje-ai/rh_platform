@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 export type CartItem = {
   productId: string;
@@ -19,6 +19,28 @@ type CartState = {
 
 function clampQty(value: number) {
   return Math.max(1, Math.min(99, Math.trunc(value) || 1));
+}
+
+function cartStorage() {
+  return {
+    getItem: (name: string) => {
+      try {
+        const raw = localStorage.getItem(name);
+        if (!raw?.trim()) return null;
+        JSON.parse(raw);
+        return raw;
+      } catch {
+        localStorage.removeItem(name);
+        return null;
+      }
+    },
+    setItem: (name: string, value: string) => {
+      localStorage.setItem(name, value);
+    },
+    removeItem: (name: string) => {
+      localStorage.removeItem(name);
+    },
+  };
 }
 
 export const useCart = create<CartState>()(
@@ -55,7 +77,11 @@ export const useCart = create<CartState>()(
         set({ items: get().items.filter((row) => row.productId !== productId) }),
       clear: () => set({ items: [] }),
     }),
-    { name: "rh-cart" },
+    {
+      name: "rh-cart",
+      skipHydration: true,
+      storage: createJSONStorage(cartStorage),
+    },
   ),
 );
 

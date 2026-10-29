@@ -4,6 +4,7 @@ import { requireOwnOrder } from "@/server/actions/shop";
 import { formatFcfa, ORDER_STATUS_LABELS, productTypeLabel } from "@/lib/shop";
 import { productApercu, productIncludes } from "@/lib/shop-preview";
 import { isMomoConfigured } from "@/lib/payments/momo";
+import { isNotchpaySandbox } from "@/lib/payments/notchpay";
 import { isStripeConfigured } from "@/lib/payments/stripe";
 import { applyStripeStatus } from "@/lib/payments/sync";
 import { PAYMENT_STATUS } from "@/lib/payments/confirm";
@@ -126,11 +127,13 @@ export default async function OrderPaymentPage({
           defaultPhone={order.user.phone}
           momoConfigured={isMomoConfigured()}
           stripeConfigured={isStripeConfigured()}
+          orangeSandbox={isNotchpaySandbox()}
           initialStatus={payment?.status ?? "new"}
           initialProvider={payment?.provider}
           initialReference={payment?.reference}
           initialMessage={payment?.failureReason}
           invoiceHref={invoiceHref}
+          receiptHref={payment?.receiptUrl ?? null}
           returnedFromStripe={returnedFromStripe}
         />
       </div>

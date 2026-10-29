@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
-import { interpretNotchpayStatus, readFeeAmount, readNotchpayTransaction } from "@/lib/payments/notchpay";
+import {
+  interpretNotchpayStatus,
+  notchpayCustomerMessage,
+  readFeeAmount,
+  readNotchpayTransaction,
+} from "@/lib/payments/notchpay";
 
 const completePayload = {
   status: "OK",
@@ -52,6 +57,16 @@ describe("frais et statut Notch Pay", () => {
       amountsTotal: 4950,
     });
     error.mockRestore();
+  });
+
+  it("explique le numéro refusé par le sandbox Notch Pay", () => {
+    const body = JSON.stringify({
+      message:
+        "Invalid test phone number. Please use one of the following formats: +237670000000 (success)",
+    });
+    expect(notchpayCustomerMessage("Charge Orange Money refusée.", body)).toBe(
+      "Notch Pay est en mode test. Pour simuler un paiement réussi, indiquez +237670000000.",
+    );
   });
 
   it("ne traite que complete comme un succès", () => {

@@ -5,6 +5,7 @@ import { notify } from "@/lib/notifications";
 import { formatFcfa } from "@/lib/shop";
 import { grantPaidOrderEntitlements } from "@/lib/entitlements";
 import { renderInvoicePdf } from "@/lib/payments/invoice";
+import { pushErpInvoice } from "@/lib/erp/invoice";
 import { activateRecruiterPackPayment } from "@/lib/payments/recruiter-pack";
 import { parseRecruiterPackReference } from "@/lib/recruiter-pack-reference";
 
@@ -102,6 +103,23 @@ export async function confirmPaidPayment(
     amountLabel: formatFcfa(order.total),
     reference: payment.reference,
     invoiceNumber: number,
+  });
+
+  await pushErpInvoice({
+    number,
+    platformPaymentRef: payment.reference,
+    platformCompanyId: order.user.companyId,
+    buyerName: `${order.user.firstName} ${order.user.lastName}`.trim(),
+    buyerEmail: order.user.email,
+    buyerPhone: payment.phone ?? order.user.phone,
+    provider: payment.provider,
+    total: order.total,
+    issuedAt,
+    lines: order.items.map((item) => ({
+      title: item.product.title,
+      quantity: item.quantity,
+      unitPrice: item.product.price,
+    })),
   });
 
   return updated;

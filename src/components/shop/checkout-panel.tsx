@@ -4,7 +4,6 @@ import { useActionState, useEffect, useMemo, useState, useTransition } from "rea
 import {
   CheckCircle2,
   Clock3,
-  CreditCard,
   LoaderCircle,
   Lock,
   RefreshCw,
@@ -25,23 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
-const METHODS: {
-  id: keyof typeof PAYMENT_METHOD_LABELS;
-  tone: string;
-}[] = [
-  {
-    id: "CARD",
-    tone: "bg-primary text-primary-foreground",
-  },
-  {
-    id: "MTN_MOMO",
-    tone: "bg-[#ffcc00] text-[#1a1a1a]",
-  },
-  {
-    id: "ORANGE_MONEY",
-    tone: "bg-[#ff7900] text-white",
-  },
-];
+const METHODS = ["CARD", "MTN_MOMO", "ORANGE_MONEY"] as const;
 
 type RecapItem = {
   title: string;
@@ -59,11 +42,13 @@ type Props = {
   defaultPhone?: string | null;
   momoConfigured: boolean;
   stripeConfigured: boolean;
+  orangeSandbox?: boolean;
   initialStatus: string;
   initialProvider?: string | null;
   initialReference?: string | null;
   initialMessage?: string | null;
   invoiceHref?: string | null;
+  receiptHref?: string | null;
   returnedFromStripe?: "success" | "cancel" | null;
 };
 
@@ -74,11 +59,13 @@ export function CheckoutPanel({
   defaultPhone,
   momoConfigured,
   stripeConfigured,
+  orangeSandbox = false,
   initialStatus,
   initialProvider,
   initialReference,
   initialMessage,
   invoiceHref,
+  receiptHref,
   returnedFromStripe,
 }: Props) {
   const offeredProvider =
@@ -177,7 +164,7 @@ export function CheckoutPanel({
           <Lock className="size-4 text-highlight" />
           PES-RH Checkout
         </div>
-        <p className="text-xs text-primary-foreground/70">MoMo · Orange · Carte</p>
+        <p className="text-xs text-primary-foreground/70">MoMo · Orange · Stripe</p>
       </div>
 
       <div className="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
@@ -197,42 +184,29 @@ export function CheckoutPanel({
           </div>
 
           <div className="grid gap-3 sm:grid-cols-3">
-            {METHODS.map((item) => {
-              const selected = method === item.id;
+            {METHODS.map((id) => {
+              const selected = method === id;
               return (
                 <button
-                  key={item.id}
+                  key={id}
                   type="button"
                   disabled={paid}
                   aria-pressed={selected}
-                  aria-label={paymentMethodLabel(item.id)}
-                  onClick={() => setMethod(item.id)}
+                  aria-label={id === "CARD" ? "Stripe" : paymentMethodLabel(id)}
+                  onClick={() => setMethod(id)}
                   className={cn(
-                    "flex h-28 items-center justify-center rounded-2xl border bg-card px-4 transition-all",
+                    "flex h-28 min-w-0 items-center justify-center overflow-hidden rounded-2xl border bg-card px-3 transition-all",
                     selected
                       ? "border-primary shadow-[0_0_0_4px_rgba(4,41,99,0.12)]"
                       : "border-border/80 hover:border-accent hover:bg-accent/5",
                   )}
                 >
-                  {item.id === "MTN_MOMO" ? (
-                    <PaymentBrandLogo brand="MTN_MOMO" className="size-16 rounded-2xl" />
-                  ) : item.id === "ORANGE_MONEY" ? (
-                    <PaymentBrandLogo
-                      brand="ORANGE_MONEY"
-                      className="h-12 w-auto max-w-[9.5rem] object-contain"
-                    />
+                  {id === "MTN_MOMO" ? (
+                    <PaymentBrandLogo brand="MTN_MOMO" />
+                  ) : id === "ORANGE_MONEY" ? (
+                    <PaymentBrandLogo brand="ORANGE_MONEY" />
                   ) : (
-                    <span className="flex flex-col items-center gap-2 text-center">
-                      <span
-                        className={cn(
-                          "inline-flex size-11 items-center justify-center rounded-2xl",
-                          item.tone,
-                        )}
-                      >
-                        <CreditCard className="size-5" />
-                      </span>
-                      <span className="text-sm font-medium">{paymentMethodLabel(item.id)}</span>
-                    </span>
+                    <PaymentBrandLogo brand="STRIPE" />
                   )}
                 </button>
               );
@@ -252,13 +226,20 @@ export function CheckoutPanel({
               <p className="mt-1 text-sm text-muted-foreground">
                 Votre livrable est débloqué. Conservez la facture pour votre comptabilité.
               </p>
-              {invoice ? (
-                <a href={invoice} target="_blank" rel="noreferrer">
-                  <Button type="button" className="mt-4">
-                    Télécharger la facture
-                  </Button>
-                </a>
-              ) : null}
+              <div className="mt-4 flex flex-wrap gap-2">
+                {invoice ? (
+                  <a href={invoice} target="_blank" rel="noreferrer">
+                    <Button type="button">Télécharger la facture</Button>
+                  </a>
+                ) : null}
+                {receiptHref ? (
+                  <a href={receiptHref} target="_blank" rel="noopener">
+                    <Button type="button" variant="outline">
+                      Reçu Stripe
+                    </Button>
+                  </a>
+                ) : null}
+              </div>
             </div>
           ) : waiting ? (
             <div
@@ -321,13 +302,11 @@ export function CheckoutPanel({
           ) : method === "CARD" ? (
             <form action={stripeAction} className="space-y-4 rounded-2xl border border-border/80 p-5">
               <input type="hidden" name="orderId" value={orderId} />
-              <div className="flex items-center gap-2 text-sm">
-                <span className="inline-flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                  <CreditCard className="size-4" />
-                </span>
+              <div className="flex items-center gap-3 text-sm">
+                <PaymentBrandLogo brand="STRIPE" />
                 <div>
-                  <p className="font-medium">Carte bancaire</p>
-                  <p className="text-xs text-muted-foreground">Stripe Checkout · page hébergée PCI</p>
+                  <p className="font-medium">Stripe</p>
+                  <p className="text-xs text-muted-foreground">Checkout et Link · page hébergée</p>
                 </div>
               </div>
               <p className="text-sm text-muted-foreground">
@@ -347,7 +326,9 @@ export function CheckoutPanel({
             <form action={orangeAction} className="space-y-4 rounded-2xl border border-border/80 p-5">
               <input type="hidden" name="orderId" value={orderId} />
               <p className="text-sm text-muted-foreground">
-                Validez la demande de paiement sur votre téléphone.
+                {orangeSandbox
+                  ? "Mode test Notch Pay : indiquez +237670000000 pour simuler un paiement réussi."
+                  : "Validez la demande de paiement sur votre téléphone."}
               </p>
               <div className="space-y-2">
                 <Label htmlFor="orange-phone">Numéro Orange Money</Label>

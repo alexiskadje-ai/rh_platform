@@ -52,6 +52,10 @@ export function isNotchpayEnabled() {
   return process.env.NOTCHPAY_ENABLED?.trim() === "true";
 }
 
+export function isNotchpaySandbox() {
+  return (process.env.NOTCHPAY_API_KEY ?? "").toLowerCase().includes("test");
+}
+
 export function isNotchpayRefundsEnabled() {
   return process.env.NOTCHPAY_REFUNDS_ENABLED?.trim() === "true";
 }
@@ -192,6 +196,15 @@ function okStatus(httpStatus: number) {
   return httpStatus >= 200 && httpStatus < 300;
 }
 
+export function notchpayCustomerMessage(fallback: string, body: string) {
+  const message = readString(asRecord(parseJson(body))?.message) ?? "";
+  if (message.toLowerCase().includes("invalid test phone number")) {
+    return "Notch Pay est en mode test. Pour simuler un paiement réussi, indiquez +237670000000.";
+  }
+  if (message && message.length <= 180 && !/key|secret|token/i.test(message)) return message;
+  return fallback;
+}
+
 export async function initiatePayment(input: {
   reference: string;
   amount: number;
@@ -241,7 +254,7 @@ export async function chargeOrange(gatewayReference: string, phone: string) {
   const transaction = readNotchpayTransaction(payload);
   if (response.httpStatus !== 202 || !transaction) {
     throw new NotchpayRequestError(
-      "Charge Orange Money refusée.",
+      notchpayCustomerMessage("Charge Orange Money refusée.", response.body),
       response.httpStatus,
       response.body,
     );

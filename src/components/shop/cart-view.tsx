@@ -28,6 +28,7 @@ export function CartView() {
     const finish = () => setReady(true);
     const unsub = useCart.persist.onFinishHydration(finish);
     if (useCart.persist.hasHydrated()) finish();
+    else void useCart.persist.rehydrate();
     return unsub;
   }, []);
 

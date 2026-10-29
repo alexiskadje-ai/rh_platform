@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { applyStripeStatus } from "@/lib/payments/sync";
+import { applyStripeStatus, saveStripeReceiptByReference } from "@/lib/payments/sync";
 import { verifyStripeWebhook } from "@/lib/payments/stripe";
 
 export const runtime = "nodejs";
@@ -18,6 +18,14 @@ export async function POST(request: Request) {
       const session = event.data.object;
       if (typeof session.id === "string") {
         await applyStripeStatus(session.id);
+      }
+    }
+
+    if (event.type === "invoice.paid" || event.type === "invoice.finalized") {
+      const invoice = event.data.object;
+      const reference = invoice.metadata?.reference;
+      if (reference && invoice.hosted_invoice_url) {
+        await saveStripeReceiptByReference(reference, invoice.hosted_invoice_url);
       }
     }
 
