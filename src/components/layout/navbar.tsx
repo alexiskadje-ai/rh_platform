@@ -20,7 +20,9 @@ export function Navbar({
   return (
     <nav
       className={cn(
-        layout === "row" ? "hidden items-center gap-6 text-[13px] lg:flex" : "flex flex-col gap-1",
+        layout === "row"
+          ? "hidden min-w-0 flex-1 items-center justify-center gap-x-7 text-[13px] xl:flex 2xl:gap-x-10"
+          : "flex flex-col gap-1",
       )}
       aria-label="Navigation principale"
     >
@@ -49,7 +51,7 @@ export function Navbar({
             key={item.href}
             href={item.href}
             className={cn(
-              "relative transition-colors",
+              "relative whitespace-nowrap transition-colors",
               overlay ? "hover:text-highlight" : "text-muted-foreground hover:text-accent",
               active && (overlay ? "text-highlight" : "text-primary"),
             )}

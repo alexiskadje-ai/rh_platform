@@ -1,15 +1,13 @@
-import { Clock, Globe, Mail, MapPin, Phone } from "lucide-react";
+import { Clock, Mail, MapPin, Phone } from "lucide-react";
 import {
   COMPANY_EMAIL,
   COMPANY_HOURS,
   COMPANY_OFFICES,
   COMPANY_SLOGAN,
-  COMPANY_WEBSITE,
   mailHref,
   telHref,
 } from "@/lib/company";
 import { PageHero } from "@/components/layout/page-hero";
-import { SocialLinks } from "@/components/layout/social-links";
 import { FadeIn } from "@/components/motion/reveal";
 import { ContactForm } from "@/components/content/contact-form";
 
@@ -48,19 +46,6 @@ export default function ContactPage() {
           <p className="mt-4 text-xs uppercase tracking-[0.2em] text-muted-foreground">Horaires</p>
           <p className="mt-2 font-display text-xl text-primary">{COMPANY_HOURS}</p>
         </div>
-      </FadeIn>
-      <FadeIn className="mt-4 rounded-3xl border border-border/80 bg-card p-6 md:p-8">
-        <Globe className="size-5 text-accent" />
-        <p className="mt-4 text-xs uppercase tracking-[0.2em] text-muted-foreground">En ligne</p>
-        <a
-          href={COMPANY_WEBSITE}
-          target="_blank"
-          rel="noreferrer"
-          className="mt-2 inline-block font-display text-xl text-primary hover:underline"
-        >
-          www.pes-rh.net
-        </a>
-        <SocialLinks className="mt-3" />
       </FadeIn>
       <FadeIn id="nous-ecrire" className="mt-10 scroll-mt-28 rounded-3xl border border-border/80 bg-card p-6 md:p-8">
         <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Nous écrire</p>

@@ -154,9 +154,6 @@ export async function subscribeNewsletter(
   _prev: ContentActionState,
   formData: FormData,
 ): Promise<ContentActionState> {
-  if (await recaptchaFailed(formData)) {
-    return { message: RECAPTCHA_REQUIRED_MESSAGE };
-  }
   if (honeypotBlocked(formData)) return { message: "Soumission invalide." };
 
   const parsed = newsletterSchema.safeParse({
@@ -225,9 +222,6 @@ export async function submitContactMessage(
   _prev: ContentActionState,
   formData: FormData,
 ): Promise<ContentActionState> {
-  if (await recaptchaFailed(formData)) {
-    return { message: RECAPTCHA_REQUIRED_MESSAGE };
-  }
   if (honeypotBlocked(formData)) return { message: "Soumission invalide." };
 
   const parsed = contactSchema.safeParse({

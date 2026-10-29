@@ -77,8 +77,8 @@ export function PartnerMenu({
         ref={buttonRef}
         type="button"
         className={cn(
-          buttonVariants({ variant: "default", size: "sm" }),
-          "justify-between gap-2",
+          buttonVariants({ variant: "outline", size: "sm" }),
+          "justify-between gap-2 border-accent/70 bg-accent/10 font-semibold text-accent hover:border-accent hover:bg-accent hover:text-white",
           placement === "inline" && "w-full",
         )}
         aria-expanded={open}

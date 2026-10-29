@@ -2,7 +2,6 @@
 
 import { useActionState } from "react";
 import { submitContactMessage, type ContentActionState } from "@/server/actions/content";
-import { RecaptchaField } from "@/components/security/recaptcha-field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -62,7 +61,6 @@ export function ContactForm({
       <div className="hidden" aria-hidden="true">
         <input name="website" tabIndex={-1} autoComplete="off" />
       </div>
-      <RecaptchaField />
       <SubmitButton>{subject === "recruteur_pro" ? "Demander un devis" : "Envoyer"}</SubmitButton>
       {state.message ? (
         <p className={cn("text-sm", state.ok ? (inverted ? "text-highlight" : "text-primary") : errorClass)}>

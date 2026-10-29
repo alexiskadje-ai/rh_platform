@@ -58,12 +58,12 @@ export function HeaderBar({
           : "border-b border-border/70 bg-background/95 text-foreground shadow-[0_8px_30px_rgba(20,33,28,0.06)] backdrop-blur-xl",
       )}
     >
-      <div className="mx-auto flex h-[4.25rem] w-full max-w-6xl items-center justify-between gap-4 px-4">
+      <div className="flex h-[4.25rem] w-full items-center gap-6 px-3 sm:px-5 lg:px-8">
         <Link href={logoHref} className="shrink-0" aria-label={COMPANY_SHORT}>
           <BrandLogo variant={light ? "white" : "color"} priority />
         </Link>
         <Navbar items={items} pathname={pathname} overlay={light} layout="row" />
-        <div className="flex items-center gap-1 sm:gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
           {user && inbox ? <NotificationBell inbox={inbox} light={light} /> : null}
           <CartLink light={light} />
           {candidateSearch ? (
@@ -149,7 +149,7 @@ export function HeaderBar({
           <button
             type="button"
             className={cn(
-              "inline-flex size-10 items-center justify-center rounded-full transition-colors lg:hidden",
+              "inline-flex size-10 items-center justify-center rounded-full transition-colors xl:hidden",
               light
                 ? "text-primary-foreground hover:bg-white/10 hover:text-highlight"
                 : "hover:bg-accent/15 hover:text-accent",
@@ -168,7 +168,7 @@ export function HeaderBar({
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             className={cn(
-              "overflow-hidden border-t lg:hidden",
+              "overflow-hidden border-t xl:hidden",
               workspace
                 ? "border-white/10 bg-primary text-primary-foreground"
                 : "border-border/40 bg-background text-foreground",

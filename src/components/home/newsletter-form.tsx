@@ -4,7 +4,6 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { subscribeNewsletter, type ContentActionState } from "@/server/actions/content";
 import { NEWSLETTER_ALERTS } from "@/lib/validations/content";
-import { RecaptchaField } from "@/components/security/recaptcha-field";
 import { Button } from "@/components/ui/button";
 
 function SubscribeButton() {
@@ -56,7 +55,6 @@ export function NewsletterForm() {
       <div className="hidden" aria-hidden="true">
         <input name="website" tabIndex={-1} autoComplete="off" />
       </div>
-      <RecaptchaField />
       {state.message ? (
         <p className={`text-sm ${state.ok ? "text-highlight" : "text-red-200"}`}>{state.message}</p>
       ) : null}
