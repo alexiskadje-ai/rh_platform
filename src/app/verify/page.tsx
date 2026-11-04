@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { EmailVerifyForm } from "@/components/auth/email-verify-form";
 import { ResendVerificationButton } from "@/components/auth/resend-verification-button";
+import { AuthCardBrand } from "@/components/layout/auth-brand";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getSessionUser } from "@/lib/dal";
@@ -36,10 +37,11 @@ export default async function VerifyPage({
 
   return (
     <main className="mx-auto flex w-full max-w-lg flex-1 items-center px-4 py-12">
-      <Card className="w-full">
+      <Card className="w-full shadow-[0_20px_60px_rgba(20,33,28,0.08)]">
         <CardHeader>
-          <CardTitle>Vérifiez votre e-mail</CardTitle>
-          <CardDescription>
+          <AuthCardBrand />
+          <CardTitle className="text-center">Vérifiez votre e-mail</CardTitle>
+          <CardDescription className="text-center">
             {emailConfirmed
               ? "Votre e-mail est confirmé. Poursuivez pour ouvrir votre espace."
               : "Saisissez le code reçu par e-mail, ou ouvrez le lien contenu dans le message."}

@@ -1,10 +1,13 @@
 import "server-only";
 
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import {
   Document,
   Page,
   Text,
   View,
+  Image,
   StyleSheet,
   renderToBuffer,
   Font,
@@ -16,6 +19,10 @@ import type { PaymentProvider } from "@prisma/client";
 
 Font.registerHyphenationCallback((word) => [word]);
 
+const logoSrc = `data:image/png;base64,${readFileSync(
+  join(process.cwd(), "public/brand/pes-mark.png"),
+).toString("base64")}`;
+
 const styles = StyleSheet.create({
   page: {
     padding: 40,
@@ -24,8 +31,10 @@ const styles = StyleSheet.create({
     color: BRAND.dark,
   },
   top: { flexDirection: "row", justifyContent: "space-between", marginBottom: 28 },
-  brand: { fontSize: 11, color: BRAND.orange, letterSpacing: 1.4, marginBottom: 4 },
-  company: { fontSize: 16, fontFamily: "Helvetica-Bold" },
+  brandRow: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 6 },
+  logo: { width: 42, height: 42, borderRadius: 8 },
+  brand: { fontSize: 11, color: BRAND.orange, letterSpacing: 1.4, marginBottom: 2 },
+  company: { fontSize: 15, fontFamily: "Helvetica-Bold" },
   meta: { fontSize: 9, color: "#5c645f", textAlign: "right" },
   title: { fontSize: 22, fontFamily: "Helvetica-Bold", marginBottom: 16 },
   box: {
@@ -75,8 +84,13 @@ function InvoiceDocument({ invoice }: { invoice: InvoicePayload }) {
       <Page size="A4" style={styles.page}>
         <View style={styles.top}>
           <View>
-            <Text style={styles.brand}>{APP_NAME}</Text>
-            <Text style={styles.company}>{COMPANY_NAME}</Text>
+            <View style={styles.brandRow}>
+              <Image src={logoSrc} style={styles.logo} />
+              <View>
+                <Text style={styles.brand}>{APP_NAME}</Text>
+                <Text style={styles.company}>{COMPANY_NAME}</Text>
+              </View>
+            </View>
             <Text style={styles.meta}>{office.address}</Text>
             <Text style={styles.meta}>{COMPANY_EMAIL}</Text>
           </View>

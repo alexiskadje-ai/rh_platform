@@ -7,6 +7,7 @@ import {
   resetPassword,
   type ActionState,
 } from "@/server/actions/auth";
+import { AuthCardBrand } from "@/components/layout/auth-brand";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SubmitButton } from "@/components/ui/submit-button";
@@ -21,8 +22,9 @@ export function RequestPasswordResetForm() {
   return (
     <Card className="w-full max-w-md shadow-[0_20px_60px_rgba(20,33,28,0.08)]">
       <CardHeader>
-        <CardTitle>Mot de passe oublié</CardTitle>
-        <CardDescription>
+        <AuthCardBrand />
+        <CardTitle className="text-center">Mot de passe oublié</CardTitle>
+        <CardDescription className="text-center">
           Indiquez l&apos;e-mail du compte. Si un compte existe, un lien valable 1 heure sera envoyé.
         </CardDescription>
       </CardHeader>
@@ -59,10 +61,11 @@ export function ResetPasswordForm({ token, invalid }: { token: string; invalid?:
 
   if (invalid) {
     return (
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md shadow-[0_20px_60px_rgba(20,33,28,0.08)]">
         <CardHeader>
-          <CardTitle>Lien invalide</CardTitle>
-          <CardDescription>Ce lien a expiré ou a déjà été utilisé.</CardDescription>
+          <AuthCardBrand />
+          <CardTitle className="text-center">Lien invalide</CardTitle>
+          <CardDescription className="text-center">Ce lien a expiré ou a déjà été utilisé.</CardDescription>
         </CardHeader>
         <CardContent>
           <Link href="/reset-password" className="text-sm font-medium text-primary">
@@ -76,8 +79,9 @@ export function ResetPasswordForm({ token, invalid }: { token: string; invalid?:
   return (
     <Card className="w-full max-w-md shadow-[0_20px_60px_rgba(20,33,28,0.08)]">
       <CardHeader>
-        <CardTitle>Nouveau mot de passe</CardTitle>
-        <CardDescription>8 caractères minimum, une majuscule et un chiffre.</CardDescription>
+        <AuthCardBrand />
+        <CardTitle className="text-center">Nouveau mot de passe</CardTitle>
+        <CardDescription className="text-center">8 caractères minimum, une majuscule et un chiffre.</CardDescription>
       </CardHeader>
       <CardContent>
         {state.ok ? (

@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { setInitialPassword, type ActionState } from "@/server/actions/auth";
 import { PasswordStrength } from "@/components/auth/password-strength";
+import { AuthCardBrand } from "@/components/layout/auth-brand";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,8 +16,9 @@ export function InitialPasswordForm() {
   return (
     <Card className="w-full max-w-md shadow-[0_20px_60px_rgba(20,33,28,0.08)]">
       <CardHeader>
-        <CardTitle>Choisissez votre mot de passe</CardTitle>
-        <CardDescription>
+        <AuthCardBrand />
+        <CardTitle className="text-center">Choisissez votre mot de passe</CardTitle>
+        <CardDescription className="text-center">
           Le mot de passe temporaire a ouvert la session. Définissez le vôtre pour accéder au
           tableau de bord. 8 caractères minimum, une majuscule et un chiffre.
         </CardDescription>

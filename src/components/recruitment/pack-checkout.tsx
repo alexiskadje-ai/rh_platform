@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { LoaderCircle, Lock } from "lucide-react";
+import { BrandMark } from "@/components/layout/brand-logo";
 import { PaymentBrandLogo } from "@/components/shop/payment-brand-logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -86,8 +87,11 @@ export function PackCheckout({
   return (
     <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
       <section className="rounded-3xl border border-border/80 bg-card p-6">
-        <p className="text-xs uppercase tracking-[0.22em] text-accent">Récapitulatif</p>
-        <h2 className="mt-2 font-display text-3xl text-primary">{packLabel}</h2>
+        <div className="flex items-center gap-3">
+          <BrandMark size="md" />
+          <p className="text-xs uppercase tracking-[0.22em] text-accent">Récapitulatif</p>
+        </div>
+        <h2 className="mt-3 font-display text-3xl text-primary">{packLabel}</h2>
         <dl className="mt-4 space-y-2 text-sm">
           <div className="flex justify-between gap-4">
             <dt className="text-muted-foreground">Entreprise</dt>

@@ -18,6 +18,7 @@ export type ErpManifest = {
   id: string;
   name: string;
   short_name: string;
+  description?: string;
   scope: string;
   start_url: string;
   display: "standalone";
@@ -27,6 +28,12 @@ export type ErpManifest = {
   icons: ManifestIcon[];
   shortcuts: ManifestShortcut[];
 };
+
+const SITE_ICONS: ManifestIcon[] = [
+  { src: "/pwa/site/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+  { src: "/pwa/site/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+  { src: "/pwa/site/icon-512-maskable.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+];
 
 /**
  * Le scope est le dossier de l'espace, avec le slash final.
@@ -58,6 +65,28 @@ const EMPLOYEE_SHORTCUTS: ManifestShortcut[] = [
   { name: "Pointage", url: "/employee/pointage" },
   { name: "Mes documents", url: "/employee/documents" },
 ];
+
+/** Manifeste public : l'icône d'accueil ouvre la plateforme sans repasser par le navigateur. */
+export function siteManifest(): ErpManifest {
+  return {
+    id: "/",
+    name: "PES-RH",
+    short_name: "PES-RH",
+    description: "Pôle Emploi Services — recrutement, formation et boutique RH.",
+    scope: "/",
+    start_url: "/",
+    display: "standalone",
+    lang: "fr",
+    theme_color: PWA_THEME_COLOR,
+    background_color: PWA_BACKGROUND_COLOR,
+    icons: SITE_ICONS,
+    shortcuts: [
+      { name: "Offres d'emploi", url: "/offres" },
+      { name: "Boutique", url: "/boutique" },
+      { name: "Connexion", url: "/login" },
+    ],
+  };
+}
 
 export function companyManifest(_raw?: string): ErpManifest {
   return {

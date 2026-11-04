@@ -26,6 +26,7 @@ import {
   Users,
 } from "lucide-react";
 import { clearPwaCaches } from "@/components/pwa/clear-caches";
+import { BrandMark } from "@/components/layout/brand-logo";
 import { logout } from "@/server/actions/auth";
 import { ROLE_HOME } from "@/lib/constants";
 import { buttonVariants } from "@/components/ui/button";
@@ -186,12 +187,28 @@ export function DashboardShell({
         <div className={cn("overflow-hidden rounded-3xl border shadow-[0_16px_40px_rgba(4,41,99,0.08)]", space.panel)}>
           <div className={cn("h-1.5", space.stripe)} />
           <div className="p-5">
-            <p className={cn("text-[11px] uppercase tracking-[0.22em]", space.eyebrow)}>Espace</p>
-            <p className={cn("mt-1 font-display text-2xl", role === "ADMIN" ? "text-primary-foreground" : "text-primary")}>
-              {space.label}
-            </p>
+            <div className="flex items-center gap-3">
+              <BrandMark
+                size="sm"
+                className={cn(
+                  "rounded-xl",
+                  role === "ADMIN" && "ring-primary-foreground/25 shadow-[0_8px_20px_rgba(0,0,0,0.2)]",
+                )}
+              />
+              <div>
+                <p className={cn("text-[11px] uppercase tracking-[0.22em]", space.eyebrow)}>Espace</p>
+                <p
+                  className={cn(
+                    "font-display text-2xl leading-none",
+                    role === "ADMIN" ? "text-primary-foreground" : "text-primary",
+                  )}
+                >
+                  {space.label}
+                </p>
+              </div>
+            </div>
             {pageLabel ? (
-              <p className={cn("mt-1 text-sm", role === "ADMIN" ? "text-primary-foreground/70" : "text-muted-foreground")}>
+              <p className={cn("mt-2 text-sm", role === "ADMIN" ? "text-primary-foreground/70" : "text-muted-foreground")}>
                 {pageLabel}
               </p>
             ) : null}

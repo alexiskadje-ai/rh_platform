@@ -1,15 +1,22 @@
 /** Ressources que le navigateur charge avant toute session. Le proxy ne les redirige pas. */
 export const PWA_INSTALL_PATHS = [
+  "/manifest.webmanifest",
   "/company/manifest.webmanifest",
   "/employee/manifest.webmanifest",
   "/sw.js",
   "/offline",
+  "/pwa/site/icon-192.png",
+  "/pwa/site/icon-512.png",
+  "/pwa/site/icon-512-maskable.png",
   "/pwa/company/icon-192.png",
   "/pwa/company/icon-512.png",
   "/pwa/company/icon-512-maskable.png",
   "/pwa/employee/icon-192.png",
   "/pwa/employee/icon-512.png",
   "/pwa/employee/icon-512-maskable.png",
+  "/brand/apple-touch-icon.png",
+  "/brand/pes-mark.png",
+  "/brand/pes-mark-192.png",
 ] as const;
 
 export function isPwaInstallAsset(pathname: string): boolean {

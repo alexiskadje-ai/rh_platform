@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { listenForInstallPrompt } from "@/components/pwa/install-prompt";
 
-export function PwaRegister({ scope }: { scope: "/company/" | "/employee/" }) {
+export function PwaRegister({ scope = "/" }: { scope?: "/" | "/company/" | "/employee/" }) {
   listenForInstallPrompt();
 
   useEffect(() => {

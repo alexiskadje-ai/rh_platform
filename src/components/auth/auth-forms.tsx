@@ -9,6 +9,7 @@ import {
   type ActionState,
 } from "@/server/actions/auth";
 import { OtpInput } from "@/components/auth/otp-input";
+import { AuthCardBrand } from "@/components/layout/auth-brand";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SubmitButton } from "@/components/ui/submit-button";
@@ -27,8 +28,9 @@ export function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
   return (
     <Card className="w-full max-w-md shadow-[0_20px_60px_rgba(20,33,28,0.08)]">
       <CardHeader>
-        <CardTitle>Connexion</CardTitle>
-        <CardDescription>E-mail ou téléphone, puis mot de passe.</CardDescription>
+        <AuthCardBrand />
+        <CardTitle className="text-center">Connexion</CardTitle>
+        <CardDescription className="text-center">E-mail ou téléphone, puis mot de passe.</CardDescription>
       </CardHeader>
       <CardContent>
         <form action={action} className="space-y-4">
@@ -85,10 +87,11 @@ export function TwoFactorForm() {
   const [state, action] = useActionState(verifyTwoFactor, {} as ActionState);
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md shadow-[0_20px_60px_rgba(20,33,28,0.08)]">
       <CardHeader>
-        <CardTitle>Vérification 2FA</CardTitle>
-        <CardDescription>
+        <AuthCardBrand />
+        <CardTitle className="text-center">Vérification 2FA</CardTitle>
+        <CardDescription className="text-center">
           Saisissez le code à 6 chiffres de votre application d&apos;authentification.
           Il expire après 5 minutes.
         </CardDescription>
@@ -165,8 +168,9 @@ export function CandidateRegisterForm() {
   return (
     <Card className="w-full max-w-lg">
       <CardHeader>
-        <CardTitle>Inscription candidat</CardTitle>
-        <CardDescription>
+        <AuthCardBrand />
+        <CardTitle className="text-center">Inscription candidat</CardTitle>
+        <CardDescription className="text-center">
           Étape {step} sur 2. Le brouillon (sans mot de passe) reste dans cet onglet.
         </CardDescription>
         <div

@@ -8,6 +8,7 @@ import { RecruiterPersonalFields } from "@/components/auth/recruiter-personal-fi
 import { RecruiterTypeChoice } from "@/components/auth/recruiter-type-choice";
 import { RecaptchaField } from "@/components/security/recaptcha-field";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { AuthCardBrand } from "@/components/layout/auth-brand";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { clearSessionDraft, readSessionDraft, writeSessionDraft } from "@/lib/form-draft";
 
@@ -77,8 +78,9 @@ export function RecruiterRegisterForm() {
   return (
     <Card className="w-full max-w-lg">
       <CardHeader>
-        <CardTitle>Inscription recruteur</CardTitle>
-        <CardDescription>
+        <AuthCardBrand />
+        <CardTitle className="text-center">Inscription recruteur</CardTitle>
+        <CardDescription className="text-center">
           Entreprise ou chasseur de têtes. Le mot de passe vous sera envoyé après validation du pack.
         </CardDescription>
       </CardHeader>

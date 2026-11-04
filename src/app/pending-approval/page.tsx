@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { Role, SubscriptionStatus, UserStatus } from "@prisma/client";
+import { AuthCardBrand } from "@/components/layout/auth-brand";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,10 +41,11 @@ export default async function PendingApprovalPage() {
 
   return (
     <main className="mx-auto flex w-full max-w-lg flex-1 items-center px-4 py-12">
-      <Card>
+      <Card className="shadow-[0_20px_60px_rgba(20,33,28,0.08)]">
         <CardHeader>
-          <CardTitle>{title}</CardTitle>
-          <CardDescription>
+          <AuthCardBrand />
+          <CardTitle className="text-center">{title}</CardTitle>
+          <CardDescription className="text-center">
             {rejected
               ? RECRUITER_PACK_REFUND_NOTICE
               : approved && user?.mustChangePassword

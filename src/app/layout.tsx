@@ -1,10 +1,13 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Fraunces, Geist, Geist_Mono } from "next/font/google";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { ChatWidget } from "@/components/chat/chat-widget";
+import { InstallAppPrompt } from "@/components/pwa/install-app-prompt";
+import { PwaRegister } from "@/components/pwa/pwa-register";
 import { APP_NAME, APP_TAGLINE } from "@/lib/constants";
 import { COMPANY_SLOGAN } from "@/lib/company";
+import { PWA_THEME_COLOR } from "@/lib/pwa/manifest";
 import { siteOrigin } from "@/lib/site";
 import "./globals.css";
 
@@ -30,11 +33,26 @@ export const metadata: Metadata = {
     template: `%s · ${APP_NAME}`,
   },
   description: `${COMPANY_SLOGAN}. ${APP_TAGLINE}`,
+  applicationName: APP_NAME,
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: APP_NAME,
+    statusBarStyle: "default",
+  },
+  icons: {
+    icon: [{ url: "/pwa/site/icon-192.png", sizes: "192x192", type: "image/png" }],
+    apple: [{ url: "/brand/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
   openGraph: {
     type: "website",
     locale: "fr_FR",
     siteName: APP_NAME,
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: PWA_THEME_COLOR,
 };
 
 export default function RootLayout({
@@ -61,6 +79,8 @@ export default function RootLayout({
         </div>
         <SiteFooter />
         <ChatWidget />
+        <PwaRegister scope="/" />
+        <InstallAppPrompt />
       </body>
     </html>
   );

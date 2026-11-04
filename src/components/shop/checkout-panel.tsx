@@ -14,6 +14,7 @@ import {
 import { formatFcfa, productTypeLabel } from "@/lib/shop";
 import { productIncludes } from "@/lib/shop-preview";
 import { refreshPayment, startMomoPayment, startStripePayment } from "@/server/actions/payments";
+import { BrandMark } from "@/components/layout/brand-logo";
 import { PaymentBrandLogo } from "@/components/shop/payment-brand-logo";
 import { ProductCover } from "@/components/shop/product-cover";
 import { Button } from "@/components/ui/button";
@@ -171,9 +172,12 @@ export function CheckoutPanel({
   return (
     <div className="overflow-hidden rounded-[2rem] border border-border/80 bg-card shadow-[0_18px_50px_rgba(20,33,28,0.08)]">
       <div className="flex items-center justify-between gap-3 border-b border-border/70 bg-primary px-5 py-4 text-primary-foreground">
-        <div className="flex items-center gap-2 text-sm font-medium">
-          <Lock className="size-4 text-highlight" />
-          PES-RH Checkout
+        <div className="flex items-center gap-3 text-sm font-medium">
+          <BrandMark size="sm" className="rounded-xl ring-primary-foreground/20" />
+          <span className="inline-flex items-center gap-2">
+            <Lock className="size-4 text-highlight" />
+            PES-RH Checkout
+          </span>
         </div>
         <p className="text-xs text-primary-foreground/70">Mobile Money · Stripe</p>
       </div>
@@ -232,7 +236,10 @@ export function CheckoutPanel({
           ) : null}
           {paid ? (
             <div className="rounded-2xl border border-primary/20 bg-primary/5 p-5">
-              <CheckCircle2 className="size-8 text-primary" />
+              <div className="flex items-center gap-3">
+                <BrandMark size="md" className="rounded-2xl" />
+                <CheckCircle2 className="size-7 text-primary" />
+              </div>
               <p className="mt-3 font-display text-xl text-primary">Paiement confirmé</p>
               {reference ? <p className="mt-1 text-sm font-medium">Référence : {reference}</p> : null}
               <p className="mt-1 text-sm text-muted-foreground">

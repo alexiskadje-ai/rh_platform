@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Building2, UserRound } from "lucide-react";
+import { BrandMark } from "@/components/layout/brand-logo";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHero } from "@/components/layout/page-hero";
@@ -10,6 +11,9 @@ export default function RegisterChoicePage() {
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 items-center px-4 py-16">
       <div className="w-full space-y-10">
+        <div className="flex justify-center">
+          <BrandMark size="lg" priority />
+        </div>
         <PageHero
           className="mx-auto text-center"
           eyebrow="Inscription"
