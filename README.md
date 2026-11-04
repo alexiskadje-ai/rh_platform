@@ -22,4 +22,4 @@ npm run dev
 
 Ouvrez [http://localhost:3000](http://localhost:3000). Compte admin : `ADMIN_EMAIL` / `ADMIN_PASSWORD`.
 
-En développement, le lien e-mail et le code SMS s'affichent sur `/verify` (ils sont aussi loggés dans le terminal).
+En développement, le lien e-mail s'affiche sur `/verify` (il est aussi loggé dans le terminal).

@@ -3,13 +3,15 @@ import Link from "next/link";
 import { requireOwnOrder } from "@/server/actions/shop";
 import { formatFcfa, ORDER_STATUS_LABELS, productTypeLabel } from "@/lib/shop";
 import { productApercu, productIncludes } from "@/lib/shop-preview";
-import { isMomoConfigured } from "@/lib/payments/momo";
 import { isNotchpaySandbox } from "@/lib/payments/notchpay";
+import { NOTCHPAY_DISPLAY_EXPIRE_MS } from "@/lib/payments/notchpay-status";
 import { isStripeConfigured } from "@/lib/payments/stripe";
 import { applyStripeStatus } from "@/lib/payments/sync";
 import { PAYMENT_STATUS } from "@/lib/payments/confirm";
 import { createPresignedDownload } from "@/lib/storage";
 import { CheckoutPanel } from "@/components/shop/checkout-panel";
+import { displayUploadUrl } from "@/lib/storage";
+import { ProductCover } from "@/components/shop/product-cover";
 import { ShopSteps } from "@/components/shop/shop-steps";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
@@ -51,10 +53,22 @@ export default async function OrderPaymentPage({
 
   const returnedFromStripe =
     query.stripe === "success" || query.stripe === "cancel" ? query.stripe : null;
+  const lineItems = await Promise.all(
+    order.items.map(async (item) => ({
+      id: item.id,
+      title: item.product.title,
+      type: item.product.type,
+      quantity: item.quantity,
+      price: item.product.price,
+      imageUrl: await displayUploadUrl(item.product.imageUrl),
+      apercu: productApercu(item.product),
+      includes: productIncludes(item.product.type),
+    })),
+  );
 
   return (
     <main className="mx-auto w-full max-w-5xl flex-1 space-y-8 px-4 py-16">
-      <ShopSteps current="paiement" />
+      <ShopSteps current={order.status === PAYMENT_STATUS.paid ? "confirmation" : "paiement"} />
       <div>
         <p className="text-xs uppercase tracking-[0.28em] text-accent">Checkout sécurisé</p>
         <h1 className="mt-3 font-display text-4xl font-medium text-primary">Paiement</h1>
@@ -69,22 +83,21 @@ export default async function OrderPaymentPage({
             <CardTitle className="text-base">Récapitulatif</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
-            {order.items.map((item) => (
+            {lineItems.map((item) => (
               <div key={item.id} className="space-y-2 rounded-2xl border border-border/70 p-3">
-                <div className="flex items-start justify-between gap-3">
-                  <p>
-                    {item.product.title}
+                <div className="flex items-start gap-3">
+                  <ProductCover type={item.type} imageUrl={item.imageUrl} size="thumb" />
+                  <p className="min-w-0 flex-1">
+                    {item.title}
                     <span className="block text-xs text-muted-foreground">
-                      {productTypeLabel(item.product.type)} × {item.quantity}
+                      {productTypeLabel(item.type)} × {item.quantity}
                     </span>
                   </p>
-                  <p className="font-medium">{formatFcfa(item.product.price * item.quantity)}</p>
+                  <p className="font-medium">{formatFcfa(item.price * item.quantity)}</p>
                 </div>
-                <p className="text-xs leading-relaxed text-muted-foreground">
-                  {productApercu(item.product)}
-                </p>
+                <p className="text-xs leading-relaxed text-muted-foreground">{item.apercu}</p>
                 <ul className="space-y-1 text-xs text-muted-foreground">
-                  {productIncludes(item.product.type).map((line) => (
+                  {item.includes.map((line) => (
                     <li key={line}>• {line}</li>
                   ))}
                 </ul>
@@ -118,21 +131,22 @@ export default async function OrderPaymentPage({
         <CheckoutPanel
           orderId={order.id}
           amount={order.total}
-          items={order.items.map((item) => ({
-            title: item.product.title,
-            type: item.product.type,
-            quantity: item.quantity,
-            price: item.product.price,
-          }))}
+          items={lineItems}
           defaultPhone={order.user.phone}
-          momoConfigured={isMomoConfigured()}
           stripeConfigured={isStripeConfigured()}
           orangeSandbox={isNotchpaySandbox()}
+          notchExpiresAt={
+            payment?.gateway === "NOTCHPAY" &&
+            (payment.status === "pending" || payment.status === "processing")
+              ? payment.createdAt.getTime() + NOTCHPAY_DISPLAY_EXPIRE_MS
+              : null
+          }
           initialStatus={payment?.status ?? "new"}
           initialProvider={payment?.provider}
           initialReference={payment?.reference}
           initialMessage={payment?.failureReason}
           invoiceHref={invoiceHref}
+          downloads={downloads}
           receiptHref={payment?.receiptUrl ?? null}
           returnedFromStripe={returnedFromStripe}
         />

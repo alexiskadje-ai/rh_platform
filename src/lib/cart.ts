@@ -6,6 +6,7 @@ export type CartItem = {
   title: string;
   type: string;
   price: number;
+  imageUrl?: string | null;
   quantity: number;
 };
 
@@ -54,7 +55,14 @@ export const useCart = create<CartState>()(
           set({
             items: get().items.map((row) =>
               row.productId === item.productId
-                ? { ...row, quantity: clampQty(row.quantity + qty), title: item.title, type: item.type, price: item.price }
+                ? {
+                    ...row,
+                    quantity: clampQty(row.quantity + qty),
+                    title: item.title,
+                    type: item.type,
+                    price: item.price,
+                    imageUrl: item.imageUrl,
+                  }
                 : row,
             ),
           });

@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { CompanyStatus, Role, SubscriptionStatus, UserStatus } from "@prisma/client";
 import { RECRUITER_ONBOARDING_PACK_PATH } from "@/lib/config/recruiter-packs";
@@ -6,12 +7,12 @@ import { auth } from "@/lib/auth";
 import { ROLE_HOME } from "@/lib/constants";
 import { db } from "@/lib/db";
 
-export async function getSessionUser() {
+export const getSessionUser = cache(async () => {
   const session = await auth();
   const user = session?.user ?? null;
   if (user) auditStore.enterWith({ userId: user.id });
   return user;
-}
+});
 
 export async function requireUser() {
   const user = await getSessionUser();

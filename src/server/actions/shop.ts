@@ -27,6 +27,7 @@ function productPayload(formData: FormData) {
     type: formData.get("type"),
     price: formData.get("price"),
     fileUrl: formData.get("fileUrl"),
+    imageUrl: formData.get("imageUrl") ?? "",
     description: formData.get("description") ?? "",
     excerpt: formData.get("excerpt") ?? "",
   });
@@ -99,7 +100,7 @@ export async function checkoutCart(
   const user = await getSessionUser();
   if (!user) return { needsAuth: true };
   if (user.role === "CANDIDATE" && !user.isVerified) {
-    return { message: "Vérifiez votre compte (e-mail et SMS) avant de commander." };
+    return { message: "Vérifiez votre e-mail avant de commander." };
   }
   if (user.role === "RECRUITER" && user.status === "PENDING") {
     return { message: "Votre espace recruteur n'est pas encore validé." };
@@ -184,6 +185,7 @@ export async function requireOwnOrder(orderId: string) {
               type: true,
               price: true,
               fileUrl: true,
+              imageUrl: true,
               description: true,
               excerpt: true,
             },

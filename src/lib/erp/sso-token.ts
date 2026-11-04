@@ -36,7 +36,7 @@ export async function signSsoToken(input: {
 }
 
 export async function signSsoTokenFromEnv(input: {
-  env: {
+  env: NodeJS.ProcessEnv | {
     ERP_SSO_ISSUER?: string;
     ERP_SSO_AUDIENCE?: string;
     ERP_SSO_PRIVATE_KEY?: string;

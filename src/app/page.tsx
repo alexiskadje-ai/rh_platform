@@ -13,7 +13,7 @@ import { FadeIn } from "@/components/motion/reveal";
 import { loadPublishedTestimonials } from "@/server/actions/content";
 import { loadSiteSettings } from "@/lib/site-content";
 
-export default async function HomePage() {
+async function loadHomeStats() {
   let cvCount = 0;
   let companyCount = 0;
   let satisfaction = 0;
@@ -49,29 +49,38 @@ export default async function HomePage() {
     // Database may be unavailable during first boot.
   }
 
+  return { cvCount, companyCount, satisfaction, recruiterCount, openOffers, profileInitials };
+}
+
+export default async function HomePage() {
+  const [home, site, offers, published] = await Promise.all([
+    loadHomeStats(),
+    loadSiteSettings(),
+    loadRecentOffers(),
+    loadPublishedTestimonials(),
+  ]);
   const stats = [
-    { label: "CV disponibles", value: cvCount },
-    { label: "Taux de satisfaction", value: satisfaction, suffix: "%", plus: false },
-    { label: "Entreprises suivies", value: companyCount },
-    { label: "Recruteurs actifs", value: recruiterCount },
+    { label: "CV disponibles", value: home.cvCount },
+    { label: "Taux de satisfaction", value: home.satisfaction, suffix: "%", plus: false },
+    { label: "Entreprises suivies", value: home.companyCount },
+    { label: "Recruteurs actifs", value: home.recruiterCount },
   ];
-  const site = await loadSiteSettings();
 
   return (
     <main>
       <HomeHero
         stats={stats}
-        profileCount={cvCount}
-        profileInitials={profileInitials}
-        openOffers={openOffers}
+        profileCount={home.cvCount}
+        profileInitials={home.profileInitials}
+        openOffers={home.openOffers}
         heroTitle={site.heroTitle}
         heroSubtitle={site.heroSubtitle}
       />
       <ServicesGrid />
       <WhyAccompany />
       <HowItWorks />
-      <RecentOffers />
-      <TestimonialsSection />
+      <RecentOffers offers={offers} />
+      <Testimonials published={published} />
       <CtaBand />
     </main>
   );
@@ -83,28 +92,26 @@ function profileInitialsFrom(firstName: string, lastName: string) {
   return `${first}${last}`.toUpperCase();
 }
 
-async function TestimonialsSection() {
-  const published = await loadPublishedTestimonials();
-  return <Testimonials published={published} />;
-}
-
 async function loadRecentOffers() {
-  await closeExpiredOffers();
-  return db.jobOffer.findMany({
-    where: publicJobWhere(),
-    include: { company: true },
-    orderBy: { createdAt: "desc" },
-    take: 6,
-  });
-}
-
-async function RecentOffers() {
-  let offers;
+  void closeExpiredOffers().catch(() => undefined);
   try {
-    offers = await loadRecentOffers();
+    return await db.jobOffer.findMany({
+      where: publicJobWhere(),
+      include: { company: true },
+      orderBy: { createdAt: "desc" },
+      take: 6,
+    });
   } catch {
     return null;
   }
+}
+
+async function RecentOffers({
+  offers,
+}: {
+  offers: Awaited<ReturnType<typeof loadRecentOffers>> | null;
+}) {
+  if (!offers) return null;
   if (offers.length === 0) return null;
   const proIds = await recruteurProCompanyIds(offers.map((item) => item.companyId));
   const ranked = [...offers].sort((a, b) => {

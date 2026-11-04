@@ -117,7 +117,7 @@ export default async function PublicJobDetailPage({
             </p>
           ) : !user.isVerified ? (
             <p className="mt-2 text-sm">
-              Vérifiez votre e-mail et votre téléphone avant de postuler.{" "}
+              Vérifiez votre e-mail avant de postuler.{" "}
               <Link href="/verify" className="text-primary underline">
                 Aller à la vérification
               </Link>

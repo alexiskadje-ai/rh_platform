@@ -5,14 +5,14 @@ import { revalidatePath } from "next/cache";
 import {
   BILLING_CYCLE_LABELS,
   RECRUITER_ONBOARDING_CONFIRM_PATH,
+  recruiterPackPath,
   RECRUITER_PACK_LABELS,
   resolvePackPrice,
 } from "@/lib/config/recruiter-packs";
 import { db } from "@/lib/db";
 import { requireOnboardingRecruiter } from "@/lib/recruiter-onboarding";
 import { PAYMENT_STATUS, markPaymentFailed } from "@/lib/payments/confirm";
-import { isMomoConfigured, requestToPayment } from "@/lib/payments/momo";
-import { beginOrangeCharge } from "@/lib/payments/notchpay";
+import { beginMobileMoneyCharge, resolveMobileMoneyProvider } from "@/lib/payments/notchpay";
 import { createCheckoutSession, isStripeConfigured } from "@/lib/payments/stripe";
 import { applyMomoStatus, applyNotchpayStatus, applyStripeStatus } from "@/lib/payments/sync";
 import {
@@ -22,7 +22,6 @@ import {
 } from "@/lib/recruiter-pack-reference";
 import { fieldErrorsFromZod } from "@/lib/users";
 import { phoneSchema } from "@/lib/validations/auth";
-import { momoPhoneSchema } from "@/lib/validations/payment";
 import { recruiterPackCheckoutSchema } from "@/lib/validations/recruiter-pack";
 
 export type RecruiterPackPaymentState = {
@@ -61,29 +60,31 @@ export async function startRecruiterPackPayment(
     cycle: formData.get("cycle"),
     provider: formData.get("provider"),
     phone: formData.get("phone") || undefined,
+    acceptTerms: formData.get("acceptTerms"),
   });
   if (!parsed.success) return { errors: fieldErrorsFromZod(parsed.error) };
 
-  const { tier, cycle, provider } = parsed.data;
+  const { tier, cycle } = parsed.data;
   let phone: string | undefined;
-  if (provider === "MTN_MOMO") {
-    const phoneParsed = momoPhoneSchema.safeParse(parsed.data.phone ?? "");
-    if (!phoneParsed.success) {
-      return { errors: { phone: phoneParsed.error.issues.map((issue) => issue.message) } };
-    }
-    phone = phoneParsed.data;
-  }
-  if (provider === "ORANGE_MONEY") {
+  let provider: "MTN_MOMO" | "ORANGE_MONEY" | "CARD" = "CARD";
+  if (parsed.data.provider === "MOBILE_MONEY") {
     const phoneParsed = phoneSchema.safeParse(parsed.data.phone ?? "");
     if (!phoneParsed.success) {
       return { errors: { phone: phoneParsed.error.issues.map((issue) => issue.message) } };
     }
+    try {
+      provider = resolveMobileMoneyProvider(phoneParsed.data);
+    } catch (error) {
+      return {
+        message:
+          error instanceof Error
+            ? error.message
+            : "Ce numéro n'est ni MTN MoMo (67) ni Orange Money (69).",
+      };
+    }
     phone = phoneParsed.data;
   }
 
-  if (provider === "MTN_MOMO" && !isMomoConfigured()) {
-    return { message: "Le sandbox MTN MoMo n'est pas encore configuré." };
-  }
   if (provider === "CARD" && !isStripeConfigured()) {
     return { message: "Stripe n'est pas configuré. Renseignez STRIPE_SECRET_KEY." };
   }
@@ -111,29 +112,30 @@ export async function startRecruiterPackPayment(
   });
 
   try {
-    if (provider === "MTN_MOMO") {
-      const momo = await requestToPayment({
-        amount,
-        externalId: reference,
-        payerMsisdn: phone ?? "",
-        payerMessage: `PES-RH ${RECRUITER_PACK_LABELS[tier]}`,
-        payeeNote: `Pack ${BILLING_CYCLE_LABELS[cycle]}`,
-      });
-      await db.payment.update({
-        where: { id: payment.id },
-        data: { providerRef: momo.referenceId },
+    if (provider === "MTN_MOMO" || provider === "ORANGE_MONEY") {
+      await beginMobileMoneyCharge({
+        provider,
+        paymentId: payment.id,
+        description: `Pack ${RECRUITER_PACK_LABELS[tier]} · ${BILLING_CYCLE_LABELS[cycle]}`,
+        customer: {
+          name: `${user.firstName} ${user.lastName}`.trim() || company.name,
+          email: user.email,
+          phone: phone ?? "",
+        },
+        walletPhone: phone ?? "",
       });
       revalidatePath(RECRUITER_ONBOARDING_CONFIRM_PATH);
+      revalidatePath(recruiterPackPath(tier));
       return {
         ok: true,
         status: PAYMENT_STATUS.pending,
         reference,
-        message: "Demande envoyée. Validez le paiement sur votre téléphone MTN.",
+        message: "Validez la demande de paiement sur votre téléphone.",
       };
     }
 
     if (provider === "CARD") {
-      const base = `${appOrigin()}${RECRUITER_ONBOARDING_CONFIRM_PATH}?tier=${tier}&cycle=${cycle}`;
+      const base = `${appOrigin()}${recruiterPackPath(tier)}?cycle=${cycle}`;
       const session = await createCheckoutSession({
         orderId: reference,
         reference,
@@ -160,23 +162,7 @@ export async function startRecruiterPackPayment(
       };
     }
 
-    await beginOrangeCharge({
-      paymentId: payment.id,
-      description: `Pack ${RECRUITER_PACK_LABELS[tier]} · ${BILLING_CYCLE_LABELS[cycle]}`,
-      customer: {
-        name: `${user.firstName} ${user.lastName}`.trim() || company.name,
-        email: user.email,
-        phone: phone ?? "",
-      },
-      walletPhone: phone ?? "",
-    });
-    revalidatePath(RECRUITER_ONBOARDING_CONFIRM_PATH);
-    return {
-      ok: true,
-      status: PAYMENT_STATUS.pending,
-      reference,
-      message: "Validez la demande de paiement sur votre téléphone.",
-    };
+    return { message: "Moyen de paiement inconnu." };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Impossible d'initier le paiement.";
     await markPaymentFailed(payment.id, message);

@@ -15,8 +15,8 @@ import {
 } from "@/lib/crypto";
 import {
   sendPasswordResetEmail,
+  sendRecruiterSignupNotice,
   sendVerificationEmail,
-  sendVerificationSms,
 } from "@/lib/notify";
 import { notify } from "@/lib/notifications";
 import { consumeToken, issueToken, peekToken } from "@/lib/tokens";
@@ -47,7 +47,6 @@ export type ActionState = {
   errors?: Record<string, string[] | undefined>;
   debug?: {
     emailUrl?: string;
-    smsCode?: string;
   };
 };
 
@@ -81,11 +80,10 @@ function safeRedirectPath(value: FormDataEntryValue | null) {
   return value;
 }
 
-async function setDevVerificationHints(emailToken: string, smsCode: string) {
+async function setDevVerificationHints(emailToken: string) {
   if (process.env.NODE_ENV === "production") return;
   const jar = await cookies();
   jar.set("rh_debug_email", emailToken, { path: "/", maxAge: 60 * 60 });
-  jar.set("rh_debug_sms", smsCode, { path: "/", maxAge: 10 * 60 });
 }
 
 async function createSession(userId: string, redirectTo?: string) {
@@ -244,10 +242,8 @@ export async function registerCandidate(
   await notify(user.id, "ACCOUNT_CREATED", { firstName: user.firstName });
 
   const emailToken = await issueToken(user.id, TokenType.EMAIL);
-  const smsCode = await issueToken(user.id, TokenType.SMS);
   await sendVerificationEmail(user.email, emailToken);
-  await sendVerificationSms(data.phone, smsCode);
-  await setDevVerificationHints(emailToken, smsCode);
+  await setDevVerificationHints(emailToken);
 
   await createSession(user.id, "/verify");
   return { ok: true };
@@ -323,16 +319,7 @@ export async function registerCompany(
     throw error;
   }
 
-  await notify(user.id, "ACCOUNT_CREATED", {
-    firstName: user.firstName,
-    accountLabel: "recruteur",
-  });
-
-  const emailToken = await issueToken(user.id, TokenType.EMAIL);
-  const smsCode = await issueToken(user.id, TokenType.SMS);
-  await sendVerificationEmail(user.email, emailToken);
-  await sendVerificationSms(data.phone, smsCode);
-  await setDevVerificationHints(emailToken, smsCode);
+  await sendRecruiterSignupNotice(user.email, data.phone, user.firstName);
 
   await createSession(user.id, RECRUITER_ONBOARDING_PACK_PATH);
   return { ok: true };
@@ -527,7 +514,17 @@ export async function confirmEmail(token: string) {
   if (activated?.role === Role.CANDIDATE && activated.status === UserStatus.ACTIVE) {
     await createSession(userId, ROLE_HOME.CANDIDATE);
   }
-  return { ok: true as const, alreadyPhone: Boolean(activated?.phoneVerifiedAt) };
+  return { ok: true as const };
+}
+
+export async function releaseVerifiedCandidate() {
+  const { auth } = await import("@/lib/auth");
+  const session = await auth();
+  if (!session?.user || session.user.isVerified) return;
+  const activated = await maybeActivateCandidate(session.user.id);
+  if (activated?.role === Role.CANDIDATE && activated.status === UserStatus.ACTIVE) {
+    await createSession(activated.id, ROLE_HOME.CANDIDATE);
+  }
 }
 
 export async function confirmEmailCode(
@@ -552,9 +549,12 @@ export async function resendVerification(
   }
   const user = await db.user.findUnique({
     where: { id: session.user.id },
-    select: { email: true, emailVerifiedAt: true },
+    select: { email: true, emailVerifiedAt: true, role: true },
   });
   if (!user) return { message: "Compte introuvable." };
+  if (user.role === Role.RECRUITER) {
+    return { ok: true, message: "Votre demande est déjà enregistrée. Aucun code n'est demandé." };
+  }
   if (user.emailVerifiedAt) return { ok: true, message: "Votre e-mail est déjà confirmé." };
   const emailToken = await issueToken(session.user.id, TokenType.EMAIL);
   await sendVerificationEmail(user.email, emailToken);
@@ -565,81 +565,10 @@ export async function resendVerification(
   return { ok: true, message: "Un nouveau code a été envoyé à votre e-mail." };
 }
 
-export async function resendSmsVerification(
-  _prev: ActionState,
-  _formData: FormData,
-): Promise<ActionState> {
-  const { auth } = await import("@/lib/auth");
-  const session = await auth();
-  if (!session?.user?.id) {
-    return { message: "Connectez-vous pour renvoyer le code." };
-  }
-  const user = await db.user.findUnique({
-    where: { id: session.user.id },
-    select: { phone: true, phoneVerifiedAt: true },
-  });
-  if (!user?.phone) return { message: "Aucun numéro n'est associé à ce compte." };
-  if (user.phoneVerifiedAt) return { ok: true, message: "Votre téléphone est déjà confirmé." };
-
-  const smsCode = await issueToken(session.user.id, TokenType.SMS);
-  const sent = await sendVerificationSms(user.phone, smsCode);
-  if (process.env.NODE_ENV !== "production") {
-    const jar = await cookies();
-    jar.set("rh_debug_sms", smsCode, { path: "/", maxAge: 10 * 60 });
-  }
-  if (!sent && process.env.NODE_ENV !== "production") {
-    return {
-      ok: true,
-      message: "Twilio n'est pas configuré : utilisez le code affiché ci-dessous.",
-      debug: { smsCode },
-    };
-  }
-  if (!sent) {
-    return { message: "Le SMS n'a pas pu être envoyé. Réessayez dans un instant." };
-  }
-  return { ok: true, message: "Un nouveau code a été envoyé par SMS." };
-}
-
-export async function confirmSms(
-  _prev: ActionState,
-  formData: FormData,
-): Promise<ActionState> {
-  const parsed = verifySmsSchema.safeParse({ code: String(formData.get("code") ?? "").replace(/\D/g, "") });
-  if (!parsed.success) {
-    return { errors: fieldErrorsFromZod(parsed.error) };
-  }
-
-  const pendingUserId = await peekToken(parsed.data.code, TokenType.SMS);
-  if (!pendingUserId) {
-    return { message: "Code SMS invalide ou expiré." };
-  }
-
-  const { auth } = await import("@/lib/auth");
-  const session = await auth();
-  if (!session?.user || session.user.id !== pendingUserId) {
-    return { message: "Ce code ne correspond pas au compte connecté." };
-  }
-
-  const userId = await consumeToken(parsed.data.code, TokenType.SMS);
-  if (!userId) {
-    return { message: "Code SMS invalide ou expiré." };
-  }
-
-  await db.user.update({
-    where: { id: userId },
-    data: { phoneVerifiedAt: new Date() },
-  });
-  const activated = await maybeActivateCandidate(userId);
-  if (activated?.role === Role.CANDIDATE && activated.status === UserStatus.ACTIVE) {
-    await createSession(userId, ROLE_HOME.CANDIDATE);
-  }
-  return { ok: true };
-}
-
 async function maybeActivateCandidate(userId: string) {
   const user = await db.user.findUnique({ where: { id: userId } });
   if (!user) return null;
-  if (user.role === Role.CANDIDATE && user.emailVerifiedAt && user.phoneVerifiedAt) {
+  if (user.role === Role.CANDIDATE && user.emailVerifiedAt) {
     return db.user.update({
       where: { id: userId },
       data: { isVerified: true, status: UserStatus.ACTIVE },

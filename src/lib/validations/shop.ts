@@ -6,6 +6,15 @@ export const productSchema = z.object({
   type: z.enum(PRODUCT_TYPES),
   price: z.coerce.number().int().min(1, "Prix obligatoire."),
   fileUrl: z.string().trim().min(1, "Fichier livrable obligatoire."),
+  imageUrl: z
+    .string()
+    .trim()
+    .max(500)
+    .default("")
+    .refine(
+      (value) => value === "" || value.startsWith("/uploads/") || value.startsWith("s3://"),
+      "Image invalide.",
+    ),
   description: z.string().trim().max(2000).default(""),
   excerpt: z.string().trim().max(1200).default(""),
 });

@@ -1,19 +1,19 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { LoaderCircle } from "lucide-react";
+import { LoaderCircle, Lock } from "lucide-react";
 import { PaymentBrandLogo } from "@/components/shop/payment-brand-logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  RECRUITER_ONBOARDING_CONFIRM_PATH,
+  recruiterPackPath,
   billingCyclePaymentNotice,
   type BillingCycle,
   type RecruiterPackTier,
 } from "@/lib/config/recruiter-packs";
-import { PAYMENT_METHOD_LABELS } from "@/lib/constants";
 import { formatFcfa } from "@/lib/shop";
 import { cn } from "@/lib/utils";
 import {
@@ -21,7 +21,7 @@ import {
   startRecruiterPackPayment,
 } from "@/server/actions/recruiter-pack";
 
-const METHODS = ["MTN_MOMO", "ORANGE_MONEY", "CARD"] as const;
+const METHODS = ["MOBILE_MONEY", "CARD"] as const;
 type MethodId = (typeof METHODS)[number];
 
 export function PackCheckout({
@@ -32,7 +32,6 @@ export function PackCheckout({
   packLabel,
   cycleLabel,
   defaultPhone,
-  momoConfigured,
   stripeConfigured,
   orangeSandbox = false,
   failed,
@@ -44,17 +43,20 @@ export function PackCheckout({
   packLabel: string;
   cycleLabel: string;
   defaultPhone?: string | null;
-  momoConfigured: boolean;
   stripeConfigured: boolean;
   orangeSandbox?: boolean;
   failed?: boolean;
 }) {
   const router = useRouter();
-  const [method, setMethod] = useState<MethodId>(momoConfigured ? "MTN_MOMO" : "ORANGE_MONEY");
+  const [method, setMethod] = useState<MethodId>("MOBILE_MONEY");
   const [state, action, pending] = useActionState(startRecruiterPackPayment, {});
   const [polled, setPolled] = useState<string | undefined>();
   const [refreshing, startRefresh] = useTransition();
   const status = polled ?? state.status;
+  const waiting =
+    Boolean(state.reference) &&
+    !state.checkoutUrl &&
+    (status === "pending" || status === "processing");
 
   useEffect(() => {
     if (state.checkoutUrl) window.location.assign(state.checkoutUrl);
@@ -73,12 +75,12 @@ export function PackCheckout({
 
   useEffect(() => {
     if (status !== "paid") return;
-    router.push(`${RECRUITER_ONBOARDING_CONFIRM_PATH}?resultat=recu`);
-  }, [status, router]);
+    router.push(recruiterPackPath(tier));
+  }, [status, router, tier]);
 
   useEffect(() => {
     if (state.status !== "failed") return;
-    router.push(`${RECRUITER_ONBOARDING_CONFIRM_PATH}?tier=${tier}&cycle=${cycle}&paiement=echec`);
+    router.push(`${recruiterPackPath(tier)}?cycle=${cycle}&paiement=echec`);
   }, [state.status, router, tier, cycle]);
 
   return (
@@ -101,6 +103,10 @@ export function PackCheckout({
           </div>
         </dl>
         <p className="mt-4 text-sm text-muted-foreground">{billingCyclePaymentNotice(cycle)}</p>
+        <p className="mt-3 text-xs text-muted-foreground">
+          Mobile Money est encaissé par Notch Pay. La carte est encaissée par Stripe. La facture est
+          émise après confirmation.
+        </p>
       </section>
 
       <section className="rounded-3xl border border-border/80 bg-card p-6">
@@ -110,20 +116,34 @@ export function PackCheckout({
             immédiatement.
           </p>
         ) : null}
+        {waiting ? (
+          <div className="rounded-2xl border border-[#ffcc00]/40 bg-[#fff8d6] p-5 text-[#1a1a1a]">
+            <div className="flex items-start gap-3">
+              <LoaderCircle className="mt-0.5 size-6 animate-spin text-[#c48a00]" />
+              <div>
+                <p className="font-medium">Validez la demande de paiement sur votre téléphone.</p>
+                <p className="mt-1 text-sm">La confirmation Mobile Money arrive par Notch Pay.</p>
+                {state.reference ? (
+                  <p className="mt-2 text-sm font-medium">Référence : {state.reference}</p>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        ) : (
         <form action={action} className="space-y-4">
           <input type="hidden" name="tier" value={tier} />
           <input type="hidden" name="cycle" value={cycle} />
           <input type="hidden" name="provider" value={method} />
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             {METHODS.map((id) => (
               <button
                 key={id}
                 type="button"
                 aria-pressed={method === id}
-                aria-label={id === "CARD" ? "Stripe" : PAYMENT_METHOD_LABELS[id]}
+                aria-label={id === "CARD" ? "Carte" : "Mobile Money"}
                 onClick={() => setMethod(id)}
                 className={cn(
-                  "flex h-28 min-w-0 items-center justify-center overflow-hidden rounded-2xl border bg-card px-3 transition-all",
+                  "flex h-28 min-w-0 items-center justify-center gap-3 overflow-hidden rounded-2xl border bg-card px-3 transition-all",
                   method === id
                     ? "border-primary shadow-[0_0_0_4px_rgba(4,41,99,0.12)]"
                     : "border-border/80 hover:border-accent hover:bg-accent/5",
@@ -131,40 +151,60 @@ export function PackCheckout({
               >
                 {id === "CARD" ? (
                   <PaymentBrandLogo brand="STRIPE" />
-                ) : id === "MTN_MOMO" ? (
-                  <PaymentBrandLogo brand="MTN_MOMO" />
                 ) : (
-                  <PaymentBrandLogo brand="ORANGE_MONEY" />
+                  <>
+                    <PaymentBrandLogo brand="MTN_MOMO" className="size-10" />
+                    <PaymentBrandLogo brand="ORANGE_MONEY" />
+                  </>
                 )}
               </button>
             ))}
           </div>
           {method !== "CARD" ? (
             <div className="space-y-2">
-              <Label htmlFor="phone">Téléphone</Label>
-              <Input id="phone" name="phone" defaultValue={defaultPhone ?? ""} required />
+              <Label htmlFor="phone">Numéro Mobile Money</Label>
+              <Input
+                id="phone"
+                name="phone"
+                defaultValue={defaultPhone ?? ""}
+                placeholder="+237 6XX XX XX XX"
+                autoComplete="tel"
+                required
+              />
               {state.errors?.phone ? (
                 <p className="text-xs text-destructive">{state.errors.phone[0]}</p>
-              ) : null}
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  {orangeSandbox
+                    ? "67 pour MTN (+237670000000), 69 pour Orange (+237690000000)."
+                    : "Un numéro 67 part vers MTN MoMo, un numéro 69 vers Orange Money."}
+                </p>
+              )}
             </div>
           ) : null}
-          {orangeSandbox && method === "ORANGE_MONEY" ? (
-            <p className="text-sm text-muted-foreground">
-              Mode test Notch Pay : indiquez +237670000000 pour simuler un paiement réussi.
-            </p>
+          <label className="flex items-start gap-2 text-sm">
+            <input type="checkbox" name="acceptTerms" value="on" className="mt-1 size-4 accent-primary" required />
+            <span>
+              J&apos;accepte les{" "}
+              <Link href="/cgu" className="text-primary underline">
+                conditions générales
+              </Link>{" "}
+              et l&apos;ouverture du pack dès confirmation du paiement.
+            </span>
+          </label>
+          {state.errors?.acceptTerms ? (
+            <p className="text-xs text-destructive">{state.errors.acceptTerms[0]}</p>
           ) : null}
           {state.message ? <p className="text-sm text-muted-foreground">{state.message}</p> : null}
-          {!momoConfigured && method === "MTN_MOMO" ? (
-            <p className="text-xs text-destructive">Le sandbox MTN MoMo n&apos;est pas configuré.</p>
-          ) : null}
           {!stripeConfigured && method === "CARD" ? (
             <p className="text-xs text-destructive">Stripe n&apos;est pas configuré.</p>
           ) : null}
           <Button type="submit" disabled={pending || refreshing}>
-            {pending || refreshing ? <LoaderCircle className="size-4 animate-spin" /> : null}
-            Confirmer l&apos;achat
+            {pending || refreshing ? <LoaderCircle className="size-4 animate-spin" /> : <Lock className="size-4" />}
+            {method === "CARD" ? "Payer par carte" : "Payer avec Mobile Money"}
           </Button>
         </form>
+        )}
       </section>
     </div>
   );

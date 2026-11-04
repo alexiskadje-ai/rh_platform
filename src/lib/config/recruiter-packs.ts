@@ -71,6 +71,15 @@ export const FIRST_LOGIN_PATH = "/premiere-connexion";
 export const RECRUITER_ONBOARDING_PACK_PATH = "/company/onboarding/pack";
 export const RECRUITER_ONBOARDING_CONFIRM_PATH = "/company/onboarding/confirmation";
 
+export function recruiterPackPath(tier: RecruiterPackTier) {
+  return `${RECRUITER_ONBOARDING_PACK_PATH}/${tier.toLowerCase()}`;
+}
+
+export function recruiterPackTierFromSlug(slug: string): RecruiterPackTier | null {
+  const tier = slug.trim().toUpperCase();
+  return isRecruiterPackTier(tier) ? tier : null;
+}
+
 export type RecruiterPackQuote = {
   tier: RecruiterPackTier;
   billingCycle: BillingCycle;

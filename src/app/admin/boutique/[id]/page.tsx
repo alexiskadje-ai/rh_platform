@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { Role } from "@prisma/client";
 import { requireAdmin } from "@/lib/dal";
 import { db } from "@/lib/db";
+import { displayUploadUrl } from "@/lib/storage";
 import { deleteProduct } from "@/server/actions/shop";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { ProductForm } from "@/components/shop/product-form";
@@ -19,6 +20,7 @@ export default async function EditProductPage({
   const { error } = await searchParams;
   const product = await db.product.findUnique({ where: { id } });
   if (!product) notFound();
+  const imagePreview = await displayUploadUrl(product.imageUrl);
 
   return (
     <DashboardShell role={Role.ADMIN} title="Administration">
@@ -48,6 +50,8 @@ export default async function EditProductPage({
             type: product.type,
             price: product.price,
             fileUrl: product.fileUrl,
+            imageUrl: product.imageUrl,
+            imagePreview,
             description: product.description,
             excerpt: product.excerpt,
           }}

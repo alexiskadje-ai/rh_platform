@@ -65,6 +65,8 @@ describe("webhook Notch Pay", () => {
     getStatus.mockReset();
     findUnique.mockResolvedValue({
       id: "pay_1",
+      provider: "MTN_MOMO",
+      gateway: "NOTCHPAY",
       gatewayReference: "trx.test_1",
       amount: 5000,
       status: "processing",
@@ -171,6 +173,66 @@ describe("webhook Notch Pay", () => {
       where: { id: "pay_1", status: { in: ["pending", "processing"] } },
       data: { status: "failed", failureReason: "Paiement refusé par l'opérateur." },
     });
+  });
+
+  it("traite un paiement cm.mtn en succès, en échec et en annulation", async () => {
+    const { processNotchpayWebhook } = await import("@/lib/payments/notchpay-webhook");
+    const cases = [
+      { status: "complete", effect: "paid", writes: false },
+      { status: "failed", effect: "failed", local: "failed" },
+      { status: "canceled", effect: "failed", local: "failed" },
+    ] as const;
+
+    for (const entry of cases) {
+      confirmPaidPayment.mockClear();
+      updateMany.mockClear();
+      getStatus.mockResolvedValue(remote({ status: entry.status }));
+      const body = JSON.stringify({
+        event: `payment.${entry.status}`,
+        data: { reference: "trx.test_1", channel: "cm.mtn", status: entry.status },
+      });
+      const result = await processNotchpayWebhook(body, sign(body));
+      expect(result).toMatchObject({ httpStatus: 200, effect: entry.effect });
+      if (entry.status === "complete") {
+        expect(confirmPaidPayment).toHaveBeenCalledWith("pay_1", { feeAmount: null });
+      } else {
+        expect(confirmPaidPayment).not.toHaveBeenCalled();
+        expect(updateMany).toHaveBeenCalledWith(
+          expect.objectContaining({
+            data: expect.objectContaining({ status: entry.local }),
+          }),
+        );
+      }
+    }
+  });
+
+  it("marque expiré un délai dépassé cm.mtn", async () => {
+    getStatus.mockResolvedValue(remote({ status: "expired" }));
+    const { processNotchpayWebhook } = await import("@/lib/payments/notchpay-webhook");
+    const body = JSON.stringify({
+      event: "payment.expired",
+      data: { reference: "trx.test_1", channel: "cm.mtn", status: "expired" },
+    });
+    const result = await processNotchpayWebhook(body, sign(body));
+    expect(result).toMatchObject({ httpStatus: 200, effect: "expired" });
+    expect(updateMany).toHaveBeenCalledWith({
+      where: { id: "pay_1", status: { in: ["pending", "processing"] } },
+      data: {
+        status: "expired",
+        failureReason: "Délai dépassé. Vous pouvez réessayer ou choisir un autre moyen.",
+      },
+    });
+  });
+
+  it("rejette la signature d'un événement cm.mtn", async () => {
+    const { processNotchpayWebhook } = await import("@/lib/payments/notchpay-webhook");
+    const body = JSON.stringify({
+      event: "payment.complete",
+      data: { reference: "trx.test_1", channel: "cm.mtn" },
+    });
+    const result = await processNotchpayWebhook(body, "00".repeat(32));
+    expect(result.httpStatus).toBe(401);
+    expect(getStatus).not.toHaveBeenCalled();
   });
 
   it("laisse en attente un statut inconnu", async () => {

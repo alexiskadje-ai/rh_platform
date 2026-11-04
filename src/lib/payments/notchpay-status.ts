@@ -5,6 +5,7 @@ import {
   NotchpayRequestError,
   getStatus,
   interpretNotchpayStatus,
+  notchpayFailureReason,
   type NotchpayTransaction,
 } from "@/lib/payments/notchpay";
 
@@ -42,6 +43,7 @@ export function isPaymentOwner(viewer: Viewer | null, payment: OwnedPayment) {
 
 export function paymentEtat(payment: { status: string; createdAt: Date }, now: Date): PaymentEtat {
   if (payment.status === "paid") return "réussi";
+  if (payment.status === "expired") return "expiré";
   if (payment.status === "failed") return "échoué";
   if (
     OPEN_STATUSES.has(payment.status) &&
@@ -122,13 +124,16 @@ export async function readNotchpayPaymentStatus(
     await confirmPaidPayment(payment.id, { feeAmount: remote.feeAmount });
     return { etat: "réussi" as const };
   }
-  if (outcome === "failed") {
+  if (outcome === "expired" || outcome === "failed") {
     const { db } = await import("@/lib/db");
     await db.payment.updateMany({
       where: { id: payment.id, status: { in: ["pending", "processing"] } },
-      data: { status: "failed", failureReason: "Paiement refusé par l'opérateur." },
+      data: {
+        status: outcome === "expired" ? "expired" : "failed",
+        failureReason: notchpayFailureReason(remote.status),
+      },
     });
-    return { etat: "échoué" as const };
+    return { etat: outcome === "expired" ? ("expiré" as const) : ("échoué" as const) };
   }
 
   const remoteStatus = remote.status?.trim().toLowerCase() ?? "";

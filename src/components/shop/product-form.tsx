@@ -24,6 +24,8 @@ export function ProductForm({
     type: string;
     price: number;
     fileUrl: string;
+    imageUrl?: string;
+    imagePreview?: string | null;
     description?: string;
     excerpt?: string;
   };
@@ -104,6 +106,27 @@ export function ProductForm({
           </p>
         )}
       </div>
+      <FileUrlField
+        name="imageUrl"
+        folder="shop/covers"
+        label="Image de la carte"
+        accept="image/jpeg,image/png,image/webp"
+        defaultUrl={initial?.imageUrl}
+      />
+      {initial?.imagePreview ? (
+        <img
+          src={initial.imagePreview}
+          alt=""
+          className="h-24 w-32 rounded-xl object-cover"
+        />
+      ) : (
+        <p className="text-xs text-muted-foreground">
+          JPEG, PNG ou WebP, 2 Mo maximum. Elle s’affiche sur la carte du catalogue.
+        </p>
+      )}
+      {state.errors?.imageUrl ? (
+        <p className="text-xs text-destructive">{state.errors.imageUrl[0]}</p>
+      ) : null}
       <FileUrlField
         name="fileUrl"
         folder="shop/products"

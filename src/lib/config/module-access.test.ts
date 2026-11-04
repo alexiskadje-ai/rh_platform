@@ -71,6 +71,13 @@ describe("pack recruteur", () => {
       ).toBeNull();
     }
     expect(recruiterPackGateApplies(RECRUITER_ONBOARDING_PACK_PATH, "RECRUITER")).toBe(false);
+    for (const path of [
+      "/company/onboarding/pack/standard",
+      "/company/onboarding/pack/premium",
+      "/company/onboarding/pack/gold",
+    ]) {
+      expect(recruiterPackGateApplies(path, "RECRUITER")).toBe(false);
+    }
   });
 
   it("ne bloque pas un candidat, une route publique, ni l'admin", () => {

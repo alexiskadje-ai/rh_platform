@@ -508,6 +508,7 @@ model Product {
   type        String
   price       Int
   fileUrl     String
+  imageUrl    String      @default("")
   description String      @default("")
   excerpt     String      @default("")
   course      Course?     @relation(fields: [courseId], references: [id], onDelete: SetNull)

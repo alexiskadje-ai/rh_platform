@@ -38,6 +38,9 @@ const nodeOnlyPackages = [
 const nextConfig: NextConfig = {
   output: "standalone",
   serverExternalPackages: nodeOnlyPackages,
+  // Dev uses Turbopack (native compiler). The webpack() hook below stays for
+  // `next build --webpack` if Windows cannot load that binary.
+  turbopack: {},
   async headers() {
     return [
       {

@@ -7,10 +7,13 @@ import { getSessionUser } from "@/lib/dal";
 import { db } from "@/lib/db";
 import { ROLE_HOME } from "@/lib/constants";
 
-export async function requireOnboardingRecruiter() {
+export async function requireOnboardingRecruiter(returnPath = RECRUITER_ONBOARDING_PACK_PATH) {
   const session = await getSessionUser();
+  const callback = returnPath.startsWith(RECRUITER_ONBOARDING_PACK_PATH)
+    ? returnPath
+    : RECRUITER_ONBOARDING_PACK_PATH;
   if (!session) {
-    redirect(`/login?callbackUrl=${encodeURIComponent(RECRUITER_ONBOARDING_PACK_PATH)}`);
+    redirect(`/login?callbackUrl=${encodeURIComponent(callback)}`);
   }
   if (session.role !== Role.RECRUITER) {
     redirect(ROLE_HOME[session.role]);

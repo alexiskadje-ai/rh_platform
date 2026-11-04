@@ -13,6 +13,7 @@ export type PreviewProduct = {
   title: string;
   type: string;
   price: number;
+  imageUrl?: string | null;
   description?: string | null;
   excerpt?: string | null;
 };
@@ -129,6 +130,7 @@ export function ProductPreviewModal({
               title={product.title}
               type={product.type}
               price={product.price}
+              imageUrl={product.imageUrl}
             />
           </div>
         </div>

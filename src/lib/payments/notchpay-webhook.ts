@@ -4,6 +4,7 @@ import {
   NotchpayRequestError,
   getStatus,
   interpretNotchpayStatus,
+  notchpayFailureReason,
 } from "@/lib/payments/notchpay";
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -79,12 +80,15 @@ export async function processNotchpayWebhook(rawBody: string, signature: string 
   if (outcome === "pending") {
     return { httpStatus: 200 as const, effect: "pending" as const };
   }
-  if (outcome === "failed") {
+  if (outcome === "expired" || outcome === "failed") {
     await db.payment.updateMany({
       where: { id: payment.id, status: { in: ["pending", "processing"] } },
-      data: { status: "failed", failureReason: "Paiement refusé par l'opérateur." },
+      data: {
+        status: outcome === "expired" ? "expired" : "failed",
+        failureReason: notchpayFailureReason(remote.status),
+      },
     });
-    return { httpStatus: 200 as const, effect: "failed" as const };
+    return { httpStatus: 200 as const, effect: outcome };
   }
 
   await confirmPaidPayment(payment.id, { feeAmount: remote.feeAmount });

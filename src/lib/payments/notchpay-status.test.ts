@@ -140,6 +140,20 @@ describe("statut de paiement Notch Pay", () => {
     expect(getStatus).not.toHaveBeenCalled();
   });
 
+  it("associe chaque statut final à un état d'interface", async () => {
+    const { paymentEtat } = await import("@/lib/payments/notchpay-status");
+    const now = new Date("2026-11-04T12:00:00.000Z");
+    const createdAt = new Date("2026-11-04T11:58:00.000Z");
+    expect(paymentEtat({ status: "pending", createdAt }, now)).toBe("en attente");
+    expect(paymentEtat({ status: "processing", createdAt }, now)).toBe("en attente");
+    expect(paymentEtat({ status: "paid", createdAt }, now)).toBe("réussi");
+    expect(paymentEtat({ status: "failed", createdAt }, now)).toBe("échoué");
+    expect(paymentEtat({ status: "expired", createdAt }, now)).toBe("expiré");
+    expect(
+      paymentEtat({ status: "pending", createdAt: new Date("2026-11-04T11:50:00.000Z") }, now),
+    ).toBe("expiré");
+  });
+
   it("laisse en attente un statut Notch Pay inconnu", async () => {
     getStatus.mockResolvedValue(remote({ status: "mystery" }));
     const { readNotchpayPaymentStatus } = await import("@/lib/payments/notchpay-status");

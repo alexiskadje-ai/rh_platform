@@ -1,7 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  NOTCHPAY_MOBILE_CHANNEL,
   interpretNotchpayStatus,
+  mobileMoneyChargeRequest,
   notchpayCustomerMessage,
+  resolveMobileMoneyProvider,
   readFeeAmount,
   readNotchpayTransaction,
 } from "@/lib/payments/notchpay";
@@ -72,10 +75,36 @@ describe("frais et statut Notch Pay", () => {
   it("ne traite que complete comme un succès", () => {
     expect(interpretNotchpayStatus("complete")).toBe("success");
     expect(interpretNotchpayStatus("failed")).toBe("failed");
+    expect(interpretNotchpayStatus("canceled")).toBe("failed");
+    expect(interpretNotchpayStatus("expired")).toBe("expired");
     expect(interpretNotchpayStatus("processing")).toBe("pending");
     const error = vi.spyOn(console, "error").mockImplementation(() => {});
     expect(interpretNotchpayStatus("mystery")).toBe("pending");
     expect(error).toHaveBeenCalled();
     error.mockRestore();
   });
+
+  it("route 67 vers MTN et 69 vers Orange, et refuse un autre préfixe", () => {
+    expect(resolveMobileMoneyProvider("+237670000000")).toBe("MTN_MOMO");
+    expect(resolveMobileMoneyProvider("690000000")).toBe("ORANGE_MONEY");
+    expect(() => resolveMobileMoneyProvider("+237650000000")).toThrow(/Aucun paiement/);
+  });
+
+  it("envoie Orange sur cm.orange et MTN sur cm.mtn", () => {
+    expect(NOTCHPAY_MOBILE_CHANNEL).toEqual({
+      ORANGE_MONEY: "cm.orange",
+      MTN_MOMO: "cm.mtn",
+    });
+    expect(mobileMoneyChargeRequest("cm.orange", "trx_orange", "690000000")).toEqual({
+      method: "POST",
+      path: "/payments/trx_orange",
+      body: { channel: "cm.orange", data: { phone: "+237690000000" } },
+    });
+    expect(mobileMoneyChargeRequest("cm.mtn", "trx_mtn", "+237 670 000 000")).toEqual({
+      method: "POST",
+      path: "/payments/trx_mtn",
+      body: { channel: "cm.mtn", data: { phone: "+237670000000" } },
+    });
+  });
+
 });

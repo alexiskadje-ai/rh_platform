@@ -55,7 +55,9 @@ export async function sendEmail({ to, subject, text, html, replyTo }: MailPayloa
   console.info(`[email] to=${Array.isArray(to) ? to.join(",") : to} subject=${subject}\n${text}`);
 }
 
-export async function sendSms(to: string, message: string) {
+export type SmsResult = { ok: boolean; permanent: boolean };
+
+export async function sendSms(to: string, message: string): Promise<SmsResult> {
   const sid = process.env.TWILIO_ACCOUNT_SID?.trim();
   const token = process.env.TWILIO_AUTH_TOKEN?.trim();
   const from = process.env.TWILIO_FROM?.trim() || process.env.TWILIO_PHONE_NUMBER?.trim();
@@ -78,18 +80,30 @@ export async function sendSms(to: string, message: string) {
       },
     );
     if (!response.ok) {
-      console.error("[sms] Twilio error", response.status);
-      return false;
+      let code = "";
+      try {
+        const payload = (await response.json()) as { code?: number };
+        if (typeof payload.code === "number") code = String(payload.code);
+      } catch {
+        code = "";
+      }
+      const hint =
+        code === "21608"
+          ? "compte d'essai Twilio : le destinataire n'est pas un numéro vérifié"
+          : "";
+      console.error("[sms] Twilio error", response.status, code, hint);
+      const permanent = response.status >= 400 && response.status < 500 && response.status !== 429;
+      return { ok: false, permanent };
     }
-    return true;
+    return { ok: true, permanent: false };
   }
   console.info(`[sms] to=${to}\n${message}`);
-  return false;
+  return { ok: false, permanent: true };
 }
 
 export async function sendVerificationEmail(email: string, token: string) {
   const origin = process.env.AUTH_URL ?? process.env.NEXTAUTH_URL ?? "http://localhost:3000";
-  const url = `${origin}/verify?token=${token}`;
+  const url = `${origin}/api/verify-email?token=${token}`;
   const help = supportEmail();
   const text = `Bonjour,\n\nVotre code de vérification ${APP_NAME} est : ${token}\n\nVous pouvez aussi confirmer votre e-mail en ouvrant ce lien :\n${url}\n\nLe code et le lien expirent dans 24 heures.${help ? `\n\nBesoin d'aide ? ${help}` : ""}`;
   const html = `
@@ -110,11 +124,19 @@ export async function sendVerificationEmail(email: string, token: string) {
   return url;
 }
 
-export async function sendVerificationSms(phone: string, code: string) {
-  return sendSms(
-    phone,
-    `${APP_NAME} : votre code de vérification est ${code}. Il expire dans 10 minutes.`,
-  );
+export async function sendRecruiterSignupNotice(email: string, phone: string, firstName: string) {
+  const lead = "Votre demande a été enregistrée.";
+  const follow =
+    "Après le choix et le paiement du pack, un administrateur examine la demande.";
+  const text = `Bonjour ${firstName},\n\n${lead} ${follow}\n\n${APP_NAME}`;
+  const html = `<p>Bonjour ${firstName},</p><p><strong>${lead}</strong> ${follow}</p>`;
+  await sendEmail({
+    to: email,
+    subject: `Votre demande a été enregistrée — ${APP_NAME}`,
+    text,
+    html,
+  });
+  await sendSms(phone, `${APP_NAME} : ${lead} ${follow}`);
 }
 
 export async function sendPasswordResetEmail(email: string, token: string) {

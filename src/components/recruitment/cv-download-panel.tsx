@@ -62,7 +62,7 @@ export function CvDownloadPanel({
           )}
         >
           <input
-            type="checkbox"
+            type={gold ? "checkbox" : "radio"}
             name="candidateId"
             value={candidate.id}
             disabled={!candidate.hasCv}

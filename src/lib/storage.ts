@@ -133,6 +133,12 @@ export async function createPresignedUpload(input: {
   };
 }
 
+export async function displayUploadUrl(fileUrl: string | null | undefined) {
+  const value = fileUrl?.trim() ?? "";
+  if (!value) return null;
+  return createPresignedDownload(value);
+}
+
 export async function createPresignedDownload(fileUrl: string) {
   if (!isS3Stored(fileUrl)) return fileUrl;
   const key = fileUrl.replace(/^s3:\/\/[^/]+\//, "");

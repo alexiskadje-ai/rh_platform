@@ -1,4 +1,6 @@
-export function isErpIntegrationEnabled(env: { ERP_INTEGRATION_ENABLED?: string } = process.env) {
+export function isErpIntegrationEnabled(
+  env: NodeJS.ProcessEnv | { ERP_INTEGRATION_ENABLED?: string } = process.env,
+) {
   return env.ERP_INTEGRATION_ENABLED === "true";
 }
 

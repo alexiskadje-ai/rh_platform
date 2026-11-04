@@ -6,22 +6,29 @@ import { refundCheckoutSession } from "@/lib/payments/stripe";
 
 /**
  * Rembourse un paiement déjà encaissé.
- * Carte : remboursement Stripe. MoMo : remboursement Collection.
- * Orange Money est encaissé par PES-RH : le remboursement est enregistré ici.
+ * Carte : remboursement Stripe.
+ * Notch Pay (MTN MoMo et Orange Money) : enregistré ici ; l'API de remboursement
+ * reste derrière NOTCHPAY_REFUNDS_ENABLED.
+ * Un ancien MoMo direct, s'il a encore une référence Collection, est remboursé par cette API.
  */
 export async function refundPaidPayment(paymentId: string) {
   const payment = await db.payment.findUnique({ where: { id: paymentId } });
   if (!payment || payment.status !== PAYMENT_STATUS.paid) {
     return { ok: false as const, message: "Aucun paiement confirmé à rembourser." };
   }
-  if (!payment.providerRef && payment.provider !== PaymentProvider.ORANGE_MONEY) {
+  const notchpay = payment.gateway === "NOTCHPAY";
+  if (
+    !notchpay &&
+    !payment.providerRef &&
+    payment.provider !== PaymentProvider.ORANGE_MONEY
+  ) {
     return { ok: false as const, message: "Référence opérateur manquante pour le remboursement." };
   }
 
   try {
-    if (payment.provider === PaymentProvider.CARD && payment.providerRef) {
+    if (!notchpay && payment.provider === PaymentProvider.CARD && payment.providerRef) {
       await refundCheckoutSession(payment.providerRef);
-    } else if (payment.provider === PaymentProvider.MTN_MOMO && payment.providerRef) {
+    } else if (!notchpay && payment.provider === PaymentProvider.MTN_MOMO && payment.providerRef) {
       await refundCollectionPayment({
         referenceId: payment.providerRef,
         amount: payment.amount,

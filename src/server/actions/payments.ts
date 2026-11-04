@@ -6,8 +6,12 @@ import { requireAdmin } from "@/lib/dal";
 import { requireOwnOrder } from "@/server/actions/shop";
 import { db } from "@/lib/db";
 import { fieldErrorsFromZod } from "@/lib/users";
-import { isMomoConfigured, requestToPayment } from "@/lib/payments/momo";
-import { beginOrangeCharge } from "@/lib/payments/notchpay";
+import {
+  beginMobileMoneyCharge,
+  beginOrangeCharge,
+  resolveMobileMoneyProvider,
+  type NotchpayMobileProvider,
+} from "@/lib/payments/notchpay";
 import { createCheckoutSession, isStripeConfigured } from "@/lib/payments/stripe";
 import {
   PAYMENT_STATUS,
@@ -18,7 +22,8 @@ import {
 import { applyMomoStatus, applyNotchpayStatus, applyStripeStatus } from "@/lib/payments/sync";
 import {
   startBankTransferSchema,
-  startMomoPaymentSchema,
+  startMobileMoneyPaymentSchema,
+  startNotchMtnPaymentSchema,
   startOrangePaymentSchema,
   startStripePaymentSchema,
 } from "@/lib/validations/payment";
@@ -30,8 +35,82 @@ export type PaymentActionState = {
   invoiceUrl?: string | null;
   checkoutUrl?: string;
   reference?: string;
+  provider?: string;
   errors?: Record<string, string[] | undefined>;
 };
+
+type OwnedOrder = NonNullable<Awaited<ReturnType<typeof requireOwnOrder>>>["order"];
+
+async function startNotchMobilePayment(
+  order: OwnedOrder,
+  phone: string,
+  provider: NotchpayMobileProvider,
+): Promise<PaymentActionState> {
+  const parsed = startNotchMtnPaymentSchema.safeParse({ orderId: order.id, phone });
+  if (!parsed.success) return { errors: fieldErrorsFromZod(parsed.error) };
+
+  if (order.status === PAYMENT_STATUS.paid || order.payment?.status === PAYMENT_STATUS.paid) {
+    return { ok: true, status: PAYMENT_STATUS.paid, message: "Cette commande est déjà payée." };
+  }
+  if (!order.user.email) {
+    return { message: "Un e-mail est requis pour le paiement Mobile Money." };
+  }
+
+  const sameRail =
+    order.payment?.provider === provider && order.payment.reference
+      ? order.payment.reference
+      : null;
+  const reference = sameRail ?? newPaymentReference(provider);
+
+  const payment = await upsertPendingPayment({
+    orderId: order.id,
+    amount: order.total,
+    provider,
+    reference,
+    phone: parsed.data.phone,
+  });
+  await db.payment.update({
+    where: { id: payment.id },
+    data: {
+      gateway: null,
+      gatewayReference: null,
+      customerWalletPhone: null,
+      feeAmount: null,
+    },
+  });
+
+  const description = order.items
+    .map((item) => item.product.title)
+    .join(", ")
+    .slice(0, 120);
+
+  try {
+    await beginMobileMoneyCharge({
+      provider,
+      paymentId: payment.id,
+      description: description || "Commande boutique",
+      customer: {
+        name: `${order.user.firstName} ${order.user.lastName}`.trim() || "Client",
+        email: order.user.email,
+        phone: parsed.data.phone,
+      },
+      walletPhone: parsed.data.phone,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Impossible d'initier le paiement Mobile Money.";
+    await markPaymentFailed(payment.id, message);
+    return { message, status: PAYMENT_STATUS.failed };
+  }
+
+  revalidatePurchases(order.id);
+  return {
+    ok: true,
+    status: PAYMENT_STATUS.pending,
+    reference,
+    provider,
+    message: "Validez la demande de paiement sur votre téléphone.",
+  };
+}
 
 function revalidatePurchases(orderId?: string) {
   revalidatePath("/boutique/commandes");
@@ -83,63 +162,56 @@ export async function startMomoPayment(
   _prev: PaymentActionState,
   formData: FormData,
 ): Promise<PaymentActionState> {
-  const parsed = startMomoPaymentSchema.safeParse({
-    orderId: formData.get("orderId"),
+  const orderId = String(formData.get("orderId") ?? "");
+  const owned = await requireOwnOrder(orderId);
+  if (!owned) return { message: "Commande introuvable." };
+  const { order } = owned;
+  const parsed = startMobileMoneyPaymentSchema.safeParse({
+    orderId,
     phone: formData.get("phone"),
+    acceptTerms: formData.get("acceptTerms"),
   });
   if (!parsed.success) return { errors: fieldErrorsFromZod(parsed.error) };
 
-  const owned = await requireOwnOrder(parsed.data.orderId);
-  if (!owned) return { message: "Commande introuvable." };
-  const { order } = owned;
-
-  if (order.status === PAYMENT_STATUS.paid) {
-    return { ok: true, status: PAYMENT_STATUS.paid, message: "Cette commande est déjà payée." };
-  }
-  if (!isMomoConfigured()) {
+  let provider: NotchpayMobileProvider;
+  try {
+    provider = resolveMobileMoneyProvider(parsed.data.phone);
+  } catch (error) {
     return {
       message:
-        "Le sandbox MTN MoMo n'est pas encore configuré. Ajoutez MOMO_API_USER, MOMO_API_KEY et MOMO_SUBSCRIPTION_KEY.",
+        error instanceof Error
+          ? error.message
+          : "Ce numéro n'est ni MTN MoMo (67) ni Orange Money (69).",
     };
   }
 
   const existing = order.payment;
-  if (existing?.status === PAYMENT_STATUS.paid) {
-    return { ok: true, status: PAYMENT_STATUS.paid };
-  }
-
-  const reference = existing?.reference ?? newPaymentReference(PaymentProvider.MTN_MOMO);
-
-  try {
-    const momo = await requestToPayment({
-      amount: order.total,
-      externalId: reference,
-      payerMsisdn: parsed.data.phone,
-      payerMessage: `PES-RH ${reference}`,
-      payeeNote: `Commande boutique ${order.id.slice(-8)}`,
-    });
-
-    await upsertPendingPayment({
-      orderId: order.id,
-      amount: order.total,
-      provider: PaymentProvider.MTN_MOMO,
-      reference,
-      providerRef: momo.referenceId,
-      phone: parsed.data.phone,
-    });
-
-    revalidatePurchases(order.id);
+  const open =
+    existing &&
+    (existing.status === PAYMENT_STATUS.pending || existing.status === "processing");
+  if (
+    open &&
+    existing.provider === PaymentProvider.MTN_MOMO &&
+    existing.gateway !== "NOTCHPAY" &&
+    existing.providerRef
+  ) {
     return {
       ok: true,
-      status: PAYMENT_STATUS.pending,
-      reference,
-      message: "Demande envoyée. Validez le paiement sur votre téléphone MTN.",
+      status: existing.status,
+      reference: existing.reference,
+      message: "Demande déjà envoyée. Validez le paiement sur votre téléphone.",
     };
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Impossible d'initier le paiement MoMo.";
-    return { message };
   }
+  if (open && existing.gateway === "NOTCHPAY") {
+    return {
+      ok: true,
+      status: existing.status,
+      reference: existing.reference,
+      message: "Validez la demande de paiement sur votre téléphone.",
+    };
+  }
+
+  return startNotchMobilePayment(order, parsed.data.phone, provider);
 }
 
 export async function startStripePayment(
@@ -148,6 +220,7 @@ export async function startStripePayment(
 ): Promise<PaymentActionState> {
   const parsed = startStripePaymentSchema.safeParse({
     orderId: formData.get("orderId"),
+    acceptTerms: formData.get("acceptTerms"),
   });
   if (!parsed.success) return { errors: fieldErrorsFromZod(parsed.error) };
 
@@ -157,6 +230,18 @@ export async function startStripePayment(
 
   if (order.status === PAYMENT_STATUS.paid || order.payment?.status === PAYMENT_STATUS.paid) {
     return { ok: true, status: PAYMENT_STATUS.paid, message: "Cette commande est déjà payée." };
+  }
+  const openMobile =
+    order.payment &&
+    order.payment.provider !== PaymentProvider.CARD &&
+    (order.payment.status === PAYMENT_STATUS.pending || order.payment.status === "processing") &&
+    (order.payment.gateway === "NOTCHPAY" || order.payment.providerRef);
+  if (openMobile && order.payment) {
+    return {
+      status: order.payment.status,
+      reference: order.payment.reference,
+      message: "Validez d'abord la demande Mobile Money déjà envoyée sur votre téléphone.",
+    };
   }
   if (!isStripeConfigured()) {
     return { message: "Stripe n'est pas configuré. Renseignez STRIPE_SECRET_KEY." };

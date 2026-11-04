@@ -8,7 +8,7 @@ import { cartCount, cartTotal, useCart } from "@/lib/cart";
 import { formatFcfa, productTypeLabel } from "@/lib/shop";
 import { productIncludes } from "@/lib/shop-preview";
 import { checkoutCart } from "@/server/actions/shop";
-import { ProductTypeIcon } from "@/components/shop/product-type-icon";
+import { ProductCover } from "@/components/shop/product-cover";
 import { TrustRow } from "@/components/shop/product-preview";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -82,9 +82,7 @@ export function CartView() {
           <Card key={item.productId} className="hover:translate-y-0">
             <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-start gap-3">
-                <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-accent/10 text-accent">
-                  <ProductTypeIcon type={item.type} />
-                </span>
+                <ProductCover type={item.type} imageUrl={item.imageUrl} size="thumb" />
                 <div>
                   <Link href={`/boutique/${item.productId}`} className="font-medium hover:text-accent">
                     {item.title}

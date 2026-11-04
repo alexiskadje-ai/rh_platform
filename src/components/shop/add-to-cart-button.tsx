@@ -11,24 +11,28 @@ export function AddToCartButton({
   title,
   type,
   price,
+  imageUrl,
   checkout = false,
   label,
   variant,
+  className,
 }: {
   productId: string;
   title: string;
   type: string;
   price: number;
+  imageUrl?: string | null;
   checkout?: boolean;
   label?: string;
   variant?: "default" | "outline";
+  className?: string;
 }) {
   const addItem = useCart((state) => state.addItem);
   const router = useRouter();
   const [added, setAdded] = useState(false);
 
   function add() {
-    addItem({ productId, title, type, price }, 1);
+    addItem({ productId, title, type, price, imageUrl }, 1);
     if (checkout) {
       router.push("/boutique/panier");
       return;
@@ -42,6 +46,7 @@ export function AddToCartButton({
       type="button"
       size="sm"
       variant={variant}
+      className={className}
       onClick={add}
       aria-live="polite"
     >

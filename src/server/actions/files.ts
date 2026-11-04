@@ -19,7 +19,17 @@ const FOLDER_ROLES: Record<string, Role[]> = {
   "courses/videos": [Role.ADMIN],
   "courses/documents": [Role.ADMIN],
   "shop/products": [Role.ADMIN],
+  "shop/covers": [Role.ADMIN],
 };
+
+const COVER_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const COVER_MAX_BYTES = 2 * 1024 * 1024;
+
+function coverError(contentType: string, size?: number) {
+  if (!COVER_TYPES.has(contentType)) return "Utilisez une image JPEG, PNG ou WebP.";
+  if (size != null && size > COVER_MAX_BYTES) return "L'image ne doit pas dépasser 2 Mo.";
+  return null;
+}
 
 function canUpload(role: Role, folder: string) {
   return FOLDER_ROLES[folder]?.includes(role) ?? false;
@@ -34,6 +44,10 @@ export async function presignPrivateFile(
   if (!canUpload(user.role, folder)) return { message: "Dossier invalide." };
   const filename = String(formData.get("filename") ?? "document");
   const contentType = String(formData.get("contentType") ?? "application/octet-stream");
+  if (folder === "shop/covers") {
+    const invalid = coverError(contentType);
+    if (invalid) return { message: invalid };
+  }
   const signed = await createPresignedUpload({ folder, filename, contentType });
   return {
     ok: true,
@@ -49,6 +63,10 @@ export async function uploadLocalFile(formData: FormData): Promise<FileActionSta
   if (!canUpload(user.role, folder)) return { message: "Dossier invalide." };
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) return { message: "Fichier manquant." };
+  if (folder === "shop/covers") {
+    const invalid = coverError(file.type || "application/octet-stream", file.size);
+    if (invalid) return { message: invalid };
+  }
   const fileUrl = await saveUpload(folder, file);
   return { ok: true, fileUrl };
 }

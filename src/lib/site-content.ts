@@ -1,3 +1,4 @@
+import { cache } from "react";
 import {
   Briefcase,
   ClipboardList,
@@ -106,7 +107,7 @@ export function parseSocialLinks(value: unknown): SocialLinks {
   return links;
 }
 
-export async function loadPublicServices(): Promise<PublicService[]> {
+export const loadPublicServices = cache(async (): Promise<PublicService[]> => {
   const user = await getSessionUser();
   const allowed = audiencesForNavVariant(navVariantForRole(user?.role));
   try {
@@ -128,7 +129,7 @@ export async function loadPublicServices(): Promise<PublicService[]> {
   } catch {
     return allowed.includes("PUBLIC") ? FALLBACK_SERVICES : [];
   }
-}
+});
 
 export async function serviceIsVisible(slug: string) {
   const user = await getSessionUser();
@@ -141,7 +142,7 @@ export async function serviceIsVisible(slug: string) {
   return row.isActive && allowed.includes(row.audience as ServiceAudienceName);
 }
 
-export async function loadSiteSettings(): Promise<PublicSiteSettings> {
+export const loadSiteSettings = cache(async (): Promise<PublicSiteSettings> => {
   try {
     const row = await db.siteSettings.findUnique({ where: { id: "site" } });
     if (!row) return FALLBACK_SITE_SETTINGS;
@@ -157,4 +158,4 @@ export async function loadSiteSettings(): Promise<PublicSiteSettings> {
   } catch {
     return FALLBACK_SITE_SETTINGS;
   }
-}
+});

@@ -3,7 +3,9 @@ import {
   BILLING_CYCLES,
   RECRUITER_PACK_TIERS,
   commitmentEndsAt,
+  recruiterPackPath,
   recruiterPackQuote,
+  recruiterPackTierFromSlug,
   resolvePackPrice,
   savingsPercentVsMonthlyYear,
 } from "@/lib/config/recruiter-packs";
@@ -56,6 +58,16 @@ describe("savingsPercentVsMonthlyYear", () => {
     expect(quote.annualizedPrice).toBe(300_000);
     expect(quote.savingsPercent).toBe(50);
     expect(BILLING_CYCLES).toHaveLength(4);
+  });
+});
+
+describe("recruiterPackPath", () => {
+  it("donne une adresse distincte à chaque pack", () => {
+    expect(recruiterPackPath("STANDARD")).toBe("/company/onboarding/pack/standard");
+    expect(recruiterPackPath("PREMIUM")).toBe("/company/onboarding/pack/premium");
+    expect(recruiterPackPath("GOLD")).toBe("/company/onboarding/pack/gold");
+    expect(recruiterPackTierFromSlug("gold")).toBe("GOLD");
+    expect(recruiterPackTierFromSlug("autre")).toBeNull();
   });
 });
 

@@ -5,6 +5,7 @@ import {
   RECRUITER_ONBOARDING_CONFIRM_PATH,
   RECRUITER_ONBOARDING_PACK_PATH,
   RECRUITER_PACK_LABELS,
+  recruiterPackPath,
   commitmentEndsAt,
 } from "@/lib/config/recruiter-packs";
 import { db } from "@/lib/db";
@@ -89,6 +90,7 @@ export async function activateRecruiterPackPayment(
   }
 
   revalidatePath(RECRUITER_ONBOARDING_PACK_PATH);
+  revalidatePath(recruiterPackPath(pack.tier));
   revalidatePath(RECRUITER_ONBOARDING_CONFIRM_PATH);
   return db.payment.findUnique({ where: { id: payment.id } });
 }

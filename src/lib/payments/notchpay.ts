@@ -30,7 +30,15 @@ export type NotchpayTransaction = {
   raw: unknown;
 };
 
-export type NotchpayOutcome = "success" | "failed" | "pending";
+export type NotchpayOutcome = "success" | "failed" | "expired" | "pending";
+
+export const NOTCHPAY_MOBILE_CHANNEL = {
+  ORANGE_MONEY: "cm.orange",
+  MTN_MOMO: "cm.mtn",
+} as const;
+
+export type NotchpayMobileProvider = keyof typeof NOTCHPAY_MOBILE_CHANNEL;
+export type NotchpayMobileChannel = (typeof NOTCHPAY_MOBILE_CHANNEL)[NotchpayMobileProvider];
 
 const KNOWN_NOTCHPAY_STATUSES = new Set([
   "pending",
@@ -60,7 +68,7 @@ export function isNotchpayRefundsEnabled() {
   return process.env.NOTCHPAY_REFUNDS_ENABLED?.trim() === "true";
 }
 
-export function normalizeOrangeWalletPhone(value: string) {
+export function normalizeCameroonWalletPhone(value: string, operator = "Orange Money") {
   const compact = value.trim().replace(/[\s.-]/g, "");
   const withPrefix = compact.startsWith("+237")
     ? compact
@@ -68,9 +76,23 @@ export function normalizeOrangeWalletPhone(value: string) {
       ? `+${compact}`
       : `+237${compact}`;
   if (!/^\+2376\d{8}$/.test(withPrefix)) {
-    throw new Error("Numéro Orange Money invalide.");
+    throw new Error(`Numéro ${operator} invalide.`);
   }
   return withPrefix;
+}
+
+export function normalizeOrangeWalletPhone(value: string) {
+  return normalizeCameroonWalletPhone(value, "Orange Money");
+}
+
+export function resolveMobileMoneyProvider(phone: string): NotchpayMobileProvider {
+  const normalized = normalizeCameroonWalletPhone(phone, "Mobile Money");
+  const national = normalized.slice(4);
+  if (national.startsWith("67")) return "MTN_MOMO";
+  if (national.startsWith("69")) return "ORANGE_MONEY";
+  throw new Error(
+    "Ce numéro n'est ni MTN MoMo (67) ni Orange Money (69). Aucun paiement n'a été lancé.",
+  );
 }
 
 function publicKey() {
@@ -157,11 +179,23 @@ export function readFeeAmount(fees: unknown) {
 export function interpretNotchpayStatus(status: string | null): NotchpayOutcome {
   const value = status?.trim().toLowerCase() ?? "";
   if (value === "complete") return "success";
-  if (value === "failed" || value === "canceled" || value === "expired") return "failed";
+  if (value === "expired") return "expired";
+  if (value === "failed" || value === "canceled") return "failed";
   if (!KNOWN_NOTCHPAY_STATUSES.has(value)) {
     console.error("[notchpay] statut inconnu", { status: value || null });
   }
   return "pending";
+}
+
+export function notchpayFailureReason(status: string | null) {
+  const value = status?.trim().toLowerCase() ?? "";
+  if (value === "canceled") {
+    return "Paiement annulé. Vous pouvez réessayer ou choisir un autre moyen.";
+  }
+  if (value === "expired") {
+    return "Délai dépassé. Vous pouvez réessayer ou choisir un autre moyen.";
+  }
+  return "Paiement refusé par l'opérateur.";
 }
 
 async function notchpayCall(call: NotchpayCall) {
@@ -236,30 +270,55 @@ export async function initiatePayment(input: {
   return { gatewayReference: transaction.reference, transaction };
 }
 
-export function orangeChargeRequest(gatewayReference: string, phone: string) {
+export function mobileMoneyChargeRequest(
+  channel: NotchpayMobileChannel,
+  gatewayReference: string,
+  phone: string,
+) {
+  const operator = channel === NOTCHPAY_MOBILE_CHANNEL.MTN_MOMO ? "MTN MoMo" : "Orange Money";
   return {
     method: "POST" as const,
     path: `/payments/${encodeURIComponent(gatewayReference)}`,
     body: {
-      channel: "cm.orange",
-      data: { phone: normalizeOrangeWalletPhone(phone) },
+      channel,
+      data: { phone: normalizeCameroonWalletPhone(phone, operator) },
     },
   };
 }
 
-export async function chargeOrange(gatewayReference: string, phone: string) {
-  const request = orangeChargeRequest(gatewayReference, phone);
+export function orangeChargeRequest(gatewayReference: string, phone: string) {
+  return mobileMoneyChargeRequest(
+    NOTCHPAY_MOBILE_CHANNEL.ORANGE_MONEY,
+    gatewayReference,
+    phone,
+  );
+}
+
+export async function chargeMobileMoney(
+  channel: NotchpayMobileChannel,
+  gatewayReference: string,
+  phone: string,
+) {
+  const request = mobileMoneyChargeRequest(channel, gatewayReference, phone);
   const response = await notchpayCall(request);
   const payload = parseJson(response.body);
   const transaction = readNotchpayTransaction(payload);
+  const fallback =
+    channel === NOTCHPAY_MOBILE_CHANNEL.MTN_MOMO
+      ? "Charge MTN MoMo refusée."
+      : "Charge Orange Money refusée.";
   if (response.httpStatus !== 202 || !transaction) {
     throw new NotchpayRequestError(
-      notchpayCustomerMessage("Charge Orange Money refusée.", response.body),
+      notchpayCustomerMessage(fallback, response.body),
       response.httpStatus,
       response.body,
     );
   }
   return { transaction };
+}
+
+export async function chargeOrange(gatewayReference: string, phone: string) {
+  return chargeMobileMoney(NOTCHPAY_MOBILE_CHANNEL.ORANGE_MONEY, gatewayReference, phone);
 }
 
 export async function getStatus(gatewayReference: string) {
@@ -279,7 +338,8 @@ export async function getStatus(gatewayReference: string) {
   return transaction;
 }
 
-export async function beginOrangeCharge(input: {
+export async function beginMobileMoneyCharge(input: {
+  provider: NotchpayMobileProvider;
   paymentId: string;
   description: string;
   customer: NotchpayCustomer;
@@ -295,15 +355,29 @@ export async function beginOrangeCharge(input: {
     throw new Error("Ce paiement n'est pas un paiement Notch Pay.");
   }
 
-  const walletPhone = normalizeOrangeWalletPhone(input.walletPhone);
+  const channel = NOTCHPAY_MOBILE_CHANNEL[input.provider];
+  const operator = input.provider === "MTN_MOMO" ? "MTN MoMo" : "Orange Money";
+  const walletPhone = normalizeCameroonWalletPhone(input.walletPhone, operator);
   let gatewayReference = payment.gatewayReference;
 
   if (gatewayReference) {
     const remote = await getStatus(gatewayReference);
-    if (remote.status && remote.status !== "pending") {
-      return { gatewayReference, transaction: remote, alreadyCharged: true as const };
+    const remoteStatus = remote.status?.trim().toLowerCase() ?? "";
+    if (remoteStatus && remoteStatus !== "pending") {
+      const terminal =
+        remoteStatus === "failed" || remoteStatus === "canceled" || remoteStatus === "expired";
+      if (!(input.provider === "MTN_MOMO" && terminal)) {
+        return { gatewayReference, transaction: remote, alreadyCharged: true as const };
+      }
+      gatewayReference = null;
+      await db.payment.update({
+        where: { id: payment.id },
+        data: { gatewayReference: null, feeAmount: null },
+      });
     }
-  } else {
+  }
+
+  if (!gatewayReference) {
     const initiated = await initiatePayment({
       reference: payment.reference,
       amount: payment.amount,
@@ -323,7 +397,7 @@ export async function beginOrangeCharge(input: {
     });
   }
 
-  const charged = await chargeOrange(gatewayReference, walletPhone);
+  const charged = await chargeMobileMoney(channel, gatewayReference, walletPhone);
   await db.payment.update({
     where: { id: payment.id },
     data: {
@@ -335,6 +409,16 @@ export async function beginOrangeCharge(input: {
     },
   });
   return { gatewayReference, transaction: charged.transaction, alreadyCharged: false as const };
+}
+
+export async function beginOrangeCharge(input: {
+  paymentId: string;
+  description: string;
+  customer: NotchpayCustomer;
+  walletPhone: string;
+  callback?: string;
+}) {
+  return beginMobileMoneyCharge({ ...input, provider: "ORANGE_MONEY" });
 }
 
 const REFUND_DISABLED =
