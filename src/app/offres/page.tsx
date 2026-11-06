@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { closeExpiredOffers, publicJobWhere } from "@/lib/jobs";
+import { publicJobWhere } from "@/lib/jobs";
 import { CONTRACT_LABELS } from "@/lib/constants";
 import { recruteurProCompanyIds } from "@/lib/subscriptions";
 import { JobOfferCard } from "@/components/recruitment/job-offer-card";
@@ -22,7 +22,6 @@ export default async function PublicJobsPage({
   searchParams: Promise<{ q?: string; location?: string; contractType?: string }>;
 }) {
   const filters = await searchParams;
-  await closeExpiredOffers();
   const offers = await db.jobOffer.findMany({
     where: publicJobWhere(filters),
     include: { company: true },

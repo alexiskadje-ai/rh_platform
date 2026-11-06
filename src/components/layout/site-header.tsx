@@ -11,23 +11,27 @@ const INBOX_ROLES: Role[] = [Role.CANDIDATE, Role.RECRUITER, Role.EMPLOYEE];
 
 export async function SiteHeader() {
   const user = await getSessionUser();
-  const inbox =
-    user && INBOX_ROLES.includes(user.role) ? await getInboxPreview(user.id) : null;
   const variant = navVariantForRole(user?.role);
-  let erp = false;
-  if (user?.role === Role.RECRUITER && isErpIntegrationEnabled()) {
-    const row = await db.user.findUnique({
-      where: { id: user.id },
-      select: { company: { select: { erpLinked: true } } },
-    });
-    erp = row?.company?.erpLinked === true;
-  }
+
+  const [inbox, erp, services] = await Promise.all([
+    user && INBOX_ROLES.includes(user.role) ? getInboxPreview(user.id) : Promise.resolve(null),
+    user?.role === Role.RECRUITER && isErpIntegrationEnabled()
+      ? db.user
+          .findUnique({
+            where: { id: user.id },
+            select: { company: { select: { erpLinked: true } } },
+          })
+          .then((row) => row?.company?.erpLinked === true)
+      : Promise.resolve(false),
+    loadPublicServices(),
+  ]);
+
   const space = spaceLink(user, erp);
-  const services = await loadPublicServices();
   const workspace =
     user?.role === Role.CANDIDATE ||
     user?.role === Role.RECRUITER ||
     user?.role === Role.EMPLOYEE;
+
   return (
     <HeaderBar
       user={user ? { role: user.role, firstName: user.firstName } : null}

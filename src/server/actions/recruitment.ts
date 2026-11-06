@@ -7,7 +7,7 @@ import {
   Role,
   UserStatus,
 } from "@prisma/client";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireCandidate, requireRecruiter } from "@/lib/dal";
@@ -353,6 +353,9 @@ async function upsertJobOffer(id: string | null, formData: FormData): Promise<Ac
     await db.jobOffer.update({ where: { id }, data });
     await refreshJobOfferEmbedding(id, user.id);
     void computeMatchScoresForOffer(id);
+    revalidateTag("home-offers", "max");
+    revalidateTag("job-offers", "max");
+    revalidateTag("home-stats", "max");
     revalidatePath("/company/offres");
     revalidatePath(`/company/offres/${id}`);
     revalidatePath("/offres");
@@ -371,6 +374,9 @@ async function upsertJobOffer(id: string | null, formData: FormData): Promise<Ac
   );
   await refreshJobOfferEmbedding(created.id, user.id);
   void computeMatchScoresForOffer(created.id);
+  revalidateTag("home-offers", "max");
+  revalidateTag("job-offers", "max");
+  revalidateTag("home-stats", "max");
   revalidatePath("/company/offres");
   revalidatePath("/offres");
   revalidatePath(`/offres/${created.slug}`);

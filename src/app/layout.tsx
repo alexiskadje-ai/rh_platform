@@ -2,8 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Fraunces, Geist, Geist_Mono } from "next/font/google";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
-import { ChatWidget } from "@/components/chat/chat-widget";
-import { InstallAppPrompt } from "@/components/pwa/install-app-prompt";
+import { DeferredChrome } from "@/components/layout/deferred-chrome";
 import { PwaRegister } from "@/components/pwa/pwa-register";
 import { APP_NAME, APP_TAGLINE } from "@/lib/constants";
 import { COMPANY_SLOGAN } from "@/lib/company";
@@ -78,9 +77,8 @@ export default function RootLayout({
           {children}
         </div>
         <SiteFooter />
-        <ChatWidget />
+        <DeferredChrome />
         <PwaRegister scope="/" />
-        <InstallAppPrompt />
       </body>
     </html>
   );

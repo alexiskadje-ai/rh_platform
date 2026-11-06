@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { auth } from "@/lib/auth";
 import {
   isModuleRouteDisabled,
   recruiterPackGateApplies,
@@ -8,10 +7,19 @@ import {
 } from "@/lib/config/module-access";
 import { FIRST_LOGIN_PATH, RECRUITER_ONBOARDING_PACK_PATH } from "@/lib/config/recruiter-packs";
 import { ROLE_HOME } from "@/lib/constants";
-import { db } from "@/lib/db";
 import { blockedPublicRedirect } from "@/lib/nav";
 import { isPwaInstallAsset } from "@/lib/pwa/assets";
 import type { Role } from "@prisma/client";
+
+/** Auth.js session cookies — presence means we may need JWT decode; absence skips auth(). */
+function hasSessionCookie(request: NextRequest) {
+  return Boolean(
+    request.cookies.get("authjs.session-token")?.value ||
+      request.cookies.get("__Secure-authjs.session-token")?.value ||
+      request.cookies.get("next-auth.session-token")?.value ||
+      request.cookies.get("__Secure-next-auth.session-token")?.value,
+  );
+}
 
 const PUBLIC_PATHS = [
   "/",
@@ -49,6 +57,7 @@ function isPublic(pathname: string) {
 
 async function recruiterGateState(userId: string) {
   if (!userId) return { companyStatus: null, subscriptionStatus: null };
+  const { db } = await import("@/lib/db");
   const row = await db.user.findUnique({
     where: { id: userId },
     select: {
@@ -81,6 +90,20 @@ export async function proxy(request: NextRequest) {
     return new NextResponse(null, { status: 404 });
   }
 
+  // Anonymous public traffic: skip JWT/Prisma cold path entirely.
+  if (!hasSessionCookie(request)) {
+    if (pathname.startsWith("/login") || pathname.startsWith("/register")) {
+      return NextResponse.next();
+    }
+    if (isPublic(pathname) && pathname !== "/pending-approval" && pathname !== "/verify") {
+      return NextResponse.next();
+    }
+    const login = new URL("/login", request.url);
+    login.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(login);
+  }
+
+  const { auth } = await import("@/lib/auth");
   const session = await auth();
   const user = session?.user;
 

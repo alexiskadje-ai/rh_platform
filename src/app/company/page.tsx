@@ -2,7 +2,6 @@ import Link from "next/link";
 import { Briefcase, CalendarClock, ClipboardList, Package } from "lucide-react";
 import { Role } from "@prisma/client";
 import { requireRecruiter } from "@/lib/dal";
-import { closeExpiredOffers } from "@/lib/jobs";
 import { getCompanyDashboard } from "@/lib/company-dashboard";
 import { INTERVIEW_FORMAT_LABELS } from "@/lib/constants";
 import {
@@ -19,7 +18,6 @@ import { candidateDisplayName } from "@/lib/users";
 
 export default async function CompanyDashboardPage() {
   const { user, company } = await requireRecruiter();
-  await closeExpiredOffers();
   const stats = await getCompanyDashboard(company.id);
   const subscription = company.recruiterSubscription;
   const packLabel = subscription ? RECRUITER_PACK_LABELS[subscription.tier] : "—";

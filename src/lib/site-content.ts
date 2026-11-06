@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import {
   Briefcase,
   ClipboardList,
@@ -107,9 +108,8 @@ export function parseSocialLinks(value: unknown): SocialLinks {
   return links;
 }
 
-export const loadPublicServices = cache(async (): Promise<PublicService[]> => {
-  const user = await getSessionUser();
-  const allowed = audiencesForNavVariant(navVariantForRole(user?.role));
+async function queryServicesForAudiences(allowedKey: string): Promise<PublicService[]> {
+  const allowed = allowedKey.split(",").filter(Boolean) as ServiceAudienceName[];
   try {
     const rows = await db.service.findMany({
       where: { isActive: true, audience: { in: allowed } },
@@ -129,6 +129,18 @@ export const loadPublicServices = cache(async (): Promise<PublicService[]> => {
   } catch {
     return allowed.includes("PUBLIC") ? FALLBACK_SERVICES : [];
   }
+}
+
+const cachedServicesForAudiences = unstable_cache(
+  queryServicesForAudiences,
+  ["site-services-by-audience"],
+  { revalidate: 120, tags: ["site-services"] },
+);
+
+export const loadPublicServices = cache(async (): Promise<PublicService[]> => {
+  const user = await getSessionUser();
+  const allowed = audiencesForNavVariant(navVariantForRole(user?.role));
+  return cachedServicesForAudiences([...allowed].sort().join(","));
 });
 
 export async function serviceIsVisible(slug: string) {
@@ -142,7 +154,7 @@ export async function serviceIsVisible(slug: string) {
   return row.isActive && allowed.includes(row.audience as ServiceAudienceName);
 }
 
-export const loadSiteSettings = cache(async (): Promise<PublicSiteSettings> => {
+async function querySiteSettings(): Promise<PublicSiteSettings> {
   try {
     const row = await db.siteSettings.findUnique({ where: { id: "site" } });
     if (!row) return FALLBACK_SITE_SETTINGS;
@@ -158,4 +170,11 @@ export const loadSiteSettings = cache(async (): Promise<PublicSiteSettings> => {
   } catch {
     return FALLBACK_SITE_SETTINGS;
   }
-});
+}
+
+export const loadSiteSettings = cache(
+  unstable_cache(querySiteSettings, ["site-settings"], {
+    revalidate: 120,
+    tags: ["site-settings"],
+  }),
+);

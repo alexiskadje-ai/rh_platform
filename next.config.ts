@@ -41,6 +41,9 @@ const nextConfig: NextConfig = {
   // Dev uses Turbopack (native compiler). The webpack() hook below stays for
   // `next build --webpack` if Windows cannot load that binary.
   turbopack: {},
+  experimental: {
+    optimizePackageImports: ["lucide-react", "framer-motion", "recharts"],
+  },
   async headers() {
     return [
       {

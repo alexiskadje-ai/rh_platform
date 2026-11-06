@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { CompanyStatus, Role, SubscriptionStatus, UserStatus } from "@prisma/client";
 import { RECRUITER_ONBOARDING_PACK_PATH } from "@/lib/config/recruiter-packs";
@@ -7,7 +8,19 @@ import { auth } from "@/lib/auth";
 import { ROLE_HOME } from "@/lib/constants";
 import { db } from "@/lib/db";
 
+async function hasSessionCookie() {
+  const jar = await cookies();
+  return Boolean(
+    jar.get("authjs.session-token")?.value ||
+      jar.get("__Secure-authjs.session-token")?.value ||
+      jar.get("next-auth.session-token")?.value ||
+      jar.get("__Secure-next-auth.session-token")?.value,
+  );
+}
+
 export const getSessionUser = cache(async () => {
+  // Anonymous requests: skip NextAuth/JWT work entirely.
+  if (!(await hasSessionCookie())) return null;
   const session = await auth();
   const user = session?.user ?? null;
   if (user) auditStore.enterWith({ userId: user.id });

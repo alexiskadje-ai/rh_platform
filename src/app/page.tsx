@@ -1,7 +1,4 @@
 import Link from "next/link";
-import { db } from "@/lib/db";
-import { closeExpiredOffers, publicJobWhere } from "@/lib/jobs";
-import { recruteurProCompanyIds } from "@/lib/subscriptions";
 import { JobOfferCard } from "@/components/recruitment/job-offer-card";
 import { HomeHero } from "@/components/home/home-hero";
 import { ServicesGrid } from "@/components/home/services-grid";
@@ -10,53 +7,15 @@ import { WhyAccompany } from "@/components/home/why-accompany";
 import { Testimonials } from "@/components/home/testimonials";
 import { CtaBand } from "@/components/home/cta-band";
 import { FadeIn } from "@/components/motion/reveal";
-import { loadPublishedTestimonials } from "@/server/actions/content";
+import { loadHomeStats, loadRecentHomeOffers, type HomeOfferCard } from "@/lib/home-data";
 import { loadSiteSettings } from "@/lib/site-content";
-
-async function loadHomeStats() {
-  let cvCount = 0;
-  let companyCount = 0;
-  let satisfaction = 0;
-  let recruiterCount = 0;
-  let openOffers = 0;
-  let profileInitials: string[] = [];
-
-  try {
-    const [cvs, companies, decided, accepted, recruiters, offers, recentProfiles] = await Promise.all([
-      db.candidate.count(),
-      db.company.count({ where: { status: "ACTIVE" } }),
-      db.application.count({ where: { status: { in: ["ACCEPTED", "REJECTED"] } } }),
-      db.application.count({ where: { status: "ACCEPTED" } }),
-      db.user.count({ where: { role: "RECRUITER", status: "ACTIVE" } }),
-      db.jobOffer.count({ where: publicJobWhere() }),
-      db.user.findMany({
-        where: { role: "CANDIDATE", firstName: { not: "" } },
-        orderBy: { createdAt: "desc" },
-        take: 6,
-        select: { firstName: true, lastName: true },
-      }),
-    ]);
-    cvCount = cvs;
-    companyCount = companies;
-    satisfaction = decided === 0 ? 0 : Math.round((accepted / decided) * 100);
-    recruiterCount = recruiters;
-    openOffers = offers;
-    profileInitials = recentProfiles
-      .map((person) => profileInitialsFrom(person.firstName, person.lastName))
-      .filter((value) => value.length > 0)
-      .slice(0, 3);
-  } catch {
-    // Database may be unavailable during first boot.
-  }
-
-  return { cvCount, companyCount, satisfaction, recruiterCount, openOffers, profileInitials };
-}
+import { loadPublishedTestimonials } from "@/lib/testimonials";
 
 export default async function HomePage() {
   const [home, site, offers, published] = await Promise.all([
     loadHomeStats(),
     loadSiteSettings(),
-    loadRecentOffers(),
+    loadRecentHomeOffers(),
     loadPublishedTestimonials(),
   ]);
   const stats = [
@@ -86,39 +45,8 @@ export default async function HomePage() {
   );
 }
 
-function profileInitialsFrom(firstName: string, lastName: string) {
-  const first = firstName.trim()[0] ?? "";
-  const last = lastName.trim()[0] ?? "";
-  return `${first}${last}`.toUpperCase();
-}
-
-async function loadRecentOffers() {
-  void closeExpiredOffers().catch(() => undefined);
-  try {
-    return await db.jobOffer.findMany({
-      where: publicJobWhere(),
-      include: { company: true },
-      orderBy: { createdAt: "desc" },
-      take: 6,
-    });
-  } catch {
-    return null;
-  }
-}
-
-async function RecentOffers({
-  offers,
-}: {
-  offers: Awaited<ReturnType<typeof loadRecentOffers>> | null;
-}) {
-  if (!offers) return null;
+function RecentOffers({ offers }: { offers: HomeOfferCard[] }) {
   if (offers.length === 0) return null;
-  const proIds = await recruteurProCompanyIds(offers.map((item) => item.companyId));
-  const ranked = [...offers].sort((a, b) => {
-    const featured = Number(proIds.has(b.companyId)) - Number(proIds.has(a.companyId));
-    if (featured !== 0) return featured;
-    return b.createdAt.getTime() - a.createdAt.getTime();
-  });
   return (
     <section className="mx-auto max-w-6xl px-4 py-20">
       <FadeIn className="flex items-end justify-between gap-4">
@@ -133,7 +61,7 @@ async function RecentOffers({
         </Link>
       </FadeIn>
       <div className="mt-10 grid gap-4 md:grid-cols-2">
-        {ranked.map((offer) => (
+        {offers.map((offer) => (
           <JobOfferCard
             key={offer.id}
             offer={offer}

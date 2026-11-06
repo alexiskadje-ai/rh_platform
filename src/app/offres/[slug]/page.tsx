@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import { JobStatus, Role } from "@prisma/client";
 import { db } from "@/lib/db";
 import { getSessionUser } from "@/lib/dal";
-import { closeExpiredOffers } from "@/lib/jobs";
 import { CONTRACT_LABELS } from "@/lib/constants";
 import { formatSalary } from "@/lib/matching";
 import { profileCompletion } from "@/lib/profile";
@@ -53,7 +52,6 @@ export default async function PublicJobDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  await closeExpiredOffers();
   const offer = await getPublicJobOffer(slug);
   if (!offer) notFound();
   const user = await getSessionUser();

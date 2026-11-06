@@ -2,7 +2,6 @@ import Link from "next/link";
 import { Role } from "@prisma/client";
 import { requireRecruiter } from "@/lib/dal";
 import { db } from "@/lib/db";
-import { closeExpiredOffers } from "@/lib/jobs";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +9,6 @@ import { cn } from "@/lib/utils";
 
 export default async function CompanyOffersPage() {
   const { companyId } = await requireRecruiter();
-  await closeExpiredOffers();
   const offers = await db.jobOffer.findMany({
     where: { companyId },
     include: { _count: { select: { applications: true } } },

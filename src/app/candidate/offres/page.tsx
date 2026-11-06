@@ -1,7 +1,7 @@
 import { Role } from "@prisma/client";
 import { requireCandidate } from "@/lib/dal";
 import { db } from "@/lib/db";
-import { closeExpiredOffers, publicJobWhere } from "@/lib/jobs";
+import { publicJobWhere } from "@/lib/jobs";
 import { computeMatchScore } from "@/lib/matching";
 import { recommendOfferIdsForCandidate } from "@/server/actions/ai-matching";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
@@ -9,7 +9,6 @@ import { JobOfferCard } from "@/components/recruitment/job-offer-card";
 
 export default async function RecommendedJobsPage() {
   const { candidate } = await requireCandidate();
-  await closeExpiredOffers();
   const rankedIds = await recommendOfferIdsForCandidate(candidate.id);
   const idList = rankedIds.map((item) => item.id);
   const embedded =

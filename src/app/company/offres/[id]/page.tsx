@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import { Role } from "@prisma/client";
 import { requireRecruiter } from "@/lib/dal";
 import { db } from "@/lib/db";
-import { closeExpiredOffers } from "@/lib/jobs";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { JobOfferForm } from "@/components/recruitment/job-offer-form";
 import { OfferStatusActions } from "@/components/recruitment/offer-status-actions";
@@ -16,7 +15,6 @@ export default async function CompanyOfferDetailPage({
 }) {
   const { id } = await params;
   const { companyId, company } = await requireRecruiter();
-  await closeExpiredOffers();
   const offer = await db.jobOffer.findFirst({
     where: { id, companyId },
   });

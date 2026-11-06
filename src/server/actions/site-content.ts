@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/dal";
 import { db } from "@/lib/db";
@@ -22,6 +22,9 @@ function slugify(value: string) {
 }
 
 function refreshSite() {
+  revalidateTag("site-settings", "max");
+  revalidateTag("site-services", "max");
+  revalidateTag("home-stats", "max");
   revalidatePath("/", "layout");
   revalidatePath("/");
   revalidatePath("/services");

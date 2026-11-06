@@ -1,7 +1,7 @@
 "use server";
 
 import { FaqStatus, Role, TestimonialStatus } from "@prisma/client";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/dal";
 import { recaptchaFailed, RECAPTCHA_REQUIRED_MESSAGE } from "@/lib/recaptcha";
@@ -118,25 +118,13 @@ export async function submitTestimonial(
   };
 }
 
-export async function loadPublishedTestimonials() {
-  try {
-    return await db.testimonial.findMany({
-      where: { status: TestimonialStatus.PUBLISHED },
-      orderBy: { publishedAt: "desc" },
-      select: { id: true, name: true, role: true, quote: true, rating: true },
-      take: 8,
-    });
-  } catch {
-    return [];
-  }
-}
-
 export async function publishTestimonial(id: string) {
   await requireRole([Role.ADMIN]);
   await db.testimonial.update({
     where: { id },
     data: { status: TestimonialStatus.PUBLISHED, publishedAt: new Date() },
   });
+  revalidateTag("testimonials", "max");
   revalidatePath("/");
   revalidatePath("/admin/messages");
 }
