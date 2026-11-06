@@ -1,4 +1,5 @@
 import { PaymentProvider, Role } from "@prisma/client";
+import { FileText } from "lucide-react";
 import { requireAdmin } from "@/lib/dal";
 import { db } from "@/lib/db";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
@@ -9,8 +10,10 @@ import {
   PAYMENT_STATUS_LABELS,
   paymentMethodLabel,
 } from "@/lib/shop";
+import { createPresignedDownload } from "@/lib/storage";
 import { confirmManualPayment } from "@/server/actions/payments";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export default async function AdminPaymentsPage() {
   await requireAdmin();
@@ -26,17 +29,27 @@ export default async function AdminPaymentsPage() {
     take: 80,
   });
 
+  const rows = await Promise.all(
+    payments.map(async (payment) => ({
+      payment,
+      invoiceHref: payment.invoiceUrl
+        ? await createPresignedDownload(payment.invoiceUrl)
+        : null,
+    })),
+  );
+
   return (
     <DashboardShell role={Role.ADMIN} title="Administration">
       <h1 className="text-2xl font-semibold">Paiements</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        MoMo, Stripe et Orange Money (Notch Pay) se confirment automatiquement.
+        MoMo, Stripe et Orange Money (Notch Pay) se confirment automatiquement. Les factures PDF se
+        téléchargent ici, sur PES-RH.
       </p>
       <div className="mt-6 space-y-3">
-        {payments.length === 0 ? (
+        {rows.length === 0 ? (
           <p className="text-sm text-muted-foreground">Aucun paiement pour le moment.</p>
         ) : (
-          payments.map((payment) => {
+          rows.map(({ payment, invoiceHref }) => {
             const canConfirm =
               payment.status === "pending" &&
               payment.gateway !== "NOTCHPAY" &&
@@ -63,10 +76,22 @@ export default async function AdminPaymentsPage() {
                         : ""}
                     </p>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <p className="text-sm font-medium">
                       {PAYMENT_STATUS_LABELS[payment.status] ?? payment.status}
                     </p>
+                    {invoiceHref ? (
+                      <a
+                        href={invoiceHref}
+                        download
+                        target="_blank"
+                        rel="noreferrer"
+                        className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
+                      >
+                        <FileText className="size-4" />
+                        Facture PDF
+                      </a>
+                    ) : null}
                     {canConfirm ? (
                       <form action={confirmManualPayment}>
                         <input type="hidden" name="paymentId" value={payment.id} />

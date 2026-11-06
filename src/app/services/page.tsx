@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { COMPANY_SHORT, COMPANY_WEBSITE } from "@/lib/company";
+import { COMPANY_SHORT } from "@/lib/company";
 import { ServicesGrid } from "@/components/home/services-grid";
 import { PageHero } from "@/components/layout/page-hero";
 import { buttonVariants } from "@/components/ui/button";
@@ -20,14 +20,6 @@ export default function ServicesPage() {
         <Link href="/register/recruiter" className={cn(buttonVariants({ size: "lg" }))}>
           Devenir recruteur
         </Link>
-        <a
-          href={COMPANY_WEBSITE}
-          target="_blank"
-          rel="noreferrer"
-          className={cn(buttonVariants({ variant: "outline", size: "lg" }))}
-        >
-          Site PES-RH
-        </a>
       </div>
     </main>
   );

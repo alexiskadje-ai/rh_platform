@@ -247,8 +247,8 @@ export function CheckoutPanel({
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 {invoice ? (
-                  <a href={invoice} target="_blank" rel="noreferrer">
-                    <Button type="button">Télécharger la facture</Button>
+                  <a href={invoice} download target="_blank" rel="noreferrer">
+                    <Button type="button">Télécharger la facture PDF</Button>
                   </a>
                 ) : null}
                 {downloads.map((file) => (

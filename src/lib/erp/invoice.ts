@@ -46,11 +46,17 @@ export function erpInvoiceEndpoint(audience: string) {
   return `${base}/api/integration/invoices`;
 }
 
-/** Envoie la facture à l'ERP. Un échec ne défait pas le paiement déjà confirmé. */
-const ERP_INVOICE_PROVIDERS = new Set(["CARD", "ORANGE_MONEY", "MTN_MOMO"]);
+/**
+ * Ancien pont facture → ERP : désactivé.
+ * La facture PDF reste sur PES-RH (téléchargement local).
+ * Réactiver seulement quand le nouvel ERP sera branché.
+ */
+export async function pushErpInvoice(_input: ErpInvoiceInput) {
+  return "disabled" as const;
+}
 
-export async function pushErpInvoice(input: ErpInvoiceInput) {
-  if (!ERP_INVOICE_PROVIDERS.has(input.provider)) return "disabled" as const;
+/** Conservé pour les tests / branchement futur du nouvel ERP. */
+export async function pushErpInvoiceWhenEnabled(input: ErpInvoiceInput) {
   if (!isErpIntegrationEnabled()) return "disabled" as const;
   const secret = process.env.PLATFORM_INTEGRATION_SECRET ?? "";
   const audience = process.env.ERP_SSO_AUDIENCE ?? "";

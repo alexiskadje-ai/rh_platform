@@ -89,12 +89,13 @@ export function MyOrdersPage({
                   ) : order.payment?.invoiceHref ? (
                     <a
                       href={order.payment.invoiceHref}
+                      download
                       target="_blank"
                       rel="noreferrer"
                       className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
                     >
                       <FileText className="size-4" />
-                      Facture
+                      Télécharger la facture
                     </a>
                   ) : (
                     <p className="text-xs text-muted-foreground">Facture en cours de génération.</p>

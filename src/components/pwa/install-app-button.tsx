@@ -71,7 +71,7 @@ export function InstallAppButton({
       return;
     }
     if (browserOffersPrompt()) {
-      setHelp("Rechargez la page. Le navigateur proposera ensuite d'ouvrir l'ERP dans sa propre fenêtre.");
+      setHelp("Rechargez la page. Le navigateur proposera ensuite d'installer PES-RH.");
       onDialog?.(true);
       return;
     }
@@ -85,7 +85,7 @@ export function InstallAppButton({
     onDialog?.(false);
   }
 
-  const label = "Installer l'ERP";
+  const label = "Installer PES-RH";
 
   return (
     <>
@@ -128,7 +128,7 @@ export function InstallAppButton({
                   </button>
                 </div>
                 <h2 id="pwa-install-title" className="mt-4 font-display text-xl text-primary">
-                  Installer l'ERP
+                  Installer PES-RH
                 </h2>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{help}</p>
                 <button type="button" className={cn(buttonVariants(), "mt-5 w-full")} onClick={closeHelp}>
